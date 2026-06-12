@@ -1,0 +1,25 @@
+{
+  "name": "underlying",
+  "private": true,
+  "packageManager": "pnpm@10.34.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "demo": "pnpm --filter @underlying/core build && pnpm --filter underlying-demo dev",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "size": "pnpm -r size",
+    "changeset": "changeset",
+    "release": "pnpm build && pnpm test && pnpm size && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.0"
+  }
+}

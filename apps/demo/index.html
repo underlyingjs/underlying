@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>underlying - playground Phase 1</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0f1115;
+        color: #e6e8ee;
+        font-family: system-ui, sans-serif;
+      }
+      #stage {
+        position: fixed;
+        inset: 0;
+        touch-action: none;
+        cursor: crosshair;
+      }
+      #ball {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 64px;
+        height: 64px;
+        margin: -32px 0 0 -32px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #7aa2ff, #2952e8);
+        cursor: grab;
+        touch-action: none;
+        will-change: transform;
+      }
+      #ball.dragging {
+        cursor: grabbing;
+      }
+      #target {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        margin: -8px 0 0 -8px;
+        border: 2px solid #7aa2ff;
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+      #hint {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        font-size: 13px;
+        opacity: 0.7;
+        user-select: none;
+        pointer-events: none;
+        line-height: 1.7;
+      }
+      #hud {
+        position: fixed;
+        left: 16px;
+        bottom: 16px;
+        font-size: 13px;
+        opacity: 0.8;
+        user-select: none;
+        pointer-events: none;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.7;
+        white-space: pre-line;
+      }
+      #controls {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-end;
+        user-select: none;
+      }
+      #controls label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      #controls span {
+        min-width: 3ch;
+        font-variant-numeric: tabular-nums;
+      }
+      #controls select {
+        background: #1a1e27;
+        color: #e6e8ee;
+        border: 1px solid #2a3040;
+        border-radius: 6px;
+        padding: 3px 6px;
+      }
+      #panel {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        width: 300px;
+        padding: 16px;
+        background: #161a22cc;
+        border: 1px solid #2a3040;
+        border-radius: 12px;
+        backdrop-filter: blur(6px);
+        user-select: none;
+      }
+      #panel h2 {
+        margin: 0 0 14px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.85;
+      }
+      #panel section {
+        padding: 10px 0;
+        border-top: 1px solid #232a38;
+      }
+      #panel .caption {
+        font-size: 12px;
+        opacity: 0.65;
+        margin-bottom: 8px;
+        line-height: 1.5;
+      }
+      #panel .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      #dots {
+        display: flex;
+        gap: 9px;
+        height: 46px;
+        align-items: flex-end;
+        flex: 1;
+      }
+      #dots span {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #7aa2ff;
+        will-change: transform;
+      }
+      #bars {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .bar {
+        width: 44px;
+        height: 10px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #6be0a2, #2c9e68);
+        will-change: transform;
+      }
+      button {
+        background: #222a3a;
+        color: #e6e8ee;
+        border: 1px solid #2f3a52;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      button:hover {
+        background: #2a3550;
+      }
+      #tween-track {
+        flex: 1;
+        height: 40px;
+        border-radius: 8px;
+        background: #10131a;
+        border: 1px dashed #2a3040;
+        position: relative;
+        overflow: hidden;
+      }
+      #tween-card {
+        position: absolute;
+        left: 6px;
+        top: 6px;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #ffb86b, #e86429);
+        will-change: transform;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div id="target"></div>
+      <div id="ball"></div>
+    </div>
+    <div id="hint">
+      attrape la balle, lance-la - selon le mode, elle revient en spring ou glisse en inertie<br />
+      (les bords du viewport sont des frontières rubber-band en mode inertie)<br />
+      clique n'importe où - même en plein vol, le retarget conserve la vélocité
+    </div>
+    <div id="hud"></div>
+    <div id="panel">
+      <h2 id="panel-title">composition &amp; tween</h2>
+      <section>
+        <div class="caption"><strong>stagger</strong> - les 8 points partent en cascade, 80 ms d'écart, springs.</div>
+        <div class="row">
+          <div id="dots">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <button id="run-stagger" type="button">lancer</button>
+        </div>
+      </section>
+      <section>
+        <div class="caption"><strong>sequence</strong> - chaque barre attend le repos de la précédente : 1 -> 2 -> 3, puis retour 3 -> 2 -> 1.</div>
+        <div class="row">
+          <div id="bars">
+            <div class="bar" id="bar-1"></div>
+            <div class="bar" id="bar-2"></div>
+            <div class="bar" id="bar-3"></div>
+          </div>
+          <button id="run-sequence" type="button">lancer</button>
+        </div>
+      </section>
+      <section>
+        <div class="caption"><strong>tween 900 ms (WAAPI)</strong> - reclique <em>en plein vol</em> : le demi-tour doit être parfaitement continu.</div>
+        <div class="row">
+          <div id="tween-track"><div id="tween-card"></div></div>
+          <button id="run-tween" type="button">aller / retour</button>
+        </div>
+      </section>
+    </div>
+    <div id="controls">
+      <label>retour
+        <select id="release-mode">
+          <option value="spring">spring vers la cible</option>
+          <option value="inertie">inertie (decay borné)</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="rm-simulate" /> simuler reduced-motion</label>
+      <label>stratégie reduced-motion
+        <select id="rm-behavior">
+          <option value="skip">skip (défaut)</option>
+          <option value="fade">fade</option>
+          <option value="allow">allow</option>
+        </select>
+      </label>
+      <label>stiffness <input id="stiffness" type="range" min="20" max="600" value="170" /> <span id="stiffness-value"></span></label>
+      <label>damping <input id="damping" type="range" min="2" max="60" value="20" /> <span id="damping-value"></span></label>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

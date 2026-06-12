@@ -1,0 +1,59 @@
+{
+  "name": "@underlying/core",
+  "version": "0.0.0",
+  "description": "Physics-first web animation: interruptible springs with velocity conservation, inertia, accessible by default, zero dependencies, < 10 kB gzip.",
+  "license": "MIT",
+  "author": "Erwan Soubeyrand <contact@underlyi.ng>",
+  "keywords": [
+    "animation",
+    "spring",
+    "physics",
+    "motion",
+    "inertia",
+    "interruptible",
+    "accessibility",
+    "reduced-motion",
+    "waapi"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/underlyingjs/underlying.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/underlyingjs/underlying#readme",
+  "bugs": "https://github.com/underlyingjs/underlying/issues",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "size": "node scripts/check-size.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}
