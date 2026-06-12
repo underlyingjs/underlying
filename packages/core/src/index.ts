@@ -1,5 +1,3 @@
-export const VERSION = '0.0.0'
-
 export { rafDriver } from './scheduler/driver'
 export type { CancelFrame, FrameDriver } from './scheduler/driver'
 export { MAX_FRAME_DELTA_MS, createScheduler } from './scheduler/scheduler'
