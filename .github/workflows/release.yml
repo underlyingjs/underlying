@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# One release at a time per ref.
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write # tags, the "Version Packages" branch, GitHub releases
+  pull-requests: write # open / update the version PR
+  id-token: write # OIDC -> npm trusted publishing + provenance
+
+jobs:
+  release:
+    runs-on: ubuntu-latest # GitHub-hosted runner: required for OIDC / provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # recent Node for OIDC trusted publishing
+          cache: pnpm
+
+      # changesets publishes via npm under the hood; OIDC needs npm >= 11.5.1
+      # (the npm bundled with the runner is older).
+      - run: npm install --global npm@latest
+
+      - run: pnpm install --frozen-lockfile
+
+      # On a normal push: opens/updates the "Version Packages" PR from the pending
+      # changesets. Once that PR is merged (no changesets left): runs ci:publish,
+      # which publishes to npm over OIDC and attaches a provenance attestation.
+      - name: Version or publish
+        uses: changesets/action@v1
+        with:
+          version: pnpm run ci:version
+          publish: pnpm run ci:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No NPM_TOKEN on purpose: auth happens via OIDC trusted publishing.

@@ -17,7 +17,9 @@
     "typecheck": "pnpm -r typecheck",
     "size": "pnpm -r size",
     "changeset": "changeset",
-    "release": "pnpm build && pnpm test && pnpm size && changeset publish"
+    "release": "pnpm build && pnpm test && pnpm size && changeset publish",
+    "ci:version": "changeset version && pnpm install --lockfile-only",
+    "ci:publish": "pnpm build && pnpm test && pnpm size && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0"
