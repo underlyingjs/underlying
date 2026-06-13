@@ -1,6 +1,6 @@
 # @underlying/core
 
-**Physics-first web animation.** Interruptible by design, accessible by default, zero dependencies, **< 10 kB gzip** (currently ~4 kB).
+**Physics-first web animation.** Interruptible by design, accessible by default, zero dependencies, **< 12 kB gzip** (currently ~10.5 kB full; a transforms-only import tree-shakes to ~2.3 kB).
 
 > Beta - the API may still move before 1.0. Built as the foundation of [underlying](https://github.com/underlyingjs/underlying), a physics-first motion library with first-class framework adapters (Angular first).
 
@@ -62,6 +62,60 @@ sequence([
 
 Repeated `animate()` calls on the same element retarget the same underlying
 values - interruption with velocity conservation, not parallel animations.
+
+## Any CSS property, colors, units
+
+Beyond the five transform/opacity channels, `animate()` accepts any CSS property
+(and custom properties) as a string or number. Values decompose into scalar
+channels - each an interruptible spring - and reformat to a CSS string every
+frame.
+
+```ts
+animate(panel, { width: '50%' })                 // computed px -> % : one measurement, velocity rebased
+animate(button, { backgroundColor: '#10b981' })  // hex/rgb()/hsl()/named, mixed in gamma-2.0 space
+animate(button, { outlineColor: 'rebeccapurple' })
+animate(card, { boxShadow: '0px 12px 32px rgba(0, 0, 0, 0.35)' })  // composite: numbers + colors
+animate(meter, { '--progress': 0.8 })            // custom property
+```
+
+Units convert by measuring once at the start (`240px` retargeted to `50%`
+rebases position *and* velocity). Unconvertible or unparseable values snap to
+the target with a one-time dev warning, never a throw.
+
+## Keyframes
+
+```ts
+animate(badge, { x: [null, 120, 80] })                  // null = from the current value
+animate(badge, { x: [0, 120, 80] }, { duration: 600 })  // explicit 0 = teleport start
+```
+
+Without a duration the waypoints are chained springs (settle at each, then
+retarget); with a duration they become an evenly-split piecewise tween that
+rides the compositor (WAAPI multi-keyframe) when eligible.
+
+## Teleport & gesture handoff
+
+```ts
+import { setStyle, releaseStyle } from '@underlying/core'
+
+const onDrag = (px: number) => setStyle(panel, { width: `${px}px` })       // coherent teleport
+const onRelease = (px: number, v: number) => {
+  setStyle(panel, { width: `${px}px` }, { velocity: v })                   // seed gesture momentum
+  animate(panel, { width: '50%' })                                         // spring inherits it
+}
+
+releaseStyle(panel)  // forget the element: dispose channels, remove our inline styles, start cold next time
+```
+
+## Custom value types
+
+The registry is the extension point for the package family (and your app):
+
+```ts
+import { registerValueType, numberValueType } from '@underlying/core'
+
+registerValueType(['--progress'], numberValueType)  // explicit, never at import time
+```
 
 ## Reduced motion
 

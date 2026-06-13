@@ -4,7 +4,7 @@ Physics-first motion library for the web. Interruptible by design, accessible by
 
 | Package | Description | Status |
 | --- | --- | --- |
-| [`@underlying/core`](packages/core) | Physics engine: scheduler, animatable values, springs/inertia/decay, composition, a11y, WAAPI delegation | beta |
+| [`@underlying/core`](packages/core) | Physics engine: scheduler, animatable values, springs/inertia/decay, any-CSS-property value model (colors, units, keyframes), composition, a11y, WAAPI delegation | beta |
 | `@underlying/angular` | Service, directives, signals integration | planned |
 | `@underlying/scroll` | Scrub, pin, parallax, snap - scroll as a source driving animatables | planned |
 | `@underlying/text` | Accessible text splitting, scramble, typewriter | planned |

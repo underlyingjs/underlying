@@ -273,8 +273,8 @@ describe('animatable', () => {
 
     driveToRest(driver, value)
     expect(value.get()).toBe(100) // snap exact sur la borne
-    expect(Math.max(...samples)).toBeGreaterThan(100) // il a réellement débordé…
-    expect(Math.max(...samples)).toBeLessThan(300) // …mais de façon bornée (rubber band)
+    expect(Math.max(...samples)).toBeGreaterThan(100) // il a réellement débordé...
+    expect(Math.max(...samples)).toBeLessThan(300) // ...mais de façon bornée (rubber band)
   })
 
   it('to() follows its easing over its duration and settles exactly', () => {

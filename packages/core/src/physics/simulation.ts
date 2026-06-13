@@ -13,13 +13,13 @@ export interface SimulationState {
 }
 
 /**
- * Every physics mode (spring, decay, inertia…) reduces to an acceleration
+ * Every physics mode (spring, decay, inertia...) reduces to an acceleration
  * function plus a rest condition over a (position, velocity) state. This is
  * what makes retargeting and handoff free: the state survives, only the
  * simulation behind it changes.
  */
 export interface Simulation {
-  /** units/s² */
+  /** units/s^2 */
   acceleration(position: number, velocity: number): number
   /** Settled position when the state qualifies as rest, null while moving. */
   rest(position: number, velocity: number): number | null

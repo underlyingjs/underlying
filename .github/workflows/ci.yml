@@ -34,6 +34,7 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      # The size budget is a hard gate: exceeding 10 kB gzip fails the build.
+      # Hard gate: the full bundle (< 12 kB gzip) plus two tree-shake probes
+      # (primitives-only and animate-only import graphs) fail the build if exceeded.
       - name: Size budget
         run: pnpm size
