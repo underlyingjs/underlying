@@ -56,10 +56,20 @@ const TRANSFORM_CHANNELS: ReadonlyArray<Channel> = ['x', 'y', 'scale', 'rotate']
 const NUMERIC_CHANNELS = new Set<string>(['x', 'y', 'scale', 'rotate', 'opacity'])
 
 /** The slice of a WAAPI Animation the delegation relies on (testable shape). */
-interface DelegatedAnimation {
+export interface DelegatedAnimation {
   currentTime: CSSNumberish | null
   onfinish: (() => void) | null
   cancel(): void
+  // Optional members the playback layer drives; the two-field call sites here are unaffected.
+  playbackRate?: number
+  pause?(): void
+  play?(): void
+}
+
+/** Internal handle the playback layer maps controls onto. Not re-exported from the package entry. */
+export interface DelegatedControls {
+  readonly animation: DelegatedAnimation
+  readonly durationMs: number
 }
 
 interface DelegatedTween {
@@ -129,6 +139,9 @@ const reclaim = (entry: ElementEntry): void => {
   const t0 = Math.max(0, t - window)
   const slope = (delegated.easing(t1) - delegated.easing(t0)) / (t1 - t0)
   const segmentDurationS = delegated.durationMs / 1000 / segments
+  // A reversed delegated tween (playbackRate < 0) hands back a negated velocity;
+  // the forward path defaults to 1, so existing reclaims are byte-identical.
+  const rateSign = Math.sign(delegated.animation.playbackRate ?? 1) || 1
 
   for (const [channel, frames] of delegated.channels) {
     const value = entry.values[channel]
@@ -136,7 +149,7 @@ const reclaim = (entry: ElementEntry): void => {
     const from = frames[index] ?? 0
     const to = frames[index + 1] ?? from
     const span = to - from
-    value.set(from + span * delegated.easing(t), { velocity: (span * slope) / segmentDurationS })
+    value.set(from + span * delegated.easing(t), { velocity: ((span * slope) / segmentDurationS) * rateSign })
   }
   delegated.animation.cancel()
   delegated.finish()
@@ -517,6 +530,18 @@ const animatePropertyKeyframes = (
     start = current !== null && current.shape === shape ? current : first
   }
   return installGroup(entry, element, property, type, start, buildChain)
+}
+
+/**
+ * Internal seam for @underlying/core/playback: the live WAAPI animation an
+ * element's delegated tween rides, so playback can map pause/seek/timeScale/
+ * reverse onto native compositor controls. Returns null on the JS path. NOT
+ * exported from the package entry (index.ts).
+ */
+export function __getDelegated(element: HTMLElement): DelegatedControls | null {
+  const delegated = registry.get(element)?.delegated
+  if (delegated === null || delegated === undefined) return null
+  return { animation: delegated.animation, durationMs: delegated.durationMs }
 }
 
 const ensureEntry = (element: HTMLElement, scheduler: Scheduler | undefined): ElementEntry => {

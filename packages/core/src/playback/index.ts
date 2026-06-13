@@ -1,0 +1,8 @@
+export { playable } from './playable'
+export type { PlayableOptions, PlaybackValue } from './playable'
+export { animatePlayback } from './animate'
+export { follow } from './follow'
+export type { Follow, FollowOptions } from './follow'
+export { timeScope } from './time-scope'
+export type { TimeScope, TimeScopeOptions } from './time-scope'
+export type { MotionKind, PlaybackHandle, PlaybackOptions } from './handle'

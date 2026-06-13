@@ -15,12 +15,20 @@ export interface SpringOptions {
   restSpeed?: number
 }
 
-export function springSimulation(target: number, options: SpringOptions = {}): Simulation {
+/** A spring whose target can be re-aimed in place: no Motion rebuild on a moving target (follow). */
+export interface RetargetableSpring extends Simulation {
+  retarget(target: number): void
+}
+
+export function springSimulation(target: number, options: SpringOptions = {}): RetargetableSpring {
   const { stiffness = 100, damping = 10, mass = 1, restDelta = 0.01, restSpeed = 0.1 } = options
+  let aim = target
   return {
-    acceleration: (position, velocity) =>
-      (-stiffness * (position - target) - damping * velocity) / mass,
+    acceleration: (position, velocity) => (-stiffness * (position - aim) - damping * velocity) / mass,
     rest: (position, velocity) =>
-      Math.abs(velocity) < restSpeed && Math.abs(position - target) < restDelta ? target : null,
+      Math.abs(velocity) < restSpeed && Math.abs(position - aim) < restDelta ? aim : null,
+    retarget: (next) => {
+      aim = next
+    },
   }
 }

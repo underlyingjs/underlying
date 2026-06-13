@@ -328,6 +328,41 @@ describe('animatable', () => {
     expect(value.get()).toBeGreaterThan(50)
   })
 
+  it('drive() writes position and velocity passively, emitting change', () => {
+    const { value } = setup(0)
+    const onChange = vi.fn()
+    const onRest = vi.fn()
+    value.on('change', onChange)
+    value.on('rest', onRest)
+
+    value.drive({ position: 42, velocity: 300 })
+    expect(value.get()).toBe(42)
+    expect(value.velocity()).toBe(300)
+    expect(value.isAnimating()).toBe(false) // un état imposé, pas une animation
+    expect(onChange).toHaveBeenLastCalledWith(42)
+    expect(onRest).not.toHaveBeenCalled() // jamais de rest sur le chemin playback
+  })
+
+  it('drive() does not interrupt a live animation', () => {
+    const { driver, value } = setup(0)
+    value.spring(100)
+    for (let t = 0; t <= 64; t += 16) driver.frame(t)
+    expect(value.isAnimating()).toBe(true)
+
+    value.drive({ position: 7, velocity: 0 })
+    expect(value.isAnimating()).toBe(true) // l'animation tient toujours la valeur
+  })
+
+  it('drive() only emits change when the position actually moves', () => {
+    const { value } = setup(10)
+    const onChange = vi.fn()
+    value.on('change', onChange)
+
+    value.drive({ position: 10, velocity: 99 }) // même position, vélocité différente
+    expect(value.velocity()).toBe(99)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   it('unsubscribing a listener is effective and idempotent', () => {
     const { driver, value } = setup(0)
     const onChange = vi.fn()
