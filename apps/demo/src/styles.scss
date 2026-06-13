@@ -186,31 +186,24 @@ pre {
   display: none; // shown only while the mobile drawer is open (see the <= 820px block)
 }
 
-// ---- brand (emblème U + wordmark) ----
+// ---- brand : wordmark + a small "docs" label (the U emblem lives in the favicon) ----
 .brand {
   display: flex;
   align-items: center;
   gap: 9px;
   flex-shrink: 0;
 
-  &__mark {
-    width: 24px;
-    height: 24px;
-    display: block;
-  }
-
   &__word {
-    font-weight: 600;
-    font-size: 17px;
-    letter-spacing: -0.01em;
-    color: var(--sapin);
-    white-space: nowrap;
+    display: block;
+    width: 168px;
+    height: auto;
   }
 
   &__sub {
     color: var(--lichen);
     font-weight: 500;
-    margin-left: 5px;
+    font-size: 13px;
+    margin-left: 1px;
   }
 }
 

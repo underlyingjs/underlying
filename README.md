@@ -1,25 +1,87 @@
-# underlying
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/wordmark-cream.svg" />
+    <img alt="underlying" src="brand/wordmark-sapin.svg" width="300" />
+  </picture>
+</p>
 
-Physics-first motion library for the web. Interruptible by design, accessible by default, framework-agnostic core with first-class adapters - Angular first.
+<p align="center"><strong>Physics-first motion for the web.</strong></p>
+
+<p align="center">
+  Springs and inertia by default. Every value interruptible, with its velocity conserved.
+  <br />Accessible out of the box. Zero dependencies. ~9.5 kB gzip.
+</p>
+
+<p align="center">
+  <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
+  <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
+  <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
+</p>
+
+---
+
+Most animation libraries make you describe motion as a duration and a curve. `underlying` starts from physics: you set a target, and a spring, a glide or a decay carries the value there - interruptible at any moment, with momentum preserved. Duration and easing still exist, as an escape hatch, not as the default.
+
+```ts
+import { animate } from '@underlying/core'
+
+animate(box, { x: 320, rotate: 12 })   // springs by default
+animate(box, { x: 0, rotate: 0 })      // retarget mid-flight: velocity conserved, never a jump
+```
+
+## Why physics-first
+
+- **Physical by default.** No hardcoded durations, no cubic-bezier guesswork. Springs, inertia and decay drive the motion; `duration` / `easing` is the escape hatch.
+- **Interruptible by design.** Every animated value knows its position *and its velocity*. A second call retargets from exactly where it is, carrying momentum - not a parallel animation, not a restart.
+- **Accessible natively.** `prefers-reduced-motion` is respected with zero config (skip or fade), reacts to mid-session OS changes, and supports app-level overrides.
+- **Deterministic.** A fixed 1/120 s timestep: the same inputs produce the same trajectory at 60, 120 or 144 Hz.
+- **One rAF loop.** Everything batches into a single tick - simulations first, style writes after. Eligible tweens ride the WAAPI compositor and hand control back losslessly on interruption.
+- **Any CSS property.** Beyond the five transform/opacity channels: lengths with unit conversion, colors, composite values and keyframe arrays, through a tree-shakeable value-type registry.
+
+## Playback
+
+Springs stay live; tweens are seekable. The opt-in [`@underlying/core/playback`](packages/core) entry adds pause, timeScale, reverse and seek - plus `bake()`, which samples a spring's trajectory into a scrubbable clip, and `follow()` for momentum scrub.
+
+```ts
+import { playable, follow } from '@underlying/core/playback'
+
+const motion = playable(value).spring(300)
+motion.pause().timeScale(0.25)   // slow-mo, identical trajectory shape
+
+const lag = follow(0)            // a value that springs toward a moving target
+onScroll((y) => lag.target(y))   // momentum scrub, conserved velocity
+```
+
+## Packages
 
 | Package | Description | Status |
 | --- | --- | --- |
-| [`@underlying/core`](packages/core) | Physics engine: scheduler, animatable values, springs/inertia/decay, any-CSS-property value model (colors, units, keyframes), composition, a11y, WAAPI delegation | beta |
+| [`@underlying/core`](packages/core) | Scheduler, animatable values, springs / inertia / decay, any-CSS-property value model, composition, a11y, WAAPI delegation | beta |
+| `@underlying/core/playback` | pause / timeScale / reverse / seek, `bake()`, `follow()` - opt-in, separate bundle | beta |
 | `@underlying/angular` | Service, directives, signals integration | planned |
 | `@underlying/scroll` | Scrub, pin, parallax, snap - scroll as a source driving animatables | planned |
 | `@underlying/text` | Accessible text splitting, scramble, typewriter | planned |
+
+## Install
+
+```sh
+npm install @underlying/core
+```
+
+Every demo on the docs site is live - [read the docs at underlyi.ng](https://underlyi.ng).
 
 ## Development
 
 ```sh
 pnpm install
-pnpm test        # Vitest, TDD
+pnpm test        # Vitest
 pnpm typecheck   # strict TypeScript
 pnpm build       # ESM + CJS + types
-pnpm size        # gzip budget gate (< 10 kB for core)
-pnpm demo        # interactive playground
+pnpm size        # gzip budget gate
+pnpm demo        # interactive docs site
 ```
 
 ## License
 
-MIT © Erwan Soubeyrand
+MIT © underlyi.ng

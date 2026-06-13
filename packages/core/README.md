@@ -1,8 +1,20 @@
-# @underlying/core
+<p align="center">
+  <img alt="underlying" src="https://underlyi.ng/wordmark-sapin.svg" width="280" />
+</p>
 
-**Physics-first web animation.** Interruptible by design, accessible by default, zero dependencies, **< 12 kB gzip** (currently ~10.5 kB full; a transforms-only import tree-shakes to ~2.3 kB).
+<p align="center">
+  <strong>Physics-first web animation.</strong> Interruptible by design, accessible by default,
+  <br />zero dependencies, ~9.5 kB gzip (a transforms-only import tree-shakes to ~2.4 kB).
+</p>
 
-> Beta - the API may still move before 1.0. Built as the foundation of [underlying](https://github.com/underlyingjs/underlying), a physics-first motion library with first-class framework adapters (Angular first).
+<p align="center">
+  <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
+  <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
+  <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
+</p>
+
+> Beta - the API may still move before 1.0. Part of [underlying](https://github.com/underlyingjs/underlying), a physics-first motion library with first-class framework adapters (Angular first).
 
 ## Why
 
@@ -62,6 +74,24 @@ sequence([
 
 Repeated `animate()` calls on the same element retarget the same underlying
 values - interruption with velocity conservation, not parallel animations.
+
+## Playback (opt-in)
+
+Springs stay live; tweens are seekable. `@underlying/core/playback` is a separate
+bundle entry (~4.3 kB gzip on top of the core) that adds pause / timeScale /
+reverse / seek, a `bake()` bridge that samples a spring into a scrubbable clip,
+and `follow()` for momentum scrub.
+
+```ts
+import { playable, follow } from '@underlying/core/playback'
+
+const motion = playable(value).spring(300)
+motion.pause().timeScale(0.25)            // slow-mo, identical trajectory shape
+if (motion.bake()) motion.progress(0.5)   // a live spring, now scrubbable
+
+const lag = follow(0)                     // a value that springs toward a moving target
+onScroll((y) => lag.target(y))            // momentum scrub, conserved velocity
+```
 
 ## Any CSS property, colors, units
 
@@ -132,4 +162,4 @@ x.spring(100, { reducedMotion: 'allow' })  // essential, gesture-driven motion
 
 ## License
 
-MIT © Erwan Soubeyrand
+MIT © underlyi.ng

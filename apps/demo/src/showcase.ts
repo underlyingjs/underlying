@@ -1,11 +1,5 @@
-// GSAP-style docs engine: a sticky top bar, a grouped left sidebar, a routed
-// content column (one "page" at a time, hash-routed), and a right "on this page"
-// panel with scroll-spy. Pages are groups of feature Sections; each Section is a
-// live demo with prose, code, and an API block.
-//
-// On narrow viewports (<= 820px) the sidebar becomes a slide-in drawer driven by
-// the very engine these docs document - dogfooding animate() for the one piece of
-// interactive chrome the site owns.
+// Docs engine: top bar, grouped sidebar, hash-routed content column, and a
+// scroll-spy "on this page" panel. Below 820px the sidebar becomes a drawer.
 
 import { animate } from '@underlying/core'
 
@@ -123,10 +117,6 @@ export function highlight(code: string): string {
 
 // --- renderer --------------------------------------------------------------
 
-// The "U" emblem from the brand guide (charte v2.0), for navbar / small sizes.
-const EMBLEM_U =
-  'M 1214.87 637.433 C 1262.04 635.401 1366.89 638.67 1373.21 702.576 C 1376.1 731.731 1355.17 750.501 1342.71 774.051 C 1334.95 788.732 1331.02 806.585 1328.25 822.896 C 1307.05 978.392 1361.27 1160.46 1248.23 1291.09 C 1196.72 1350.14 1123.46 1375.07 1047.62 1378.72 C 924.516 1385.48 779.558 1343.04 743.105 1209.48 C 713.397 1100.63 733.907 980.808 728.938 868.751 C 728.618 842.303 723.309 811.051 709.363 788.273 C 694.826 764.529 678.108 755.475 675.499 724.463 C 674.109 707.943 678.965 691.557 689.898 678.954 C 717.251 647.425 770.578 641.331 809.865 638.788 C 858.96 635.609 952.523 635.131 990.7 669.278 C 1004.81 681.896 1010.95 699.238 1008.95 717.931 C 1005.86 746.766 980.86 766.103 970.495 793.939 C 952.947 841.069 954.741 967.044 957.725 1020.67 C 959.779 1057.59 963.042 1105.9 992.707 1132.01 C 1008.73 1146.11 1030.08 1150.65 1050.98 1149.14 C 1069.4 1147.82 1086.63 1140.28 1098.8 1126.15 C 1111 1111.98 1116.88 1093.56 1120.57 1075.53 C 1130.05 1029.29 1133.87 849.053 1119.87 803.721 C 1110.41 773.116 1078.68 755.945 1076.53 722.611 C 1075.43 706.176 1081.03 689.996 1092.07 677.77 C 1120.12 646.454 1175.19 639.422 1214.87 637.433 z'
-
 const ICON_MENU =
   '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6.5h18M3 12h18M3 17.5h18"/></svg>'
 const ICON_CLOSE =
@@ -138,10 +128,8 @@ export function renderShowcase(pages: Page[], root: HTMLElement): void {
   const pageById = new Map(pages.map((page) => [page.id, page]))
 
   // Top bar -----------------------------------------------------------------
-  // The hamburger only shows < 820px (CSS). The version badge + search live in
-  // `tools`, a display:contents wrapper on desktop so they behave as direct
-  // top-bar flex children; on mobile the whole wrapper is relocated into the
-  // drawer (see syncViewport), which is why both share one container.
+  // `tools` (badge + search) is display:contents on desktop and relocated into
+  // the drawer on mobile (see syncViewport) - one container for both layouts.
   const search = h('input', { class: 'search__input', type: 'text', placeholder: 'Search...', spellcheck: false })
   const tools = h('div', { class: 'topbar__tools' },
     h('span', { class: 'topbar__badge' }, `v${__CORE_VERSION__}`),
@@ -156,7 +144,8 @@ export function renderShowcase(pages: Page[], root: HTMLElement): void {
     h('a', {
       class: 'brand',
       href: `#/${pages[0]?.id ?? ''}`,
-      html: `<svg class="brand__mark" viewBox="0 0 2048 2048" aria-hidden="true"><path fill="#1c3426" d="${EMBLEM_U}"/></svg><span class="brand__word">underlying<small class="brand__sub">docs</small></span>`,
+      'aria-label': 'underlying docs',
+      html: `<img class="brand__word" src="/wordmark-sapin.svg" alt="underlying" /><small class="brand__sub">docs</small>`,
     }),
     tools,
     h('div', { class: 'topbar__spacer' }),
@@ -232,8 +221,7 @@ export function renderShowcase(pages: Page[], root: HTMLElement): void {
 // --- mobile drawer ---------------------------------------------------------
 
 // Wires the hamburger / scrim / Escape / focus-trap into a slide-in drawer and
-// returns a `close()` the router can call on navigation. The slide itself is run
-// by animate() (springs, reduced-motion-aware) - the docs animating themselves.
+// returns a close() for the router to call on navigation. The slide runs on animate().
 function mountDrawer(refs: {
   sidebar: HTMLElement
   scrim: HTMLElement
@@ -262,12 +250,8 @@ function mountDrawer(refs: {
     menuBtn.setAttribute('aria-expanded', 'true')
     menuBtn.setAttribute('aria-label', 'Close navigation')
     menuBtn.innerHTML = ICON_CLOSE
-    // Explicit `[from, to]` keyframe: a channel's first touch otherwise starts
-    // from its CSS-neutral value (x: 0), which would skip the slide entirely.
-    // Underdamped (zeta ~= 0.59) so the panel overshoots x:0 with a real spring
-    // bounce - the --drawer-pad gutter swallows that overshoot, so it never
-    // exposes a sliver of scrim at the screen edge. The scrim itself fades on a
-    // near-critical spring (no flicker).
+    // Explicit [from, to]: a channel's first touch starts from x:0 and would skip
+    // the slide. The --drawer-pad gutter swallows the underdamped overshoot.
     animate(sidebar, { x: [-width(), 0] }, { stiffness: 320, damping: 21 })
     animate(scrim, { opacity: [0, 1] }, { stiffness: 320, damping: 38 })
     // On touch, focus the panel, not the search box: focusing search pops the iOS
@@ -282,9 +266,8 @@ function mountDrawer(refs: {
     menuBtn.setAttribute('aria-expanded', 'false')
     menuBtn.setAttribute('aria-label', 'Open navigation')
     menuBtn.innerHTML = ICON_MENU
-    // Close near-critically damped (bounce-free), with a loose rest threshold so
-    // `finished` resolves the moment the panel is ~off-screen instead of chasing
-    // the last sub-pixel - the scroll-lock (body.nav-open) lifts promptly.
+    // Close near-critically damped (no bounce); a loose rest threshold resolves
+    // finished as soon as the panel is off-screen, lifting the scroll-lock.
     animate(scrim, { opacity: 0 }, { stiffness: 340, damping: 38 })
     void animate(sidebar, { x: -width() }, { stiffness: 340, damping: 36, restDelta: 1.5, restSpeed: 150 })
       .finished.then(() => {
