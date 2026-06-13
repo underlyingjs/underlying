@@ -3,7 +3,7 @@
   "version": "0.1.0-beta.0",
   "description": "Physics-first web animation: interruptible springs with velocity conservation, inertia, colors, units, keyframes, accessible by default, zero dependencies, < 12 kB gzip.",
   "license": "MIT",
-  "author": "Erwan Soubeyrand <contact@underlyi.ng>",
+  "author": "underlyi.ng <contact@underlyi.ng>",
   "keywords": [
     "animation",
     "spring",
