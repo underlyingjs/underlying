@@ -4,6 +4,7 @@ import { gettingStarted, interruption, springs } from './sections/core'
 import { colors, composite, keyframes, lengthsUnits } from './sections/value-model'
 import { gestures, setRelease } from './sections/gestures'
 import { composition } from './sections/composition'
+import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -42,6 +43,13 @@ const pages: Page[] = [
     title: 'Composition',
     blurb: 'Build cascades and ordered chains that batch into the one rAF loop.',
     sections: [composition],
+  },
+  {
+    id: 'playback',
+    group: 'Guides',
+    title: 'Playback',
+    blurb: 'Springs are live, tweens are seekable. The opt-in <code>@underlying/core/playback</code> entry adds pause, timeScale, reverse, and seek, a <code>bake()</code> bridge that turns a spring into a scrubbable clip, and <code>follow()</code> for momentum scrub.',
+    sections: [pauseResume, slowMo, scrub, bakedClip, momentumScrub],
   },
   {
     id: 'accessibility',
