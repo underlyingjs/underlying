@@ -11,8 +11,22 @@ export { animatable } from './value/animatable'
 export type { Animatable, AnimatableOptions, AnimationHandle, SetOptions } from './value/animatable'
 export { bindStyle } from './dom/bind-style'
 export type { BindStyleOptions, StyleBindings } from './dom/bind-style'
-export { animate } from './dom/animate'
-export type { AnimateOptions, AnimateTargets } from './dom/animate'
+export { animate, releaseStyle, setStyle } from './dom/animate'
+export type {
+  AnimateKeyframes,
+  AnimateOptions,
+  AnimateProperty,
+  AnimateTargets,
+  AnimateValue,
+  NumericKeyframes,
+  SetStyleOptions,
+} from './dom/animate'
+export { registerValueType } from './value/registry'
+export { numberValueType } from './value/types/number'
+export { lengthValueType } from './value/types/length'
+export { colorValueType } from './value/types/color'
+export { complexValueType } from './value/types/complex'
+export type { ChannelMeta, MeasureUnit, ParsedValue, ValueType } from './value/value-type'
 export { sequence, stagger } from './compose/composition'
 export type { AnimationStep, StaggerOptions } from './compose/composition'
 export { onReducedMotionChange, prefersReducedMotion, setReducedMotionOverride } from './a11y/reduced-motion'

@@ -12,6 +12,7 @@
     "@underlying/core": "workspace:*"
   },
   "devDependencies": {
+    "sass": "^1.77.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
   }

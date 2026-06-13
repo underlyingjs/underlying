@@ -9,9 +9,9 @@ export interface SpringOptions {
   mass?: number
   /** Initial velocity in units/s - handoff from a gesture (drag -> release). */
   velocity?: number
-  /** Rest requires |position - target| < restDelta… */
+  /** Rest requires |position - target| < restDelta... */
   restDelta?: number
-  /** …AND |velocity| < restSpeed (units/s). */
+  /** ...AND |velocity| < restSpeed (units/s). */
   restSpeed?: number
 }
 

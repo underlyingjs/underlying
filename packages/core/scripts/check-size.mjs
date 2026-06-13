@@ -1,15 +1,61 @@
-// Enforces the core size budget on the built ESM bundle (gzip, level 9).
+// Enforces the core size budgets on the built ESM bundle (gzip, level 9):
+//  - the full public surface stays under the headline budget;
+//  - a primitives-only user (animatable/bindStyle/physics) ships ZERO of the
+//    value model (the lazy registry + parsers must stay tree-shakeable);
+//  - the animate() import graph (which deliberately pulls the registry and the
+//    four built-in parsers) cannot creep unnoticed.
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
+import { build } from 'esbuild'
 
-const BUDGET_BYTES = 10 * 1024
+const BUDGET_BYTES = 12 * 1024
+const PRIMITIVES_BUDGET_BYTES = 3.5 * 1024
+const ANIMATE_BUDGET_BYTES = 9.5 * 1024
 
-const bundle = new URL('../dist/index.js', import.meta.url)
-const gzipped = gzipSync(readFileSync(bundle), { level: 9 }).length
-const report = `${(gzipped / 1024).toFixed(2)} kB gzip (budget ${BUDGET_BYTES / 1024} kB)`
+const bundleUrl = new URL('../dist/index.js', import.meta.url)
+const distDir = dirname(fileURLToPath(bundleUrl))
 
-if (gzipped > BUDGET_BYTES) {
-  console.error(`@underlying/core: ${report} - BUDGET EXCEEDED`)
-  process.exit(1)
+const gzipBytes = (contents) => gzipSync(contents, { level: 9 }).length
+const kb = (bytes) => `${(bytes / 1024).toFixed(2)} kB`
+
+let failed = false
+const check = (label, bytes, budget) => {
+  const ok = bytes <= budget
+  failed ||= !ok
+  const status = ok ? 'OK' : 'BUDGET EXCEEDED'
+  const line = `${label}: ${kb(bytes)} gzip (budget ${kb(budget)}) - ${status}`
+  if (ok) console.log(line)
+  else console.error(line)
 }
-console.log(`@underlying/core: ${report} - OK`)
+
+// Bundle a fixture that imports only the given exports, tree-shaken + minified,
+// so the probe measures exactly the import graph those entry points pull in.
+const probe = async (imports) => {
+  const result = await build({
+    stdin: {
+      contents: `import { ${imports.join(', ')} } from './index.js'\nconsole.log(${imports.join(', ')})`,
+      resolveDir: distDir,
+      loader: 'js',
+    },
+    bundle: true,
+    treeShaking: true,
+    minify: true,
+    format: 'esm',
+    platform: 'neutral',
+    write: false,
+    logLevel: 'silent',
+  })
+  return gzipBytes(result.outputFiles[0].contents)
+}
+
+check('@underlying/core (full)', gzipBytes(readFileSync(bundleUrl)), BUDGET_BYTES)
+check(
+  'primitives only (animatable/bindStyle/physics)',
+  await probe(['animatable', 'bindStyle', 'stagger', 'sequence', 'prefersReducedMotion']),
+  PRIMITIVES_BUDGET_BYTES,
+)
+check('animate() import graph', await probe(['animate']), ANIMATE_BUDGET_BYTES)
+
+process.exit(failed ? 1 : 0)

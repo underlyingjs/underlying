@@ -143,3 +143,91 @@ describe('animate - délégation WAAPI opportuniste', () => {
     expect(animations.length).toBe(0) // conflit transform : pas de délégation
   })
 })
+
+describe('animate - WAAPI multi-keyframe delegation', () => {
+  it('delegates an n-keyframe numeric array as n keyframes with easing on 0..n-2', () => {
+    const { scheduler, element, animations } = setupWaapi()
+    animate(element, { x: [0, 100, 50] }, { duration: 900, easing: linear, scheduler })
+
+    expect(animations.length).toBe(1)
+    const { keyframes, options } = animations[0]!
+    expect(keyframes.length).toBe(3)
+    expect(keyframes[0]!['transform']).toBe('translate3d(0px, 0px, 0)')
+    expect(keyframes[1]!['transform']).toBe('translate3d(100px, 0px, 0)')
+    expect(keyframes[2]!['transform']).toBe('translate3d(50px, 0px, 0)')
+    expect(String(keyframes[0]!['easing']).startsWith('linear(')).toBe(true)
+    expect(String(keyframes[1]!['easing']).startsWith('linear(')).toBe(true)
+    expect(keyframes[2]!['easing']).toBeUndefined() // last keyframe carries no easing
+    expect(options['easing']).toBeUndefined() // per-keyframe, not animation-level
+    expect(options['duration']).toBe(900)
+  })
+
+  it('carries untouched transform channels along as constants in every frame', () => {
+    const { driver, scheduler, element, animations } = setupWaapi()
+    animate(element, { x: 50 }, { scheduler }) // spring x to 50
+    for (let t = 0; t <= 4000; t += 16) driver.frame(t)
+
+    animate(element, { y: [0, 100, 50] }, { duration: 600, scheduler })
+    const { keyframes } = animations[0]!
+    expect(keyframes[0]!['transform']).toBe('translate3d(50px, 0px, 0)')
+    expect(keyframes[1]!['transform']).toBe('translate3d(50px, 100px, 0)')
+    expect(keyframes[2]!['transform']).toBe('translate3d(50px, 50px, 0)')
+  })
+
+  it('reclaims segment-local position and velocity per channel, then cancels', () => {
+    const { driver, scheduler, element, animations } = setupWaapi()
+    animate(element, { x: [0, 100, 50] }, { duration: 1000, easing: linear, scheduler })
+
+    // progress 0.6 of 2 segments -> segment 1 (100 -> 50), local t 0.2:
+    // pos = 100 + (-50)(0.2) = 90; velocity = (-50)/(0.5s) = -100 u/s
+    animations[0]!.currentTime = 600
+    animate(element, { x: 0 }, { scheduler }) // spring interrupt
+    expect(animations[0]!.cancelled).toBe(true)
+
+    driver.frame(0)
+    expect(translateX(element)).toBeCloseTo(90, 5)
+    driver.frame(16)
+    expect(translateX(element)).toBeLessThan(90) // inherited -100 u/s drives it down
+  })
+
+  it('commits the final keyframe on finish, cancelling only after the render flush', async () => {
+    const { driver, scheduler, element, animations } = setupWaapi()
+    const handle = animate(element, { x: [0, 100, 50] }, { duration: 800, scheduler })
+
+    animations[0]!.onfinish?.()
+    expect(animations[0]!.cancelled).toBe(false)
+    driver.frame(0)
+    expect(element.style.transform).toBe('translate3d(50px, 0px, 0)') // frames[n-1]
+    expect(animations[0]!.cancelled).toBe(true)
+    await handle.finished
+  })
+
+  it('falls back to the rAF path when frame counts differ across channels', async () => {
+    const { driver, scheduler, element, animations } = setupWaapi()
+    animate(element, { x: [0, 100, 50], y: 30 }, { duration: 600, scheduler })
+
+    expect(animations.length).toBe(0) // 3 frames vs 2 frames -> not uniform
+    // The x chain advances between segments on a microtask, so flush them.
+    let t = 0
+    for (let guard = 0; guard < 10_000; guard++) {
+      if (driver.pendingCount() > 0) {
+        t += 16
+        driver.frame(t)
+      } else {
+        await new Promise<void>((resolve) => setTimeout(resolve, 0))
+        if (driver.pendingCount() === 0) break
+      }
+    }
+    expect(element.style.transform).toBe('translate3d(50px, 30px, 0)') // same endpoints
+  })
+
+  it('never delegates a registry property, and a property spring does not block a transform tween', () => {
+    const { scheduler, element, animations } = setupWaapi()
+    element.style.width = '100px'
+    animate(element, { width: '200px' }, { scheduler }) // registry group, mid-physics
+    expect(animations.length).toBe(0) // width never delegates
+
+    animate(element, { x: 100 }, { duration: 300, scheduler })
+    expect(animations.length).toBe(1) // a property group mid-physics does not block delegation
+  })
+})
