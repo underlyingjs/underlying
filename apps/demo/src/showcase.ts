@@ -356,28 +356,58 @@ function renderPage(page: Page, pages: Page[], content: HTMLElement, toc: HTMLEl
   // Right "on this page"
   toc.replaceChildren(h('div', { class: 'toc__title' }, 'On this page'))
   const tocLinks = new Map<string, HTMLElement>()
+  const setActive = (id: string): void => {
+    for (const [linkId, link] of tocLinks) link.classList.toggle('toc__link--active', linkId === id)
+  }
   for (const section of page.sections) {
-    const link = h('div', { class: 'toc__link', onClick: () => document.getElementById(section.id)?.scrollIntoView({ behavior: 'smooth' }) }, section.title)
+    const link = h('div', {
+      class: 'toc__link',
+      onClick: () => {
+        setActive(section.id) // instant feedback; do not wait for the scroll to settle
+        document.getElementById(section.id)?.scrollIntoView({ behavior: 'smooth' })
+      },
+    }, section.title)
     tocLinks.set(section.id, link)
     toc.append(link)
   }
 
-  // Scroll-spy
+  // Scroll-spy. The active link is the topmost section currently inside the
+  // upper band - EXCEPT at the very bottom of the page, where the last section
+  // can never reach that band, so it would otherwise never light up (the
+  // off-by-one the short last section showed). Bottom-of-page wins.
+  const visible = new Set<string>()
+  const atBottom = (): boolean => {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight
+    return scrollable > 4 && window.scrollY >= scrollable - 2 // only when the page truly scrolls
+  }
+  const update = (): void => {
+    if (atBottom()) {
+      const last = page.sections[page.sections.length - 1]
+      if (last !== undefined) setActive(last.id)
+      return
+    }
+    const topmost = page.sections.find((section) => visible.has(section.id))
+    if (topmost !== undefined) setActive(topmost.id)
+  }
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        if (!entry.isIntersecting) continue
-        for (const link of tocLinks.values()) link.classList.remove('toc__link--active')
-        tocLinks.get(entry.target.id)?.classList.add('toc__link--active')
+        if (entry.isIntersecting) visible.add(entry.target.id)
+        else visible.delete(entry.target.id)
       }
+      update()
     },
-    { rootMargin: '-15% 0px -75% 0px' },
+    { rootMargin: '-80px 0px -70% 0px' },
   )
   for (const section of page.sections) {
     const node = document.getElementById(section.id)
     if (node !== null) observer.observe(node)
   }
-  teardown.push(() => observer.disconnect())
+  window.addEventListener('scroll', update, { passive: true })
+  teardown.push(() => {
+    observer.disconnect()
+    window.removeEventListener('scroll', update)
+  })
 }
 
 function renderCard(section: Section, teardown: Array<() => void>): HTMLElement {

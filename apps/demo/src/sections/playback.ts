@@ -76,7 +76,7 @@ play.timeScale(1)      // back to real time`,
     const launch = (): void => {
       handle?.stop()
       out = !out
-      handle = animatePlayback(box, { x: out ? spanOf(track) : 0, scale: out ? 1.3 : 1 }, { duration: 1400 })
+      handle = animatePlayback(box, { x: out ? spanOf(track) : 0, rotate: out ? 360 : 0 }, { duration: 1400 })
       handle.timeScale(scale)
     }
     ctx.onCleanup(() => handle?.stop())
@@ -116,11 +116,7 @@ scrubber.addEventListener('input', () => clip.progress(scrubber.valueAsNumber / 
     ctx.stage.append(track)
     const clip = animatePlayback(box, { x: spanOf(track), rotate: 360 }, { duration: 2000, paused: true })
     ctx.onCleanup(() => clip.stop())
-    ctx.controls.append(
-      slider('progress', { min: 0, max: 100, value: 0, onInput: (v) => clip.progress(v / 100) }),
-      button('play', () => clip.play()),
-      button('reverse', () => clip.reverse()),
-    )
+    ctx.controls.append(slider('progress', { min: 0, max: 100, value: 0, onInput: (v) => clip.progress(v / 100) }))
   },
   noReplay: true,
 }
@@ -129,36 +125,59 @@ export const bakedClip: Section = {
   id: 'playback-bake',
   group: 'Playback',
   title: 'bake()',
-  tagline: 'Sample a spring once into a seekable clip, then scrub the bounce.',
+  tagline: 'Turn a live spring into a clip you can replay and scrub.',
   description: `
-    <p>A live spring chases a target; it has no timeline to scrub. <code>bake()</code>
-    runs the deterministic 1/120 s simulation to rest once and records it into a
-    seekable table, conserving the exact pixels the live run would show. Now the
-    overshoot is yours to scrub. This is the bridge from physics to a timeline.</p>`,
+    <p>A live spring chases a target, so it has no timeline: you cannot rewind it.
+    <code>bake()</code> runs the deterministic 1/120 s simulation to rest <em>once</em>
+    and records the whole bounce into a seekable table, pixel-for-pixel identical to
+    the live run. Press <strong>play</strong> to watch the recorded bounce, then drag
+    the scrubber to step through the overshoot by hand, forward or backward. That is
+    the bridge from physics to a timeline.</p>`,
   code: `import { animatable, bindStyle } from '@underlying/core'
 import { playable } from '@underlying/core/playback'
 
 const x = animatable(0)
-bindStyle(box, { x })
-const motion = playable(x).spring(260, { stiffness: 120, damping: 9, paused: true })
+bindStyle(box, { x })                                  // x -> box transform
 
-if (motion.bake()) scrubber.oninput = () => motion.progress(scrubber.valueAsNumber / 100)`,
+const clip = playable(x).spring(240, { damping: 9, paused: true })
+clip.bake()                                            // sample the bounce once
+
+clip.progress(0.5)   // now seekable: jump anywhere on the recorded bounce`,
   api: `bake(options?: { maxDurationMs?: number }): boolean   // false if the motion never rests`,
   run(ctx) {
     const track = lane()
     const box = h('div', { class: 'obj obj--chip' })
     track.append(box)
     ctx.stage.append(track)
+
     const x = animatable(0)
     ctx.onCleanup(bindStyle(box, { x }))
     // Aim short of the edge so the underdamped overshoot stays inside the stage.
-    const motion = playable(x).spring(spanOf(track) * 0.65, { stiffness: 120, damping: 9, paused: true })
-    motion.bake()
+    const clip = playable(x).spring(spanOf(track) * 0.62, { stiffness: 120, damping: 9, paused: true })
+    clip.bake()
+
+    const scrubber = slider('progress', { min: 0, max: 100, value: 0, onInput: (v) => clip.progress(v / 100) })
+    const range = scrubber.querySelector('input') as HTMLInputElement
+    const durationMs = clip.duration() ?? 1000
+    let raf = 0
+    const play = (): void => {
+      cancelAnimationFrame(raf)
+      let start = 0
+      const tick = (now: number): void => {
+        if (start === 0) start = now
+        const p = Math.min((now - start) / durationMs, 1)
+        range.value = String(p * 100)
+        range.dispatchEvent(new Event('input')) // moves the thumb and seeks the clip
+        if (p < 1) raf = requestAnimationFrame(tick)
+      }
+      raf = requestAnimationFrame(tick)
+    }
     ctx.onCleanup(() => {
-      motion.stop()
+      cancelAnimationFrame(raf)
+      clip.stop()
       x.dispose()
     })
-    ctx.controls.append(slider('progress', { min: 0, max: 100, value: 0, onInput: (v) => motion.progress(v / 100) }))
+    ctx.controls.append(button('play', play), scrubber)
   },
   noReplay: true,
 }
