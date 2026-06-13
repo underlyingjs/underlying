@@ -61,4 +61,11 @@ describe('@underlying/core public surface', () => {
     const surface = await import('./index')
     expect('VERSION' in surface).toBe(false)
   })
+
+  it('keeps the opt-in playback layer and internal seams out of the main entry', async () => {
+    const surface = await import('./index')
+    for (const name of ['playable', 'animatePlayback', 'follow', 'timeScope', '__getDelegated']) {
+      expect(name in surface).toBe(false)
+    }
+  })
 })

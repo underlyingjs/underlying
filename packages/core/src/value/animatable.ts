@@ -32,6 +32,12 @@ export interface Animatable {
   isAnimating(): boolean
   /** Teleport: cancels any animation; velocity resets to 0 unless seeded. */
   set(value: number, options?: SetOptions): void
+  /**
+   * Passive write of position+velocity: emits `change`, but does NOT freeze an
+   * active animation, fire `rest`, or zero velocity. The playback layer drives
+   * a value through this; the value stays a state holder.
+   */
+  drive(state: SimulationState): void
   /** Freeze in place: position AND velocity stay readable. */
   stop(): void
   /** Retargets from the current position and velocity - interruptible at any time. */
@@ -171,6 +177,13 @@ export function animatable(initial: number, options: AnimatableOptions = {}): An
       velocity = setOptions.velocity ?? 0
       if (position !== value) {
         position = value
+        emitChange()
+      }
+    },
+    drive(state) {
+      velocity = state.velocity
+      if (position !== state.position) {
+        position = state.position
         emitChange()
       }
     },

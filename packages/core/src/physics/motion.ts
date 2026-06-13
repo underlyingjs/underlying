@@ -12,6 +12,18 @@ export interface Motion {
   rest(state: SimulationState): number | null
 }
 
+/**
+ * A Motion whose elapsed clock can be repositioned: the seek seam for duration
+ * tweens and baked-spring tables. A live spring/decay is NOT seekable - it has
+ * no fixed durationS - so simulationMotion stays a plain Motion.
+ */
+export interface SeekableMotion extends Motion {
+  /** Reposition to an absolute elapsed time (seconds); returns the sample there. Next step() continues from it. */
+  seek(elapsedS: number): SimulationState
+  /** Total elapsed at rest (seconds). Tweens: the duration. Sampled tables: the last entry. */
+  readonly durationS: number
+}
+
 export function simulationMotion(simulation: Simulation): Motion {
   return {
     step: (state, timestepS) => stepSimulation(simulation, state, timestepS),

@@ -13,8 +13,10 @@ import { build } from 'esbuild'
 const BUDGET_BYTES = 12 * 1024
 const PRIMITIVES_BUDGET_BYTES = 3.5 * 1024
 const ANIMATE_BUDGET_BYTES = 9.5 * 1024
+const PLAYBACK_BUDGET_BYTES = 5 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)
+const playbackUrl = new URL('../dist/playback/index.js', import.meta.url)
 const distDir = dirname(fileURLToPath(bundleUrl))
 
 const gzipBytes = (contents) => gzipSync(contents, { level: 9 }).length
@@ -32,13 +34,9 @@ const check = (label, bytes, budget) => {
 
 // Bundle a fixture that imports only the given exports, tree-shaken + minified,
 // so the probe measures exactly the import graph those entry points pull in.
-const probe = async (imports) => {
+const probeFrom = async (entry, fixture) => {
   const result = await build({
-    stdin: {
-      contents: `import { ${imports.join(', ')} } from './index.js'\nconsole.log(${imports.join(', ')})`,
-      resolveDir: distDir,
-      loader: 'js',
-    },
+    stdin: { contents: fixture, resolveDir: distDir, loader: 'js' },
     bundle: true,
     treeShaking: true,
     minify: true,
@@ -50,12 +48,20 @@ const probe = async (imports) => {
   return gzipBytes(result.outputFiles[0].contents)
 }
 
-check('@underlying/core (full)', gzipBytes(readFileSync(bundleUrl)), BUDGET_BYTES)
+// Multi-entry splits shared code into a chunk, so dist/index.js alone is a
+// re-export shim. Re-bundle the whole entry to measure the real full surface.
+const probe = (imports) => probeFrom('index.js', `import { ${imports.join(', ')} } from './index.js'\nconsole.log(${imports.join(', ')})`)
+const probeFull = () => probeFrom('index.js', `import * as core from './index.js'\nconsole.log(core)`)
+
+check('@underlying/core (full)', await probeFull(), BUDGET_BYTES)
 check(
   'primitives only (animatable/bindStyle/physics)',
   await probe(['animatable', 'bindStyle', 'stagger', 'sequence', 'prefersReducedMotion']),
   PRIMITIVES_BUDGET_BYTES,
 )
 check('animate() import graph', await probe(['animate']), ANIMATE_BUDGET_BYTES)
+// The playback bundle imports the shared core chunk, so its own file IS the net
+// cost of adding playback on top of a core you already ship.
+check('@underlying/core/playback (net)', gzipBytes(readFileSync(playbackUrl)), PLAYBACK_BUDGET_BYTES)
 
 process.exit(failed ? 1 : 0)
