@@ -172,7 +172,7 @@ export function renderShowcase(pages: Page[], root: HTMLElement): void {
   const topbar = h('header', { class: 'topbar' }, topbarInner)
 
   // Sidebar -----------------------------------------------------------------
-  const sidebar = h('aside', { class: 'sidebar', id: 'site-nav' })
+  const sidebar = h('aside', { class: 'sidebar', id: 'site-nav', tabindex: '-1' })
   const sideLinks = new Map<string, HTMLAnchorElement>()
   const groups = new Map<string, Page[]>()
   for (const page of pages) {
@@ -200,7 +200,10 @@ export function renderShowcase(pages: Page[], root: HTMLElement): void {
   const content = h('main', { class: 'content' })
   const toc = h('aside', { class: 'toc' })
   const scrim = h('div', { class: 'scrim', 'aria-hidden': 'true' })
-  root.append(topbar, h('div', { class: 'layout' }, sidebar, content, toc), scrim)
+  // Sampled by iOS 26 to tint the bottom toolbar the page colour while the drawer
+  // is open (see .drawer-foot); removed from the layout on close.
+  const drawerFoot = h('div', { class: 'drawer-foot', 'aria-hidden': 'true' })
+  root.append(topbar, h('div', { class: 'layout' }, sidebar, content, toc), scrim, drawerFoot)
 
   // Mobile drawer -----------------------------------------------------------
   const closeDrawer = mountDrawer({ sidebar, scrim, menuBtn, search, tools, topbarInner, spacer })
@@ -267,7 +270,10 @@ function mountDrawer(refs: {
     // near-critical spring (no flicker).
     animate(sidebar, { x: [-width(), 0] }, { stiffness: 320, damping: 21 })
     animate(scrim, { opacity: [0, 1] }, { stiffness: 320, damping: 38 })
-    search.focus({ preventScroll: true })
+    // On touch, focus the panel, not the search box: focusing search pops the iOS
+    // keyboard on open. A real keyboard (fine pointer) still lands on the box.
+    if (window.matchMedia('(pointer: coarse)').matches) sidebar.focus({ preventScroll: true })
+    else search.focus({ preventScroll: true })
   }
 
   const closeDrawer = (returnFocus = true): void => {
@@ -371,10 +377,8 @@ function renderPage(page: Page, pages: Page[], content: HTMLElement, toc: HTMLEl
     toc.append(link)
   }
 
-  // Scroll-spy. The active link is the topmost section currently inside the
-  // upper band - EXCEPT at the very bottom of the page, where the last section
-  // can never reach that band, so it would otherwise never light up (the
-  // off-by-one the short last section showed). Bottom-of-page wins.
+  // Scroll-spy: the topmost section in the band wins, except at page bottom where
+  // the last section can't reach it (so bottom-of-page wins, lighting the last item).
   const visible = new Set<string>()
   const atBottom = (): boolean => {
     const scrollable = document.documentElement.scrollHeight - window.innerHeight
