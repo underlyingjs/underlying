@@ -2,6 +2,12 @@
 // content column (one "page" at a time, hash-routed), and a right "on this page"
 // panel with scroll-spy. Pages are groups of feature Sections; each Section is a
 // live demo with prose, code, and an API block.
+//
+// On narrow viewports (<= 820px) the sidebar becomes a slide-in drawer driven by
+// the very engine these docs document - dogfooding animate() for the one piece of
+// interactive chrome the site owns.
+
+import { animate } from '@underlying/core'
 
 export interface DemoContext {
   stage: HTMLElement
@@ -121,29 +127,52 @@ export function highlight(code: string): string {
 const EMBLEM_U =
   'M 1214.87 637.433 C 1262.04 635.401 1366.89 638.67 1373.21 702.576 C 1376.1 731.731 1355.17 750.501 1342.71 774.051 C 1334.95 788.732 1331.02 806.585 1328.25 822.896 C 1307.05 978.392 1361.27 1160.46 1248.23 1291.09 C 1196.72 1350.14 1123.46 1375.07 1047.62 1378.72 C 924.516 1385.48 779.558 1343.04 743.105 1209.48 C 713.397 1100.63 733.907 980.808 728.938 868.751 C 728.618 842.303 723.309 811.051 709.363 788.273 C 694.826 764.529 678.108 755.475 675.499 724.463 C 674.109 707.943 678.965 691.557 689.898 678.954 C 717.251 647.425 770.578 641.331 809.865 638.788 C 858.96 635.609 952.523 635.131 990.7 669.278 C 1004.81 681.896 1010.95 699.238 1008.95 717.931 C 1005.86 746.766 980.86 766.103 970.495 793.939 C 952.947 841.069 954.741 967.044 957.725 1020.67 C 959.779 1057.59 963.042 1105.9 992.707 1132.01 C 1008.73 1146.11 1030.08 1150.65 1050.98 1149.14 C 1069.4 1147.82 1086.63 1140.28 1098.8 1126.15 C 1111 1111.98 1116.88 1093.56 1120.57 1075.53 C 1130.05 1029.29 1133.87 849.053 1119.87 803.721 C 1110.41 773.116 1078.68 755.945 1076.53 722.611 C 1075.43 706.176 1081.03 689.996 1092.07 677.77 C 1120.12 646.454 1175.19 639.422 1214.87 637.433 z'
 
+const ICON_MENU =
+  '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6.5h18M3 12h18M3 17.5h18"/></svg>'
+const ICON_CLOSE =
+  '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13"/></svg>'
+const ICON_GITHUB =
+  '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.16-.02-2.1-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>'
+
 export function renderShowcase(pages: Page[], root: HTMLElement): void {
   const pageById = new Map(pages.map((page) => [page.id, page]))
 
   // Top bar -----------------------------------------------------------------
+  // The hamburger only shows < 820px (CSS). The version badge + search live in
+  // `tools`, a display:contents wrapper on desktop so they behave as direct
+  // top-bar flex children; on mobile the whole wrapper is relocated into the
+  // drawer (see syncViewport), which is why both share one container.
   const search = h('input', { class: 'search__input', type: 'text', placeholder: 'Search...', spellcheck: false })
-  const topbar = h('header', { class: 'topbar' },
-    h('div', { class: 'topbar__inner' },
+  const tools = h('div', { class: 'topbar__tools' },
+    h('span', { class: 'topbar__badge' }, `v${__CORE_VERSION__}`),
+    h('div', { class: 'search' }, search, h('span', { class: 'search__key' }, '/')),
+  )
+  const menuBtn = h('button', {
+    class: 'topbar__menu', type: 'button', 'aria-label': 'Open navigation',
+    'aria-expanded': 'false', 'aria-controls': 'site-nav', html: ICON_MENU,
+  })
+  const topbarInner = h('div', { class: 'topbar__inner' },
+    menuBtn,
+    h('a', {
+      class: 'brand',
+      href: `#/${pages[0]?.id ?? ''}`,
+      html: `<svg class="brand__mark" viewBox="0 0 2048 2048" aria-hidden="true"><path fill="#1c3426" d="${EMBLEM_U}"/></svg><span class="brand__word">underlying<small class="brand__sub">docs</small></span>`,
+    }),
+    tools,
+    h('div', { class: 'topbar__spacer' }),
+    h('nav', { class: 'topbar__links' },
       h('a', {
-        class: 'brand',
-        href: `#/${pages[0]?.id ?? ''}`,
-        html: `<svg class="brand__mark" viewBox="0 0 2048 2048" aria-hidden="true"><path fill="#1c3426" d="${EMBLEM_U}"/></svg><span class="brand__word">underlying<small class="brand__sub">docs</small></span>`,
+        class: 'topbar__link', href: 'https://github.com/underlyingjs/underlying',
+        target: '_blank', rel: 'noopener', 'aria-label': 'GitHub repository',
+        html: `<span class="topbar__link-icon">${ICON_GITHUB}</span><span class="topbar__link-text">GitHub</span>`,
       }),
-      h('span', { class: 'topbar__badge' }, 'v0.1 beta'),
-      h('div', { class: 'search' }, search, h('span', { class: 'search__key' }, '/')),
-      h('div', { class: 'topbar__spacer' }),
-      h('nav', { class: 'topbar__links' },
-        h('a', { class: 'topbar__link', href: 'https://github.com/underlyingjs/underlying', target: '_blank' }, 'GitHub'),
-      ),
     ),
   )
+  const spacer = topbarInner.querySelector('.topbar__spacer') as HTMLElement
+  const topbar = h('header', { class: 'topbar' }, topbarInner)
 
   // Sidebar -----------------------------------------------------------------
-  const sidebar = h('aside', { class: 'sidebar' })
+  const sidebar = h('aside', { class: 'sidebar', id: 'site-nav' })
   const sideLinks = new Map<string, HTMLAnchorElement>()
   const groups = new Map<string, Page[]>()
   for (const page of pages) {
@@ -170,11 +199,16 @@ export function renderShowcase(pages: Page[], root: HTMLElement): void {
 
   const content = h('main', { class: 'content' })
   const toc = h('aside', { class: 'toc' })
-  root.append(topbar, h('div', { class: 'layout' }, sidebar, content, toc))
+  const scrim = h('div', { class: 'scrim', 'aria-hidden': 'true' })
+  root.append(topbar, h('div', { class: 'layout' }, sidebar, content, toc), scrim)
+
+  // Mobile drawer -----------------------------------------------------------
+  const closeDrawer = mountDrawer({ sidebar, scrim, menuBtn, search, tools, topbarInner, spacer })
 
   // Routing -----------------------------------------------------------------
   let teardown: Array<() => void> = []
   const route = (): void => {
+    closeDrawer(false) // a navigation always dismisses the open menu
     const id = location.hash.replace(/^#\/?/, '')
     const page = pageById.get(id) ?? pages[0]
     if (page === undefined) return
@@ -190,6 +224,112 @@ export function renderShowcase(pages: Page[], root: HTMLElement): void {
   }
   window.addEventListener('hashchange', route)
   route()
+}
+
+// --- mobile drawer ---------------------------------------------------------
+
+// Wires the hamburger / scrim / Escape / focus-trap into a slide-in drawer and
+// returns a `close()` the router can call on navigation. The slide itself is run
+// by animate() (springs, reduced-motion-aware) - the docs animating themselves.
+function mountDrawer(refs: {
+  sidebar: HTMLElement
+  scrim: HTMLElement
+  menuBtn: HTMLButtonElement
+  search: HTMLInputElement
+  tools: HTMLElement
+  topbarInner: HTMLElement
+  spacer: HTMLElement
+}): (returnFocus?: boolean) => void {
+  const { sidebar, scrim, menuBtn, search, tools, topbarInner, spacer } = refs
+  const mql = window.matchMedia('(max-width: 820px)')
+  let open = false
+
+  // visibility:hidden keeps the closed drawer laid out, so this stays accurate
+  // even before the first open; offsetWidth is a belt-and-suspenders fallback.
+  const width = (): number => sidebar.getBoundingClientRect().width || sidebar.offsetWidth || 320
+  const focusable = (): HTMLElement[] =>
+    Array.from(
+      sidebar.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'),
+    ).filter((node) => node.offsetParent !== null)
+
+  const openDrawer = (): void => {
+    if (open || !mql.matches) return
+    open = true
+    document.body.classList.add('nav-open')
+    menuBtn.setAttribute('aria-expanded', 'true')
+    menuBtn.setAttribute('aria-label', 'Close navigation')
+    menuBtn.innerHTML = ICON_CLOSE
+    // Explicit `[from, to]` keyframe: a channel's first touch otherwise starts
+    // from its CSS-neutral value (x: 0), which would skip the slide entirely.
+    // Underdamped (zeta ~= 0.59) so the panel overshoots x:0 with a real spring
+    // bounce - the --drawer-pad gutter swallows that overshoot, so it never
+    // exposes a sliver of scrim at the screen edge. The scrim itself fades on a
+    // near-critical spring (no flicker).
+    animate(sidebar, { x: [-width(), 0] }, { stiffness: 320, damping: 21 })
+    animate(scrim, { opacity: [0, 1] }, { stiffness: 320, damping: 38 })
+    search.focus({ preventScroll: true })
+  }
+
+  const closeDrawer = (returnFocus = true): void => {
+    if (!open) return
+    open = false
+    menuBtn.setAttribute('aria-expanded', 'false')
+    menuBtn.setAttribute('aria-label', 'Open navigation')
+    menuBtn.innerHTML = ICON_MENU
+    // Close near-critically damped (bounce-free), with a loose rest threshold so
+    // `finished` resolves the moment the panel is ~off-screen instead of chasing
+    // the last sub-pixel - the scroll-lock (body.nav-open) lifts promptly.
+    animate(scrim, { opacity: 0 }, { stiffness: 340, damping: 38 })
+    void animate(sidebar, { x: -width() }, { stiffness: 340, damping: 36, restDelta: 1.5, restSpeed: 150 })
+      .finished.then(() => {
+        if (!open) document.body.classList.remove('nav-open') // hides via CSS once off-screen
+      })
+    // Return focus to the trigger; also rescue focus stranded on a drawer link
+    // that a navigation is about to hide (returnFocus is false from route()).
+    if (returnFocus || sidebar.contains(document.activeElement)) menuBtn.focus({ preventScroll: true })
+  }
+
+  // Relocate the badge+search between top bar (desktop) and drawer (mobile), and
+  // hard-reset any drawer state/inline styles when returning to the desktop layout.
+  const syncViewport = (): void => {
+    if (mql.matches) {
+      if (tools.parentElement !== sidebar) sidebar.prepend(tools)
+    } else {
+      open = false
+      document.body.classList.remove('nav-open')
+      menuBtn.setAttribute('aria-expanded', 'false')
+      menuBtn.setAttribute('aria-label', 'Open navigation')
+      menuBtn.innerHTML = ICON_MENU
+      sidebar.style.transform = '' // drop the engine's leftover translateX
+      scrim.style.opacity = ''
+      if (tools.parentElement !== topbarInner) topbarInner.insertBefore(tools, spacer)
+    }
+  }
+
+  menuBtn.addEventListener('click', () => (open ? closeDrawer() : openDrawer()))
+  scrim.addEventListener('click', () => closeDrawer())
+  sidebar.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      closeDrawer()
+      return
+    }
+    if (event.key !== 'Tab') return
+    const items = focusable()
+    const first = items[0]
+    const last = items[items.length - 1]
+    if (first === undefined || last === undefined) return
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  })
+  mql.addEventListener('change', syncViewport)
+  syncViewport()
+
+  return closeDrawer
 }
 
 function renderPage(page: Page, pages: Page[], content: HTMLElement, toc: HTMLElement, teardown: Array<() => void>): void {

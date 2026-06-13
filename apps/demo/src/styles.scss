@@ -90,7 +90,7 @@ pre {
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 80; // above the mobile drawer (70) and scrim (60)
   background: rgba(250, 249, 246, 0.86);
   backdrop-filter: saturate(150%) blur(8px);
   border-bottom: 1px solid var(--ligne);
@@ -105,6 +105,13 @@ pre {
     padding: 0 22px;
   }
 
+  // wrapper for badge + search: transparent on desktop (children behave as
+  // direct top-bar flex items), restyled into a column once relocated into the
+  // drawer on mobile (see the <= 820px block).
+  &__tools {
+    display: contents;
+  }
+
   &__badge {
     font-family: var(--mono);
     font-size: 10.5px;
@@ -113,6 +120,33 @@ pre {
     border: 1px solid var(--ligne);
     padding: 2px 8px;
     border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  // hamburger - hidden until the drawer layout kicks in
+  &__menu {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-left: -8px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--sapin);
+    cursor: pointer;
+    transition: background 160ms ease-out, border-color 160ms ease-out;
+
+    &:hover {
+      background: var(--tint);
+      border-color: var(--ligne);
+    }
+
+    svg {
+      display: block;
+    }
   }
 
   &__spacer {
@@ -127,12 +161,25 @@ pre {
   }
 
   &__link {
+    display: inline-flex;
+    align-items: center;
     transition: color 160ms ease-out;
 
     &:hover {
       color: var(--sapin);
     }
   }
+
+  // GitHub link collapses to its mark on mobile (see the <= 820px block)
+  &__link-icon {
+    display: none;
+    line-height: 0;
+  }
+}
+
+// ---- scrim derrière le drawer mobile (caché par défaut) ----
+.scrim {
+  display: none;
 }
 
 // ---- brand (emblème U + wordmark) ----
@@ -140,6 +187,7 @@ pre {
   display: flex;
   align-items: center;
   gap: 9px;
+  flex-shrink: 0;
 
   &__mark {
     width: 24px;
@@ -152,6 +200,7 @@ pre {
     font-size: 17px;
     letter-spacing: -0.01em;
     color: var(--sapin);
+    white-space: nowrap;
   }
 
   &__sub {
@@ -665,15 +714,123 @@ pre {
   }
 }
 
-@media (max-width: 820px) {
+// Desktop guard: neutralise any inline translateX the drawer engine may have
+// left on the sidebar, so resizing up from the mobile layout never shifts it.
+@media (min-width: 821px) {
   .sidebar {
-    display: none;
+    transform: none !important;
   }
+}
+
+@media (max-width: 820px) {
+  // Single content column; the sidebar leaves the flow to become a drawer.
   .layout {
     grid-template-columns: 1fr;
   }
   .content {
-    padding: 28px 22px 100px;
+    padding: 28px 20px 96px;
+  }
+  .content__title {
+    font-size: 30px;
+  }
+  .content__lead {
+    font-size: 16px;
+  }
+  .doc {
+    padding: 32px 0;
+  }
+
+  // Top bar: reveal the hamburger, tighten spacing, collapse GitHub to its mark.
+  .topbar__menu {
+    display: inline-flex;
+  }
+  .topbar__inner {
+    gap: 10px;
+    padding: 0 14px;
+  }
+  .topbar__link-text {
+    display: none;
+  }
+  .topbar__link-icon {
+    display: block;
+  }
+
+  // The sidebar, now a fixed slide-in drawer driven by animate().
+  //
+  // It hangs --drawer-pad px off the left edge (negative left + matching
+  // padding-left) so the underdamped open spring can overshoot past its resting
+  // x:0 without ever exposing a sliver of scrim at the screen's left edge. The
+  // visible interior still starts 14px from the screen edge. translateX(-100%)
+  // therefore equals -(width) = fully hidden, matching the engine's closed x.
+  .sidebar {
+    --drawer-pad: 72px;
+    position: fixed;
+    top: var(--topbar-h);
+    left: calc(-1 * var(--drawer-pad));
+    bottom: 0;
+    height: auto;
+    width: calc(min(320px, 84vw) + var(--drawer-pad));
+    z-index: 70;
+    padding: 4px 14px 40px calc(14px + var(--drawer-pad));
+    background: var(--creme);
+    border-right: 1px solid var(--ligne);
+    box-shadow: 18px 0 40px -28px rgba(28, 52, 38, 0.45);
+    transform: translateX(-100%); // resting (closed) before the engine takes over
+    visibility: hidden; // keeps the closed drawer out of the tab order / a11y tree
+    overscroll-behavior: contain;
+  }
+
+  // Relocated badge + search, stacked at the top of the drawer (search first).
+  .sidebar > .topbar__tools {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 2px 14px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--ligne-soft);
+
+    .search {
+      flex: 0 0 auto;
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .search__key {
+      display: none; // no "/" shortcut affordance on touch
+    }
+  }
+
+  .scrim {
+    display: block;
+    position: fixed;
+    top: var(--topbar-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    background: rgba(28, 52, 38, 0.34);
+    opacity: 0; // driven by animate(); pointer-events gate the closed state
+    pointer-events: none;
+  }
+
+  body.nav-open {
+    overflow: hidden; // scroll-lock the page behind the drawer
+  }
+  body.nav-open .sidebar {
+    visibility: visible;
+  }
+  body.nav-open .scrim {
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 440px) {
+  .content {
+    padding: 24px 16px 80px;
+  }
+  .content__title {
+    font-size: 26px;
   }
 }
 
