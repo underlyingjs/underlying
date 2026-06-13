@@ -182,6 +182,10 @@ pre {
   display: none;
 }
 
+.drawer-foot {
+  display: none; // shown only while the mobile drawer is open (see the <= 820px block)
+}
+
 // ---- brand (emblème U + wordmark) ----
 .brand {
   display: flex;
@@ -263,6 +267,11 @@ pre {
   overflow-y: auto;
   padding: 22px 14px 60px;
   border-right: 1px solid var(--ligne);
+
+  // Focused programmatically on open; the visible focus belongs on the links inside.
+  &:focus {
+    outline: none;
+  }
 
   &__group {
     font-family: var(--mono);
@@ -741,6 +750,11 @@ pre {
   }
 
   // Top bar: reveal the hamburger, tighten spacing, collapse GitHub to its mark.
+  // Opaque (no blur) so iOS 26 samples it to tint the top toolbar.
+  .topbar {
+    background: var(--creme);
+    backdrop-filter: none;
+  }
   .topbar__menu {
     display: inline-flex;
   }
@@ -767,8 +781,10 @@ pre {
     position: fixed;
     top: var(--topbar-h);
     left: calc(-1 * var(--drawer-pad));
-    bottom: 0;
-    height: auto;
+    // svh keeps the panel above the iOS toolbar, not behind it; vh is the fallback.
+    bottom: auto;
+    height: calc(100vh - var(--topbar-h));
+    height: calc(100svh - var(--topbar-h));
     width: calc(min(320px, 84vw) + var(--drawer-pad));
     z-index: 70;
     padding: 4px 14px 40px calc(14px + var(--drawer-pad));
@@ -802,15 +818,30 @@ pre {
   }
 
   .scrim {
-    display: block;
     position: fixed;
     top: var(--topbar-h);
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: auto;
+    height: calc(100vh - var(--topbar-h));
+    height: calc(100svh - var(--topbar-h));
     z-index: 60;
     background: rgba(28, 52, 38, 0.34);
-    opacity: 0; // driven by animate(); pointer-events gate the closed state
+    opacity: 0; // driven by animate()
+    pointer-events: none;
+  }
+
+  // iOS 26 tints its bottom toolbar from a solid fixed element near the bottom
+  // edge. Parked just below the fold so the sampled creme tints the bar with no
+  // visible block (it must keep a few px in range to be detected).
+  .drawer-foot {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: -8px;
+    min-height: 12px;
+    background: var(--creme);
+    z-index: 65; // above the scrim (60), below the drawer (70)
     pointer-events: none;
   }
 
@@ -820,8 +851,13 @@ pre {
   body.nav-open .sidebar {
     visibility: visible;
   }
+  // display (not opacity) so iOS 26 stops sampling them on close and the bar reverts.
   body.nav-open .scrim {
+    display: block;
     pointer-events: auto;
+  }
+  body.nav-open .drawer-foot {
+    display: block;
   }
 }
 
