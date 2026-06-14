@@ -6,7 +6,8 @@
     "@underlying/core": "0.0.0",
     "@underlying/scroll": "0.1.0-beta.0",
     "@underlying/timeline": "0.1.0-beta.0",
-    "@underlying/gestures": "0.1.0-beta.0"
+    "@underlying/gestures": "0.1.0-beta.0",
+    "@underlying/text": "0.1.0-beta.0"
   },
   "changesets": [
     "core-initial-beta",
@@ -14,6 +15,7 @@
     "scroll-initial-beta",
     "scroll-republish",
     "sequence-live-composition",
+    "text-initial-beta",
     "timeline-initial-beta",
     "value-model"
   ]
