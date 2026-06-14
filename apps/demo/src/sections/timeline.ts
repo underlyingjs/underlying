@@ -75,8 +75,8 @@ export const timelineChoreograph: Section = {
     each verb drops a clip at a position, and the master plays or scrubs all of them as
     one. Here the card pops in, the avatar springs <code>&lt;</code> (with it), then the
     name, bio and button cascade in with a <code>stagger</code>. Drag the scrubber to run
-    the whole reveal forward and backward; press <strong>replay</strong> to play it. Every
-    moving thing on screen is this one timeline - nothing is a CSS animation.</p>`,
+    the whole reveal forward and backward, or press <strong>play</strong>. Every moving
+    thing on screen is this one timeline - nothing is a CSS animation.</p>`,
   code: `import { timeline } from '@underlying/timeline'
 
 const tl = timeline()
@@ -93,7 +93,7 @@ scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 10
     const scrubber = slider('progress', { min: 0, max: 100, value: 0, onInput: (v) => tl.progress(v / 100) })
     const range = scrubber.querySelector('input')
     const valueOut = scrubber.querySelector('.field__value')
-    // Sync the slider WHILE the timeline self-animates (mount / replay / reverse),
+    // Sync the slider WHILE the timeline self-animates (play / reverse),
     // then let the rAF sleep - polling tl.progress() every frame forever pegs the CPU.
     let raf = 0
     let lastPct = -1
@@ -123,8 +123,9 @@ scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 10
     })
 
     ctx.controls.append(
-      button('replay', () => {
-        tl.seek(0).play()
+      button('play', () => {
+        if (tl.progress() >= 1) tl.seek(0) // parked at the end: restart; otherwise resume from here
+        tl.play()
         startSync()
       }),
       button('reverse', () => {
@@ -134,7 +135,7 @@ scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 10
       scrubber,
     )
     // Show the card already revealed - no animation on mount, which would compete
-    // with the visitor's first scroll. The replay button plays the reveal on demand.
+    // with the visitor's first scroll. The play button runs the reveal on demand.
     tl.progress(1)
     if (range !== null) range.value = '100'
     if (valueOut !== null) valueOut.textContent = '100'

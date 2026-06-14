@@ -122,7 +122,7 @@ export const bakedClip: Section = {
   id: 'playback-bake',
   group: 'Playback',
   title: 'bake()',
-  tagline: 'Turn a live spring into a clip you can replay and scrub.',
+  tagline: 'Turn a live spring into a clip you can scrub and play again.',
   description: `
     <p>A live spring chases a target, so it has no timeline: you cannot rewind it.
     <code>bake()</code> runs the deterministic 1/120 s simulation to rest <em>once</em>
