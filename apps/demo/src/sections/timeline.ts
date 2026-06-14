@@ -122,18 +122,26 @@ scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 10
       if (raf !== 0) cancelAnimationFrame(raf)
     })
 
-    ctx.controls.append(
-      button('play', () => {
-        if (tl.progress() >= 1) tl.seek(0) // parked at the end: restart; otherwise resume from here
+    // play() resumes the CURRENT direction; reverse() only flips it. So mirror the
+    // direction and make the two buttons ABSOLUTE: play always runs forward (reveal),
+    // reverse always runs backward (hide). Without this, pressing play right after a
+    // finished reverse would resume the backward direction at progress 0 - a dead end
+    // where nothing moves until you reverse again.
+    let dir: 1 | -1 = 1
+    const drive = (want: 1 | -1): void => {
+      const p = tl.progress()
+      if (want > 0 && p >= 1) tl.seek(0) // parked revealed: restart the reveal from the top
+      if (want < 0 && p <= 0) tl.progress(1) // parked hidden: rewind to the end first
+      if (dir !== want) {
+        tl.reverse() // reverse() flips the direction AND plays
+        dir = want
+      } else {
         tl.play()
-        startSync()
-      }),
-      button('reverse', () => {
-        tl.reverse()
-        startSync()
-      }),
-      scrubber,
-    )
+      }
+      startSync()
+    }
+
+    ctx.controls.append(button('play', () => drive(1)), button('reverse', () => drive(-1)), scrubber)
     // Show the card already revealed - no animation on mount, which would compete
     // with the visitor's first scroll. The play button runs the reveal on demand.
     tl.progress(1)
