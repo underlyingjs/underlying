@@ -6,7 +6,7 @@ import { gestures, setRelease } from './sections/gestures'
 import { composition } from './sections/composition'
 import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
 import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
-import { timelineChoreograph, timelineScroll } from './sections/timeline'
+import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -63,9 +63,9 @@ const pages: Page[] = [
   {
     id: 'timeline',
     group: 'Guides',
-    title: 'Timeline',
-    blurb: 'A timeline is a score you can scrub. <code>@underlying/timeline</code> sequences motion with labels and relative positions, nests, and the master <em>is</em> a seekable handle - so <code>@underlying/scroll</code> scrubs a whole timeline. To stay seekable it records its physics: a spring is baked into the exact trajectory a live one would draw, overshoot included, not an eased curve. Composed motion is physics-shaped but recorded; live, interruptible physics lives in core and momentum scrub.',
-    sections: [timelineChoreograph, timelineScroll],
+    title: 'Timeline & sequence',
+    blurb: 'Two ways to compose motion. A timeline is a score you can <em>scrub</em>: <code>@underlying/timeline</code> sequences with labels and relative positions, nests, and the master <em>is</em> a seekable handle - so <code>@underlying/scroll</code> scrubs a whole timeline. To stay seekable it records its physics, a spring baked into the exact trajectory a live one would draw. Its live twin, <code>sequence()</code> in core/playback, composes the same way but keeps every value <em>interruptible</em> - you cannot scrub it, but you can retarget it mid-flight with velocity conserved. Scrub or interrupt: pick per effect.',
+    sections: [timelineChoreograph, sequenceInterrupt, timelineScroll],
   },
   {
     id: 'accessibility',
