@@ -6,6 +6,7 @@ import { gestures, setRelease } from './sections/gestures'
 import { composition } from './sections/composition'
 import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
 import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
+import { timelineChoreograph, timelineScroll } from './sections/timeline'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -14,7 +15,7 @@ const pages: Page[] = [
     id: 'getting-started',
     group: 'Quick start',
     title: 'Getting started',
-    blurb: '<strong>underlying</strong> is a physics-first web animation engine. Springs drive the motion, every value is interruptible with its velocity conserved, and accessibility is respected by default. Each demo below is live - click, drag, replay.',
+    blurb: '<strong>underlying</strong> is a physics-first web animation engine: springs and inertia generate the motion, not eased curves. Single values stay live and interruptible, velocity conserved - gestures, momentum, retargets. Timelines you can scrub record that same physics so it stays seekable. Accessibility is respected by default. Each demo below is interactive - click, drag, scrub.',
     sections: [gettingStarted],
   },
   {
@@ -58,6 +59,13 @@ const pages: Page[] = [
     title: 'Scroll',
     blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>pin()</code>, <code>snap()</code>, and <code>trigger()</code>, all on the one rAF loop. Each demo drives its own scroll container.',
     sections: [scrollScrub, scrollParallax, scrollTrigger, scrollSnap, scrollTrack],
+  },
+  {
+    id: 'timeline',
+    group: 'Guides',
+    title: 'Timeline',
+    blurb: 'A timeline is a score you can scrub. <code>@underlying/timeline</code> sequences motion with labels and relative positions, nests, and the master <em>is</em> a seekable handle - so <code>@underlying/scroll</code> scrubs a whole timeline. To stay seekable it records its physics: a spring is baked into the exact trajectory a live one would draw, overshoot included, not an eased curve. Composed motion is physics-shaped but recorded; live, interruptible physics lives in core and momentum scrub.',
+    sections: [timelineChoreograph, timelineScroll],
   },
   {
     id: 'accessibility',

@@ -58,6 +58,8 @@ onScroll((y) => lag.target(y))   // momentum scrub, conserved velocity
 
 ## Packages
 
+Live, interruptible physics is the single-value default (core, and scroll's momentum scrub). The layers that let you scrub time - scroll's locked scrub, the timeline - record that physics into a seekable form: the motion stays physics-shaped (a real spring trajectory, overshoot and all), never an eased fake.
+
 | Package | Description | Status |
 | --- | --- | --- |
 | [`@underlying/core`](packages/core) | Scheduler, animatable values, springs / inertia / decay, any-CSS-property value model, composition, a11y, WAAPI delegation | beta |

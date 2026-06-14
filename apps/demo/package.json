@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@underlying/core": "workspace:*",
-    "@underlying/scroll": "workspace:*"
+    "@underlying/scroll": "workspace:*",
+    "@underlying/timeline": "workspace:*"
   },
   "devDependencies": {
     "sass": "^1.77.0",
