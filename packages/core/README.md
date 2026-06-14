@@ -8,7 +8,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@underlying/core"><img alt="npm" src="https://img.shields.io/npm/v/@underlying/core?label=npm&color=1C3426" /></a>
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
   <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
   <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />

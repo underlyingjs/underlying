@@ -8,7 +8,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@underlying/scroll"><img alt="npm" src="https://img.shields.io/npm/v/@underlying/scroll?label=npm&color=1C3426" /></a>
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
   <img alt="scroll gzip" src="https://img.shields.io/badge/scroll-~4%20kB%20gzip-1C3426" />
   <img alt="built on" src="https://img.shields.io/badge/built%20on-%40underlying%2Fcore-1C3426" />
