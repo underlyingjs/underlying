@@ -93,20 +93,48 @@ scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 10
     const scrubber = slider('progress', { min: 0, max: 100, value: 0, onInput: (v) => tl.progress(v / 100) })
     const range = scrubber.querySelector('input')
     const valueOut = scrubber.querySelector('.field__value')
+    // Sync the slider WHILE the timeline self-animates (mount / replay / reverse),
+    // then let the rAF sleep - polling tl.progress() every frame forever pegs the CPU.
     let raf = 0
-    const tick = (): void => {
+    let lastPct = -1
+    let still = 0
+    const sync = (): void => {
+      raf = 0
       if (range !== null && document.activeElement !== range) {
-        const pct = String(Math.round(tl.progress() * 100))
-        range.value = pct
-        if (valueOut !== null) valueOut.textContent = pct
+        const pct = Math.round(tl.progress() * 100)
+        if (pct !== lastPct) {
+          lastPct = pct
+          range.value = String(pct)
+          if (valueOut !== null) valueOut.textContent = String(pct)
+          still = 0
+        } else {
+          still += 1
+        }
       }
-      raf = requestAnimationFrame(tick)
+      if (still < 12) raf = requestAnimationFrame(sync) // stop ~0.2s after it stops moving
     }
-    raf = requestAnimationFrame(tick)
-    ctx.onCleanup(() => cancelAnimationFrame(raf))
+    const startSync = (): void => {
+      still = 0
+      lastPct = -1
+      if (raf === 0) raf = requestAnimationFrame(sync)
+    }
+    ctx.onCleanup(() => {
+      if (raf !== 0) cancelAnimationFrame(raf)
+    })
 
-    ctx.controls.append(button('replay', () => tl.seek(0).play()), button('reverse', () => tl.reverse()), scrubber)
+    ctx.controls.append(
+      button('replay', () => {
+        tl.seek(0).play()
+        startSync()
+      }),
+      button('reverse', () => {
+        tl.reverse()
+        startSync()
+      }),
+      scrubber,
+    )
     tl.play() // reveal on mount, rather than showing an empty stage
+    startSync()
   },
   noReplay: true,
 }
