@@ -12,6 +12,7 @@
     "@underlying/core": "workspace:*",
     "@underlying/gestures": "workspace:*",
     "@underlying/scroll": "workspace:*",
+    "@underlying/text": "workspace:*",
     "@underlying/timeline": "workspace:*"
   },
   "devDependencies": {

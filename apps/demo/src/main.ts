@@ -8,6 +8,7 @@ import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections
 import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
+import { textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -74,6 +75,13 @@ const pages: Page[] = [
     title: 'Drag & FLIP',
     blurb: '<code>@underlying/gestures</code> - drag and fling with the pointer\'s velocity handed straight into physics, plus FLIP layout transitions that spring to their new places and stay <em>interruptible</em>: mutate again mid-flight and each element retargets from its live velocity, never a restart.',
     sections: [dragPlayground, flipShuffle],
+  },
+  {
+    id: 'text',
+    group: 'Guides',
+    title: 'Text',
+    blurb: '<code>@underlying/text</code> splits text into chars, words and lines you can animate - without breaking accessibility: the screen reader reads it whole, copy/paste is intact, emoji stay whole. <code>reveal()</code> springs the pieces in; <code>scramble()</code> and <code>typewriter()</code> write content with the final text always the accessible name.',
+    sections: [textSplit, textReveal, textScramble, textTypewriter],
   },
   {
     id: 'accessibility',
