@@ -5,10 +5,12 @@
     "underlying-demo": "0.0.0",
     "@underlying/core": "0.0.0",
     "@underlying/scroll": "0.1.0-beta.0",
-    "@underlying/timeline": "0.1.0-beta.0"
+    "@underlying/timeline": "0.1.0-beta.0",
+    "@underlying/gestures": "0.1.0-beta.0"
   },
   "changesets": [
     "core-initial-beta",
+    "gestures-initial-beta",
     "scroll-initial-beta",
     "scroll-republish",
     "sequence-live-composition",
