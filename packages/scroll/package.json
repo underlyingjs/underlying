@@ -1,6 +1,6 @@
 {
   "name": "@underlying/scroll",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "description": "Scroll-driven animation for @underlying/core: scrub, pin, parallax, snap. Physics-first, no scroll-jacking.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
