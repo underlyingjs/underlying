@@ -13,7 +13,9 @@ import { build } from 'esbuild'
 const BUDGET_BYTES = 12 * 1024
 const PRIMITIVES_BUDGET_BYTES = 3.5 * 1024
 const ANIMATE_BUDGET_BYTES = 9.5 * 1024
-const PLAYBACK_BUDGET_BYTES = 5 * 1024
+// The opt-in playback layer: pause/timeScale/reverse/seek, bake(), follow(),
+// timeScope, and sequence() (the live composition twin of @underlying/timeline).
+const PLAYBACK_BUDGET_BYTES = 6 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)
 const playbackUrl = new URL('../dist/playback/index.js', import.meta.url)
@@ -56,7 +58,7 @@ const probeFull = () => probeFrom('index.js', `import * as core from './index.js
 check('@underlying/core (full)', await probeFull(), BUDGET_BYTES)
 check(
   'primitives only (animatable/bindStyle/physics)',
-  await probe(['animatable', 'bindStyle', 'stagger', 'sequence', 'prefersReducedMotion']),
+  await probe(['animatable', 'bindStyle', 'stagger', 'chain', 'prefersReducedMotion']),
   PRIMITIVES_BUDGET_BYTES,
 )
 check('animate() import graph', await probe(['animate']), ANIMATE_BUDGET_BYTES)

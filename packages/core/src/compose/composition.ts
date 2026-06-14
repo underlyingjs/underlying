@@ -80,8 +80,11 @@ export function stagger<T>(
  * Runs steps one after another, each starting when the previous one rests.
  * `stop` freezes the current step and cancels the remaining ones.
  * `finished` resolves at the end (or on stop) - never rejects.
+ *
+ * The low-level ordered-handle primitive. For fluent, interruptible authoring
+ * (verbs, overlap, pause/timeScale) use `sequence()` from `@underlying/core/playback`.
  */
-export function sequence(steps: readonly AnimationStep[]): AnimationHandle {
+export function chain(steps: readonly AnimationStep[]): AnimationHandle {
   let stopped = false
   let current: AnimationHandle | null = null
   let resolveFinished = () => {}
