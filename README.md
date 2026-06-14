@@ -44,26 +44,28 @@ animate(box, { x: 0, rotate: 0 })      // retarget mid-flight: velocity conserve
 
 ## Playback
 
-Springs stay live; tweens are seekable. The opt-in [`@underlying/core/playback`](packages/core) entry adds pause, timeScale, reverse and seek - plus `bake()`, which samples a spring's trajectory into a scrubbable clip, and `follow()` for momentum scrub.
+Springs stay live; tweens are seekable. The opt-in [`@underlying/core/playback`](packages/core) entry adds pause, timeScale, reverse and seek - plus `bake()`, which samples a spring's trajectory into a scrubbable clip, `follow()` for momentum scrub, and `sequence()`, a live composition you interrupt by hand (the twin of the timeline you scrub).
 
 ```ts
-import { playable, follow } from '@underlying/core/playback'
+import { playable, follow, sequence } from '@underlying/core/playback'
 
 const motion = playable(value).spring(300)
 motion.pause().timeScale(0.25)   // slow-mo, identical trajectory shape
 
 const lag = follow(0)            // a value that springs toward a moving target
 onScroll((y) => lag.target(y))   // momentum scrub, conserved velocity
+
+sequence().spring(a, 1).spring(b, 1, { overlap: 80 }).play()   // live cascade, grab it mid-flight
 ```
 
 ## Packages
 
-Live, interruptible physics is the single-value default (core, and scroll's momentum scrub). The layers that let you scrub time - scroll's locked scrub, the timeline - record that physics into a seekable form: the motion stays physics-shaped (a real spring trajectory, overshoot and all), never an eased fake.
+Live, interruptible physics is the default - for a single value (core, scroll's momentum scrub) and for whole compositions (`sequence()`). The layers that let you scrub *time* - scroll's locked scrub, the timeline - record that physics into a seekable form: the motion stays physics-shaped (a real spring trajectory, overshoot and all), never an eased fake. So composition comes in two honest flavors: live and interruptible (`sequence()`), or recorded and scrubbable (the timeline).
 
 | Package | Description | Status |
 | --- | --- | --- |
 | [`@underlying/core`](packages/core) | Scheduler, animatable values, springs / inertia / decay, any-CSS-property value model, composition, a11y, WAAPI delegation | beta |
-| `@underlying/core/playback` | pause / timeScale / reverse / seek, `bake()`, `follow()` - opt-in, separate bundle | beta |
+| `@underlying/core/playback` | pause / timeScale / reverse / seek, `bake()`, `follow()`, `sequence()` - opt-in, separate bundle | beta |
 | `@underlying/angular` | Service, directives, signals integration | planned |
 | [`@underlying/scroll`](packages/scroll) | Scrub, parallax, pin, snap, triggers - scroll as a source driving animatables | beta |
 | [`@underlying/timeline`](packages/timeline) | Seekable timelines: labels, relative positions, nesting, stagger - scrubbable, physics-shaped | beta |

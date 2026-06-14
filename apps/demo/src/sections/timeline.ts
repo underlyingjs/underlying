@@ -1,12 +1,25 @@
-import { animatable, bindStyle, easeOutCubic } from '@underlying/core'
-import { playable } from '@underlying/core/playback'
+import { animatable, bindStyle, easeOutCubic, type Animatable } from '@underlying/core'
+import { playable, sequence, type Sequence } from '@underlying/core/playback'
 import { createScroll } from '@underlying/scroll'
 import { timeline, type Timeline } from '@underlying/timeline'
 import { button, h, slider, type DemoContext, type Section } from '../showcase'
 
-// The shared piece both demos drive: a profile card whose entrance is one
-// timeline (card fade+pop, avatar spring, then a staggered name/bio/button).
-function revealCard(ctx: DemoContext): { card: HTMLElement; tl: Timeline } {
+interface Card {
+  card: HTMLElement
+  cardOp: Animatable
+  cardS: Animatable
+  avatarS: Animatable
+  rowOps: Animatable[]
+  rowYs: Animatable[]
+}
+
+// The shared profile card every demo on this page drives: an avatar, a name,
+// two bios and a Follow button. Each channel is a plain animatable, so the same
+// card can be revealed by a timeline (scrubbed) or a sequence (interrupted).
+function profileCard(
+  ctx: DemoContext,
+  init: { cardOp: number; cardS: number; avatarS: number; rowOp: number; rowY: number },
+): Card {
   const avatar = h('div', { class: 'tlcard__avatar' })
   const name = h('div', { class: 'tlcard__name' }, 'Lina Mercier')
   const sub = h('div', { class: 'tlcard__sub' }, '@lina · springs only')
@@ -20,15 +33,27 @@ function revealCard(ctx: DemoContext): { card: HTMLElement; tl: Timeline } {
     follow,
   )
 
-  const cardOp = animatable(0)
-  const cardS = animatable(0.95)
-  const avatarS = animatable(0)
+  const cardOp = animatable(init.cardOp)
+  const cardS = animatable(init.cardS)
+  const avatarS = animatable(init.avatarS)
   const rows = [name, sub, bio1, bio2, follow]
-  const rowOps = rows.map(() => animatable(0))
-  const rowYs = rows.map(() => animatable(10))
+  const rowOps = rows.map(() => animatable(init.rowOp))
+  const rowYs = rows.map(() => animatable(init.rowY))
   ctx.onCleanup(bindStyle(card, { opacity: cardOp, scale: cardS }))
   ctx.onCleanup(bindStyle(avatar, { scale: avatarS }))
   rows.forEach((r, i) => ctx.onCleanup(bindStyle(r, { opacity: rowOps[i]!, y: rowYs[i]! })))
+  return { card, cardOp, cardS, avatarS, rowOps, rowYs }
+}
+
+// The reveal as ONE timeline (card fade+pop, avatar spring, staggered rows).
+function revealCard(ctx: DemoContext): { card: HTMLElement; tl: Timeline } {
+  const { card, cardOp, cardS, avatarS, rowOps, rowYs } = profileCard(ctx, {
+    cardOp: 0,
+    cardS: 0.95,
+    avatarS: 0,
+    rowOp: 0,
+    rowY: 10,
+  })
 
   const tl = timeline()
     .to(cardOp, 1, { at: 0, duration: 220, easing: easeOutCubic })
@@ -113,6 +138,173 @@ scroll.scrub(tl)   // locked: scroll position -> tl.progress(p), no special-casi
     const scroll = createScroll({ scroller: box })
     scroll.scrub(tl) // smooth:false (default): frame-exact, reversible
     ctx.onCleanup(() => scroll.dispose())
+  },
+  noReplay: true,
+}
+
+// Smoothed pointer velocity in px/s over a ~50 ms window (mirrors the gestures demo).
+class VelocityTracker {
+  private value = 0
+  private lastPosition = 0
+  private lastTimeMs = 0
+  start(position: number, timeMs: number): void {
+    this.value = 0
+    this.lastPosition = position
+    this.lastTimeMs = timeMs
+  }
+  sample(position: number, timeMs: number): void {
+    const dt = (timeMs - this.lastTimeMs) / 1000
+    if (dt <= 0) return
+    const instantaneous = (position - this.lastPosition) / dt
+    const alpha = 1 - Math.exp(-dt / 0.05)
+    this.value += (instantaneous - this.value) * alpha
+    this.lastPosition = position
+    this.lastTimeMs = timeMs
+  }
+  read(timeMs: number): number {
+    return timeMs - this.lastTimeMs > 80 ? 0 : this.value
+  }
+}
+
+interface Chip {
+  el: HTMLElement
+  x: Animatable
+  y: Animatable
+  vx: VelocityTracker
+  vy: VelocityTracker
+  dragging: boolean
+  grabX: number
+  grabY: number
+}
+
+export const sequenceInterrupt: Section = {
+  id: 'sequence-interrupt',
+  group: 'Timeline',
+  title: 'sequence()',
+  tagline: 'Fling the pieces, then gather them - the live twin you interrupt by hand.',
+  description: `
+    <p>Five chips, one live formation. Grab any chip and <strong>fling</strong> it:
+    it leaves on the exact velocity your hand gave it and glides to a stop - your hand
+    is the interruption. Then hit <strong>gather</strong> and a <code>sequence()</code>
+    (from <code>@underlying/core/playback</code>) sweeps them back into a row, one after
+    another, overshooting into place. Grab one <em>while</em> it gathers and it pops out
+    to follow you - the sequence yields, because every chip is a live spring, not a baked
+    frame. That is the difference from a timeline: you do not scrub this, you interrupt it.</p>`,
+  code: `import { sequence } from '@underlying/core/playback'
+
+// fling: on release, the glide inherits the pointer's velocity (bounded by the edges)
+chip.x.decay({ velocity: releaseVx, min: 0, max: width })
+
+// gather: a live cascade you can grab mid-flight
+const gather = () => sequence()
+  .spring(a.x, homeAx).spring(a.y, homeAy, { overlap: 0 })
+  .spring(b.x, homeBx, { overlap: 70 })   // 70 ms after the previous leg starts
+  /* ...the rest of the row... */ .play()`,
+  run(ctx) {
+    const CHIP = 40
+    const N = 5
+    const field = h('div', { style: 'position:absolute;inset:0;touch-action:none' })
+    ctx.stage.append(field)
+
+    const chips: Chip[] = Array.from({ length: N }, () => {
+      const el = h('div', {
+        class: 'obj obj--chip',
+        style: `position:absolute;left:0;top:0;width:${CHIP}px;height:${CHIP}px;cursor:grab;touch-action:none`,
+      })
+      field.append(el)
+      const chip: Chip = {
+        el,
+        x: animatable(0),
+        y: animatable(0),
+        vx: new VelocityTracker(),
+        vy: new VelocityTracker(),
+        dragging: false,
+        grabX: 0,
+        grabY: 0,
+      }
+      ctx.onCleanup(bindStyle(el, { x: chip.x, y: chip.y }))
+      return chip
+    })
+
+    const homeOf = (i: number): { x: number; y: number } => {
+      const r = field.getBoundingClientRect()
+      const gap = 12
+      const totalW = N * CHIP + (N - 1) * gap
+      return { x: (r.width - totalW) / 2 + i * (CHIP + gap), y: r.height / 2 - CHIP / 2 }
+    }
+
+    // gather: one live sequence, a 70 ms cascade home. Grabbing a chip stop()s it.
+    let current: Sequence | null = null
+    const gather = (): void => {
+      current?.stop()
+      const s = sequence()
+      chips.forEach((c, i) => {
+        c.x.stop() // kill any in-flight glide so the sequence can take the value over cleanly
+        c.y.stop()
+        const home = homeOf(i)
+        s.spring(c.x, home.x, { overlap: i === 0 ? 0 : 70, stiffness: 260, damping: 16 })
+        s.spring(c.y, home.y, { overlap: 0, stiffness: 260, damping: 16 })
+      })
+      current = s
+      s.play()
+    }
+    // scatter (for non-draggers): fling each chip on bounded inertia, like a flick.
+    const scatter = (): void => {
+      current?.stop()
+      const r = field.getBoundingClientRect()
+      chips.forEach((c, i) => {
+        c.x.stop()
+        c.y.stop()
+        c.x.decay({ velocity: (i - (N - 1) / 2) * 540, min: 0, max: r.width - CHIP })
+        c.y.decay({ velocity: i % 2 === 0 ? -780 : 780, min: 0, max: r.height - CHIP })
+      })
+    }
+
+    for (const c of chips) {
+      c.el.addEventListener('pointerdown', (e) => {
+        current?.stop() // grabbing yields the gather cascade
+        c.x.stop()
+        c.y.stop()
+        c.dragging = true
+        c.el.setPointerCapture(e.pointerId)
+        c.el.style.cursor = 'grabbing'
+        const box = field.getBoundingClientRect()
+        c.grabX = e.clientX - box.left - c.x.get()
+        c.grabY = e.clientY - box.top - c.y.get()
+        c.vx.start(c.x.get(), e.timeStamp)
+        c.vy.start(c.y.get(), e.timeStamp)
+      })
+      c.el.addEventListener('pointermove', (e) => {
+        if (!c.dragging) return
+        const box = field.getBoundingClientRect()
+        const nx = e.clientX - box.left - c.grabX
+        const ny = e.clientY - box.top - c.grabY
+        c.x.set(nx)
+        c.y.set(ny)
+        c.vx.sample(nx, e.timeStamp)
+        c.vy.sample(ny, e.timeStamp)
+      })
+      c.el.addEventListener('pointerup', (e) => {
+        if (!c.dragging) return
+        c.dragging = false
+        c.el.style.cursor = 'grab'
+        const box = field.getBoundingClientRect()
+        // release into a glide that inherits the fling velocity, bounded by the edges
+        c.x.decay({ velocity: c.vx.read(e.timeStamp), min: 0, max: box.width - CHIP })
+        c.y.decay({ velocity: c.vy.read(e.timeStamp), min: 0, max: box.height - CHIP })
+      })
+    }
+    ctx.onCleanup(() => current?.stop())
+
+    // deal in from below on mount
+    const r0 = field.getBoundingClientRect()
+    chips.forEach((c, i) => {
+      c.x.set(homeOf(i).x)
+      c.y.set(r0.height + 30)
+    })
+    gather()
+
+    ctx.controls.append(button('scatter', scatter), button('gather', gather))
   },
   noReplay: true,
 }
