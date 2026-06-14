@@ -60,7 +60,7 @@ onScroll((y) => lag.target(y))   // momentum scrub, conserved velocity
 | [`@underlying/core`](packages/core) | Scheduler, animatable values, springs / inertia / decay, any-CSS-property value model, composition, a11y, WAAPI delegation | beta |
 | `@underlying/core/playback` | pause / timeScale / reverse / seek, `bake()`, `follow()` - opt-in, separate bundle | beta |
 | `@underlying/angular` | Service, directives, signals integration | planned |
-| `@underlying/scroll` | Scrub, pin, parallax, snap - scroll as a source driving animatables | planned |
+| [`@underlying/scroll`](packages/scroll) | Scrub, parallax, pin, snap, triggers - scroll as a source driving animatables | beta |
 | `@underlying/text` | Accessible text splitting, scramble, typewriter | planned |
 
 ## Install
