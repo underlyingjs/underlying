@@ -1,6 +1,6 @@
 {
   "name": "@underlying/gestures",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "description": "Drag, fling and interruptible FLIP for @underlying/core: pointer velocity straight into physics, layout transitions that retarget mid-flight. Physics-first.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
