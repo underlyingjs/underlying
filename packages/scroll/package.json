@@ -1,19 +1,17 @@
 {
-  "name": "@underlying/core",
+  "name": "@underlying/scroll",
   "version": "0.1.0-beta.0",
-  "description": "Physics-first web animation: interruptible springs with velocity conservation, inertia, colors, units, keyframes, accessible by default, zero dependencies, < 12 kB gzip.",
+  "description": "Scroll-driven animation for @underlying/core: scrub, pin, parallax, snap. Physics-first, no scroll-jacking.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
   "keywords": [
     "animation",
-    "spring",
-    "physics",
-    "motion",
-    "inertia",
-    "interruptible",
-    "accessibility",
-    "reduced-motion",
-    "waapi"
+    "scroll",
+    "scrolltrigger",
+    "parallax",
+    "pin",
+    "scrub",
+    "physics"
   ],
   "publishConfig": {
     "access": "public",
@@ -22,7 +20,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/underlyingjs/underlying.git",
-    "directory": "packages/core"
+    "directory": "packages/scroll"
   },
   "homepage": "https://github.com/underlyingjs/underlying#readme",
   "bugs": "https://github.com/underlyingjs/underlying/issues",
@@ -36,16 +34,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./playback": {
-      "types": "./dist/playback/index.d.ts",
-      "import": "./dist/playback/index.js",
-      "require": "./dist/playback/index.cjs"
-    },
-    "./testing": {
-      "types": "./dist/testing/index.d.ts",
-      "import": "./dist/testing/index.js",
-      "require": "./dist/testing/index.cjs"
     }
   },
   "files": [
@@ -60,6 +48,9 @@
     "build": "vite build && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "size": "node scripts/check-size.mjs"
+  },
+  "dependencies": {
+    "@underlying/core": "workspace:*"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",
