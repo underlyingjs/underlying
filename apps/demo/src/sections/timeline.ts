@@ -133,8 +133,11 @@ scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 10
       }),
       scrubber,
     )
-    tl.play() // reveal on mount, rather than showing an empty stage
-    startSync()
+    // Show the card already revealed - no animation on mount, which would compete
+    // with the visitor's first scroll. The replay button plays the reveal on demand.
+    tl.progress(1)
+    if (range !== null) range.value = '100'
+    if (valueOut !== null) valueOut.textContent = '100'
   },
   noReplay: true,
 }
@@ -324,13 +327,13 @@ const gather = () => sequence()
     }
     ctx.onCleanup(() => current?.stop())
 
-    // deal in from below on mount
-    const r0 = field.getBoundingClientRect()
+    // Place the chips in their row statically - no deal-in animation on mount, which
+    // would run below the fold and compete with the visitor's first scroll.
     chips.forEach((c, i) => {
-      c.x.set(homeOf(i).x)
-      c.y.set(r0.height + 30)
+      const home = homeOf(i)
+      c.x.set(home.x)
+      c.y.set(home.y)
     })
-    gather()
 
     ctx.controls.append(button('scatter', scatter), button('gather', gather))
   },
