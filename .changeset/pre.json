@@ -9,6 +9,7 @@
   "changesets": [
     "core-initial-beta",
     "scroll-initial-beta",
+    "scroll-republish",
     "value-model"
   ]
 }
