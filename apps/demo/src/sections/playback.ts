@@ -49,7 +49,6 @@ play.reverse()   // run the curve backward`,
       button('reverse', () => handle?.reverse()),
     )
   },
-  noReplay: true,
 }
 
 export const slowMo: Section = {
@@ -94,7 +93,6 @@ play.timeScale(1)      // back to real time`,
       }),
     )
   },
-  noReplay: true,
 }
 
 export const scrub: Section = {
@@ -118,7 +116,6 @@ scrubber.addEventListener('input', () => clip.progress(scrubber.valueAsNumber / 
     ctx.onCleanup(() => clip.stop())
     ctx.controls.append(slider('progress', { min: 0, max: 100, value: 0, onInput: (v) => clip.progress(v / 100) }))
   },
-  noReplay: true,
 }
 
 export const bakedClip: Section = {
@@ -179,7 +176,6 @@ clip.progress(0.5)   // now seekable: jump anywhere on the recorded bounce`,
     })
     ctx.controls.append(button('play', play), scrubber)
   },
-  noReplay: true,
 }
 
 export const momentumScrub: Section = {
@@ -217,5 +213,4 @@ lane.addEventListener('pointermove', (event) => lag.target(localX(event)))`,
     track.addEventListener('pointerdown', (event) => lag.target(localX(event)))
     track.addEventListener('pointermove', (event) => lag.target(localX(event)))
   },
-  noReplay: true,
 }

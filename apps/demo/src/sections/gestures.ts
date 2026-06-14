@@ -112,7 +112,6 @@ animatable(initial).decay({ velocity, min, max })`,
       ], (value) => (mode = value)),
     )
   },
-  noReplay: true,
 }
 
 export const setRelease: Section = {
@@ -181,5 +180,4 @@ releaseStyle(el: HTMLElement): void`,
       }),
     )
   },
-  noReplay: true,
 }

@@ -50,5 +50,4 @@ chain(steps: Array<() => AnimationHandle>): AnimationHandle`,
       ),
     )
   },
-  noReplay: true,
 }

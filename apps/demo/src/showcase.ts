@@ -19,7 +19,6 @@ export interface Section {
   code: string
   api?: string
   run(ctx: DemoContext): void
-  noReplay?: boolean
 }
 
 export interface Page {
@@ -416,7 +415,6 @@ function renderCard(section: Section, teardown: Array<() => void>): HTMLElement 
     stage.replaceChildren()
     controls.replaceChildren()
     section.run({ stage, controls, onCleanup: (fn) => cleanups.push(fn) })
-    if (!section.noReplay) controls.append(h('button', { class: 'btn btn--replay', onClick: mount }, 'Replay'))
   }
   // Page teardown runs whatever the current mount registered.
   teardown.push(() => {

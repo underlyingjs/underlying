@@ -39,7 +39,6 @@ s.revert()                                        // restore, byte-identical`,
       ),
     )
   },
-  noReplay: true,
 }
 
 export const textReveal: Section = {
@@ -71,7 +70,6 @@ reveal(headline, { by: 'words', each: 55, from: { y: 26, opacity: 0 } })`,
       }),
     )
   },
-  noReplay: true,
 }
 
 export const textScramble: Section = {
@@ -103,7 +101,6 @@ scramble(title, 'underlying')`,
       }),
     )
   },
-  noReplay: true,
 }
 
 export const textTypewriter: Section = {
@@ -134,5 +131,4 @@ typewriter(line, 'physics-first.')`,
       }),
     )
   },
-  noReplay: true,
 }

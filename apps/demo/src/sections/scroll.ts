@@ -69,7 +69,6 @@ scroll.scrub(trail, { smooth: 0.16 })      // trails it by ~0.16s, momentum`,
       scroll.dispose()
     })
   },
-  noReplay: true,
 }
 
 export const scrollParallax: Section = {
@@ -117,7 +116,6 @@ bindStyle(nearDot, { y: near })`,
       scroll.dispose()
     })
   },
-  noReplay: true,
 }
 
 export const scrollTrigger: Section = {
@@ -167,7 +165,6 @@ scroll.trigger(card, {
       scroll.dispose()
     })
   },
-  noReplay: true,
 }
 
 export const scrollSnap: Section = {
@@ -221,7 +218,6 @@ scroll.snap({
     })
     ctx.onCleanup(() => scroll.dispose())
   },
-  noReplay: true,
 }
 
 export const scrollTrack: Section = {
@@ -259,5 +255,4 @@ t.on((p) => {
     })
     ctx.onCleanup(() => scroll.dispose())
   },
-  noReplay: true,
 }

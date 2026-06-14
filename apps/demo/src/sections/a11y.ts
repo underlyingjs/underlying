@@ -54,5 +54,4 @@ prefersReducedMotion(): boolean`,
     // Leave the override cleared when navigating away.
     ctx.onCleanup(() => setReducedMotionOverride(null))
   },
-  noReplay: true,
 }

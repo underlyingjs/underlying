@@ -28,7 +28,6 @@ animate(box, { x: 0, scale: 1, rotate: 0 })        // retarget: velocity conserv
       }),
     )
   },
-  noReplay: true,
 }
 
 export const springs: Section = {
@@ -65,7 +64,6 @@ track.addEventListener('pointerdown', (event) => {
       slider('damping', { min: 2, max: 60, value: damping, onInput: (v) => (damping = v) }),
     )
   },
-  noReplay: true,
 }
 
 export const interruption: Section = {
@@ -93,5 +91,4 @@ animate(chip, { x: 0 })     // interrupt: continues from the live velocity`,
       button('right', () => animate(chip, { x: span() }, { stiffness: 120, damping: 12 })),
     )
   },
-  noReplay: true,
 }

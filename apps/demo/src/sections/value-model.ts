@@ -42,7 +42,6 @@ animate(el, { width: AnimateValue, height?: AnimateValue, /* ... */ }, options?)
       button('180px', () => go('180px')),
     )
   },
-  noReplay: true,
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +82,6 @@ animate(swatch, { backgroundColor: 'rebeccapurple' }, fade)`,
       ctx.controls.append(button(color.label, () => animate(swatch, { backgroundColor: color.value }, fade)))
     }
   },
-  noReplay: true,
 }
 
 // ---------------------------------------------------------------------------
@@ -117,7 +115,6 @@ animate(card, { boxShadow: 'none' })          // back to the zero-equivalent`,
       ctx.controls.append(button(shadow.label, () => animate(card, { boxShadow: shadow.value })))
     }
   },
-  noReplay: true,
 }
 
 // ---------------------------------------------------------------------------
@@ -149,5 +146,4 @@ animate(el, { x: [0, 160, 80] }, options?)`,
       button('reset', () => animate(chip, { x: 0 })),
     )
   },
-  noReplay: true,
 }

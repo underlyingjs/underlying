@@ -45,5 +45,4 @@ animate(meter, { '--progress': 0.8 }, { stiffness: 180, damping: 22 })`,
       button('100%', () => set(1)),
     )
   },
-  noReplay: true,
 }
