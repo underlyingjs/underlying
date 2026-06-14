@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@underlying/core": "workspace:*",
+    "@underlying/gestures": "workspace:*",
     "@underlying/scroll": "workspace:*",
     "@underlying/timeline": "workspace:*"
   },

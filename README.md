@@ -16,6 +16,7 @@
   <a href="https://www.npmjs.com/package/@underlying/core"><img alt="@underlying/core on npm" src="https://img.shields.io/npm/v/@underlying/core?label=core&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/scroll"><img alt="@underlying/scroll on npm" src="https://img.shields.io/npm/v/@underlying/scroll?label=scroll&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/timeline"><img alt="@underlying/timeline on npm" src="https://img.shields.io/npm/v/@underlying/timeline?label=timeline&color=1C3426" /></a>
+  <a href="https://www.npmjs.com/package/@underlying/gestures"><img alt="@underlying/gestures on npm" src="https://img.shields.io/npm/v/@underlying/gestures?label=gestures&color=1C3426" /></a>
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
   <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
   <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />
@@ -60,7 +61,7 @@ sequence().spring(a, 1).spring(b, 1, { overlap: 80 }).play()   // live cascade, 
 
 ## Packages
 
-Live, interruptible physics is the default - for a single value (core, scroll's momentum scrub) and for whole compositions (`sequence()`). The layers that let you scrub *time* - scroll's locked scrub, the timeline - record that physics into a seekable form: the motion stays physics-shaped (a real spring trajectory, overshoot and all), never an eased fake. So composition comes in two honest flavors: live and interruptible (`sequence()`), or recorded and scrubbable (the timeline).
+Live, interruptible physics is the default - for a single value (core, scroll's momentum scrub), for whole compositions (`sequence()`), and for drag, fling and FLIP layout transitions (`@underlying/gestures`). The layers that let you scrub *time* - scroll's locked scrub, the timeline - record that physics into a seekable form: the motion stays physics-shaped (a real spring trajectory, overshoot and all), never an eased fake. So composition comes in two honest flavors: live and interruptible (`sequence()`), or recorded and scrubbable (the timeline).
 
 | Package | Description | Status |
 | --- | --- | --- |
@@ -69,6 +70,7 @@ Live, interruptible physics is the default - for a single value (core, scroll's 
 | `@underlying/angular` | Service, directives, signals integration | planned |
 | [`@underlying/scroll`](packages/scroll) | Scrub, parallax, pin, snap, triggers - scroll as a source driving animatables | beta |
 | [`@underlying/timeline`](packages/timeline) | Seekable timelines: labels, relative positions, nesting, stagger - scrubbable, physics-shaped | beta |
+| [`@underlying/gestures`](packages/gestures) | Drag, fling and interruptible FLIP - pointer velocity into physics, layout transitions that retarget mid-flight | beta |
 | `@underlying/text` | Accessible text splitting, scramble, typewriter | planned |
 
 ## Install
