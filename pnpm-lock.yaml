@@ -23,6 +23,9 @@ importers:
       '@underlying/scroll':
         specifier: workspace:*
         version: link:../../packages/scroll
+      '@underlying/text':
+        specifier: workspace:*
+        version: link:../../packages/text
       '@underlying/timeline':
         specifier: workspace:*
         version: link:../../packages/timeline
@@ -78,6 +81,28 @@ importers:
         version: 3.2.6(jsdom@26.1.0)(sass@1.101.0)
 
   packages/scroll:
+    dependencies:
+      '@underlying/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.3.5
+        version: 6.4.3(sass@1.101.0)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.6(jsdom@26.1.0)(sass@1.101.0)
+
+  packages/text:
     dependencies:
       '@underlying/core':
         specifier: workspace:*
