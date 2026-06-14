@@ -24,7 +24,6 @@ draggable(card, { bounds: panel, release: 'inertia' })  // grab, fling, glide`,
     const drag = draggable(card, { bounds: field, release: 'inertia' })
     ctx.onCleanup(() => drag.dispose())
   },
-  noReplay: true,
 }
 
 export const flipShuffle: Section = {
@@ -57,5 +56,4 @@ shuffleBtn.onclick = () =>
     }
     ctx.controls.append(button('shuffle', shuffle))
   },
-  noReplay: true,
 }

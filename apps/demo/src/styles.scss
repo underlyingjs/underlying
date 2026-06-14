@@ -431,12 +431,12 @@ pre {
 // ---- demo (live + code) ----
 .demo {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   margin-top: 20px;
 
   @media (max-width: 1180px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   &__live {
@@ -620,11 +620,6 @@ pre {
   &:active {
     transform: scale(0.97);
     transition: transform 120ms var(--rebond);
-  }
-
-  &--replay {
-    margin-left: auto;
-    color: var(--sous-bois);
   }
 }
 

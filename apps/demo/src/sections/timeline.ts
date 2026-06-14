@@ -139,7 +139,6 @@ scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 10
     if (range !== null) range.value = '100'
     if (valueOut !== null) valueOut.textContent = '100'
   },
-  noReplay: true,
 }
 
 export const timelineScroll: Section = {
@@ -170,7 +169,6 @@ scroll.scrub(tl)   // locked: scroll position -> tl.progress(p), no special-casi
     scroll.scrub(tl) // smooth:false (default): frame-exact, reversible
     ctx.onCleanup(() => scroll.dispose())
   },
-  noReplay: true,
 }
 
 // Smoothed pointer velocity in px/s over a ~50 ms window (mirrors the gestures demo).
@@ -337,5 +335,4 @@ const gather = () => sequence()
 
     ctx.controls.append(button('scatter', scatter), button('gather', gather))
   },
-  noReplay: true,
 }
