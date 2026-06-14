@@ -363,10 +363,16 @@ function renderPage(page: Page, pages: Page[], content: HTMLElement, toc: HTMLEl
   // Scroll-spy: the topmost section in the band wins, except at page bottom where
   // the last section can't reach it (so bottom-of-page wins, lighting the last item).
   const visible = new Set<string>()
-  const atBottom = (): boolean => {
-    const scrollable = document.documentElement.scrollHeight - window.innerHeight
-    return scrollable > 4 && window.scrollY >= scrollable - 2 // only when the page truly scrolls
+  // Reading scrollHeight forces a synchronous reflow; the scroll handler fires a
+  // burst during a rubber-band overscroll, so measuring it on every event thrashes
+  // layout (worse the taller the page). It changes only on resize - measure there.
+  let scrollable = 0
+  const measure = (): void => {
+    scrollable = document.documentElement.scrollHeight - window.innerHeight
   }
+  measure()
+  requestAnimationFrame(measure) // re-measure once after first layout (web fonts, async)
+  const atBottom = (): boolean => scrollable > 4 && window.scrollY >= scrollable - 2 // only when the page truly scrolls
   const update = (): void => {
     if (atBottom()) {
       const last = page.sections[page.sections.length - 1]
@@ -391,9 +397,11 @@ function renderPage(page: Page, pages: Page[], content: HTMLElement, toc: HTMLEl
     if (node !== null) observer.observe(node)
   }
   window.addEventListener('scroll', update, { passive: true })
+  window.addEventListener('resize', measure, { passive: true })
   teardown.push(() => {
     observer.disconnect()
     window.removeEventListener('scroll', update)
+    window.removeEventListener('resize', measure)
   })
 }
 
