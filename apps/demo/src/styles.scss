@@ -1068,6 +1068,49 @@ pre {
   top: 28px;
 }
 
+// drag & flip (@underlying/gestures)
+.dragfield {
+  position: absolute;
+  inset: 0;
+}
+.dragcard {
+  position: absolute;
+  left: calc(50% - 46px);
+  top: calc(50% - 30px);
+  width: 92px;
+  height: 60px;
+  border-radius: 12px;
+  background: var(--sapin);
+  color: var(--creme);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: grab;
+  user-select: none;
+}
+.flipgrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 178px;
+  margin: 0 auto;
+  justify-content: center;
+}
+.flipgrid__item {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--sapin);
+  color: var(--creme);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 14px;
+  user-select: none;
+}
+
 // track : lecture brute de la progression sous le scroller
 .scrollcol {
   display: flex;

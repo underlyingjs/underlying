@@ -7,6 +7,7 @@ import { composition } from './sections/composition'
 import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
 import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
+import { dragPlayground, flipShuffle } from './sections/drag-flip'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -66,6 +67,13 @@ const pages: Page[] = [
     title: 'Timeline & sequence',
     blurb: 'Two ways to compose motion. A timeline is a score you can <em>scrub</em>: <code>@underlying/timeline</code> sequences with labels and relative positions, nests, and the master <em>is</em> a seekable handle - so <code>@underlying/scroll</code> scrubs a whole timeline. To stay seekable it records its physics, a spring baked into the exact trajectory a live one would draw. Its live twin, <code>sequence()</code> in core/playback, composes the same way but keeps every value <em>interruptible</em> - you cannot scrub it, but you can retarget it mid-flight with velocity conserved. Scrub or interrupt: pick per effect.',
     sections: [timelineChoreograph, sequenceInterrupt, timelineScroll],
+  },
+  {
+    id: 'drag-flip',
+    group: 'Guides',
+    title: 'Drag & FLIP',
+    blurb: '<code>@underlying/gestures</code> - drag and fling with the pointer\'s velocity handed straight into physics, plus FLIP layout transitions that spring to their new places and stay <em>interruptible</em>: mutate again mid-flight and each element retargets from its live velocity, never a restart.',
+    sections: [dragPlayground, flipShuffle],
   },
   {
     id: 'accessibility',
