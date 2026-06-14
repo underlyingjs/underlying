@@ -12,6 +12,7 @@
   "changesets": [
     "core-initial-beta",
     "gestures-initial-beta",
+    "gestures-republish",
     "scroll-initial-beta",
     "scroll-republish",
     "sequence-live-composition",
