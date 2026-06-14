@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createManualDriver } from '../scheduler/manual-driver'
 import { createScheduler } from '../scheduler/scheduler'
 import { animatable } from '../value/animatable'
-import { sequence, stagger } from './composition'
+import { chain, stagger } from './composition'
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
@@ -62,11 +62,11 @@ describe('stagger', () => {
   })
 })
 
-describe('sequence', () => {
+describe('chain', () => {
   it('runs steps one after another', async () => {
     const { driver, values } = setup(2)
     const [a, b] = values
-    sequence([() => a!.spring(100), () => b!.spring(100)])
+    chain([() => a!.spring(100), () => b!.spring(100)])
 
     expect(a!.isAnimating()).toBe(true)
     expect(b!.isAnimating()).toBe(false)
@@ -90,7 +90,7 @@ describe('sequence', () => {
   it('finished resolves after the last step', async () => {
     const { driver, values } = setup(2)
     const [a, b] = values
-    const handle = sequence([() => a!.spring(100), () => b!.spring(100)])
+    const handle = chain([() => a!.spring(100), () => b!.spring(100)])
 
     let t = 0
     while (t <= 20_000) {
@@ -109,7 +109,7 @@ describe('sequence', () => {
   it('stop cancels the remaining steps', async () => {
     const { driver, values } = setup(2)
     const [a, b] = values
-    const handle = sequence([() => a!.spring(100), () => b!.spring(100)])
+    const handle = chain([() => a!.spring(100), () => b!.spring(100)])
     driver.frame(0)
     driver.frame(16)
 
@@ -124,7 +124,7 @@ describe('sequence', () => {
     await handle.finished
   })
 
-  it('an empty sequence resolves immediately', async () => {
-    await sequence([]).finished
+  it('an empty chain resolves immediately', async () => {
+    await chain([]).finished
   })
 })

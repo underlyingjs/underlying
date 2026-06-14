@@ -61,12 +61,12 @@ handle.stop()                  // freeze in place; position AND velocity stay re
 ## Element-level API
 
 ```ts
-import { animate, stagger, sequence } from '@underlying/core'
+import { animate, stagger, chain } from '@underlying/core'
 
 animate(el, { x: 100, opacity: 0 })              // springs by default
 animate(el, { x: 100 }, { duration: 400 })       // tween - delegated to WAAPI when free
 
-sequence([
+chain([
   () => animate(title, { opacity: 1 }),
   () => stagger(items, (item) => animate(item, { y: 0 }), 60),
 ])
@@ -78,12 +78,13 @@ values - interruption with velocity conservation, not parallel animations.
 ## Playback (opt-in)
 
 Springs stay live; tweens are seekable. `@underlying/core/playback` is a separate
-bundle entry (~4.3 kB gzip on top of the core) that adds pause / timeScale /
+bundle entry (~5.3 kB gzip on top of the core) that adds pause / timeScale /
 reverse / seek, a `bake()` bridge that samples a spring into a scrubbable clip,
-and `follow()` for momentum scrub.
+`follow()` for momentum scrub, and `sequence()` - the live, interruptible twin of
+`@underlying/timeline` (a cascade you grab mid-flight, not a baked table you scrub).
 
 ```ts
-import { playable, follow } from '@underlying/core/playback'
+import { playable, follow, sequence } from '@underlying/core/playback'
 
 const motion = playable(value).spring(300)
 motion.pause().timeScale(0.25)            // slow-mo, identical trajectory shape
@@ -91,6 +92,8 @@ if (motion.bake()) motion.progress(0.5)   // a live spring, now scrubbable
 
 const lag = follow(0)                     // a value that springs toward a moving target
 onScroll((y) => lag.target(y))            // momentum scrub, conserved velocity
+
+sequence().spring(a, 1).spring(b, 1, { overlap: 80 }).play()  // live cascade, interruptible
 ```
 
 ## Any CSS property, colors, units

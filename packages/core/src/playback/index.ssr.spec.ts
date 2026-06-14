@@ -14,10 +14,12 @@ describe('playback SSR import safety', () => {
     expect(typeof playback.animatePlayback).toBe('function')
     expect(typeof playback.follow).toBe('function')
     expect(typeof playback.timeScope).toBe('function')
+    expect(typeof playback.sequence).toBe('function')
   })
 
   it('constructs a timeScope and a follow value with an injected scheduler, no DOM', () => {
     expect(() => playback.timeScope()).not.toThrow()
+    expect(() => playback.sequence()).not.toThrow() // lazy scope: no browser global at construction
     const f = playback.follow(0)
     expect(f.value.get()).toBe(0)
     f.dispose()

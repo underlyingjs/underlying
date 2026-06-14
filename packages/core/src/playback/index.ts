@@ -5,4 +5,14 @@ export { follow } from './follow'
 export type { Follow, FollowOptions } from './follow'
 export { timeScope } from './time-scope'
 export type { TimeScope, TimeScopeOptions } from './time-scope'
+export { createSequence, createSequence as sequence } from './sequence'
+export type {
+  DecayLegOptions,
+  LegOptions,
+  Sequence,
+  SequenceOptions,
+  SpringLegOptions,
+  StaggerLegOptions,
+  ToLegOptions,
+} from './sequence'
 export type { MotionKind, PlaybackHandle, PlaybackOptions } from './handle'
