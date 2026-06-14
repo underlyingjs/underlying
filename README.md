@@ -15,6 +15,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@underlying/core"><img alt="@underlying/core on npm" src="https://img.shields.io/npm/v/@underlying/core?label=core&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/scroll"><img alt="@underlying/scroll on npm" src="https://img.shields.io/npm/v/@underlying/scroll?label=scroll&color=1C3426" /></a>
+  <a href="https://www.npmjs.com/package/@underlying/timeline"><img alt="@underlying/timeline on npm" src="https://img.shields.io/npm/v/@underlying/timeline?label=timeline&color=1C3426" /></a>
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
   <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
   <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />
@@ -63,6 +64,7 @@ onScroll((y) => lag.target(y))   // momentum scrub, conserved velocity
 | `@underlying/core/playback` | pause / timeScale / reverse / seek, `bake()`, `follow()` - opt-in, separate bundle | beta |
 | `@underlying/angular` | Service, directives, signals integration | planned |
 | [`@underlying/scroll`](packages/scroll) | Scrub, parallax, pin, snap, triggers - scroll as a source driving animatables | beta |
+| [`@underlying/timeline`](packages/timeline) | Seekable timelines: labels, relative positions, nesting, stagger - scrubbable, physics-shaped | beta |
 | `@underlying/text` | Accessible text splitting, scramble, typewriter | planned |
 
 ## Install

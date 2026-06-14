@@ -1,0 +1,13 @@
+---
+"@underlying/timeline": minor
+---
+
+Initial beta of `@underlying/timeline`: seekable, scrubbable timelines composed over the playback layer. The master IS a `PlaybackHandle` (kind:'timeline', seekable:true), so `@underlying/scroll` scrubs a whole timeline with zero special-casing.
+
+- **Authoring** - `to` / `from` / `fromTo` / `spring` / `decay` / `add` (nest a timeline) / `stagger` / `call` / `label` / `shiftCursor`, all chainable. Sequential clips on one value chain from the prior exit, velocity conserved at the seam.
+- **Position grammar** - absolute ms, labels, `<` / `>` (prev clip start/end), `<N` / `>N`, `+=N` / `-=N` (timeline-end relative), `label+=N`.
+- **Seekable for every case** - tweens are seekable from birth; spring/decay children are baked once at build (a never-resting one throws); the whole timeline gets a finite `duration()` that is never undefined. `seek(t)` / `progress(p)` fan synchronously to every child.
+- **Live clock** - `play` / `pause` / `timeScale` / `reverse` on one rAF subscription via `timeScope`; `repeat` / `yoyo` loop the whole timeline.
+- Lazy build (resolve + bake on first touch), SSR-safe, deterministic under the manual driver, ~3 kB gzip with the core marked external.
+
+Composed timeline motion is **physics-shaped but baked** (a recorded spring trajectory, not an eased curve) - the price of a seekable, reversible master. For live, interruptible single-value physics, use `@underlying/core` and `@underlying/scroll`'s momentum scrub.
