@@ -671,7 +671,6 @@ pre {
     height: 52px;
     border-radius: 12px;
     background: var(--sapin);
-    will-change: transform;
   }
 
   &--swatch {
@@ -679,14 +678,12 @@ pre {
     height: 96px;
     border-radius: 16px;
     background: var(--sapin);
-    will-change: background-color;
   }
 
   &--bar {
     height: 60px;
     border-radius: 10px;
     background: var(--sapin);
-    will-change: width;
   }
 
   &--dot {
@@ -694,7 +691,6 @@ pre {
     height: 14px;
     border-radius: 50%;
     background: var(--sapin);
-    will-change: transform;
   }
 
   &--card {
@@ -703,7 +699,6 @@ pre {
     border-radius: 14px;
     background: #fff;
     border: 1px solid var(--ligne);
-    will-change: box-shadow;
   }
 }
 
@@ -1020,7 +1015,6 @@ pre {
   display: flex;
   flex-direction: column;
   gap: 11px;
-  will-change: transform, opacity;
 
   &__head {
     display: flex;
@@ -1033,7 +1027,6 @@ pre {
     height: 44px;
     border-radius: 50%;
     background: var(--sapin);
-    will-change: transform;
   }
   &__id {
     display: flex;
@@ -1045,17 +1038,14 @@ pre {
     font-weight: 620;
     font-size: 16px;
     color: var(--sapin);
-    will-change: transform, opacity;
   }
   &__sub {
     font-size: 12.5px;
     color: var(--sous-bois);
-    will-change: transform, opacity;
   }
   &__text {
     font-size: 13px;
     color: var(--sous-bois);
-    will-change: transform, opacity;
   }
   &__follow {
     align-self: flex-start;
@@ -1065,7 +1055,6 @@ pre {
     background: var(--sapin);
     color: var(--creme);
     font-size: 12.5px;
-    will-change: transform, opacity;
   }
 }
 
