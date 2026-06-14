@@ -5,6 +5,7 @@ import { colors, composite, keyframes, lengthsUnits } from './sections/value-mod
 import { gestures, setRelease } from './sections/gestures'
 import { composition } from './sections/composition'
 import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
+import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -50,6 +51,13 @@ const pages: Page[] = [
     title: 'Playback',
     blurb: 'Springs are live, tweens are seekable. The opt-in <code>@underlying/core/playback</code> entry adds pause, timeScale, reverse, and seek, a <code>bake()</code> bridge that turns a spring into a scrubbable clip, and <code>follow()</code> for momentum scrub.',
     sections: [pauseResume, slowMo, scrub, bakedClip, momentumScrub],
+  },
+  {
+    id: 'scroll',
+    group: 'Guides',
+    title: 'Scroll',
+    blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>pin()</code>, <code>snap()</code>, and <code>trigger()</code>, all on the one rAF loop. Each demo drives its own scroll container.',
+    sections: [scrollScrub, scrollParallax, scrollTrigger, scrollSnap, scrollTrack],
   },
   {
     id: 'accessibility',

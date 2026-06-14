@@ -854,6 +854,198 @@ pre {
   }
 }
 
+// ---- démos scroll : conteneur scrollable autonome (le scroll est la source) ----
+.scroller {
+  position: relative;
+  width: 100%;
+  max-width: 264px;
+  height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--ligne);
+  border-radius: 10px;
+  background: #fff;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mousse) transparent;
+
+  &__hint {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: block;
+    padding: 6px 0 8px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mousse);
+    background: linear-gradient(#fff 55%, transparent);
+    pointer-events: none;
+  }
+
+  &__rail {
+    position: relative;
+    min-height: 460px;
+    padding: 0 16px 16px;
+
+    &--tall {
+      min-height: 720px;
+    }
+    &--list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+      padding: 4px 16px 130px;
+    }
+    &--flush {
+      min-height: 0;
+      padding: 0;
+    }
+  }
+
+  // parallax : couches empilées, y piloté par parallax()
+  &__layers {
+    position: sticky;
+    top: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 84px;
+    gap: 26px;
+  }
+  &__layer--far {
+    opacity: 0.4;
+  }
+  &__layer--mid {
+    opacity: 0.68;
+  }
+
+  // trigger : cartes qui montent et apparaissent à l'entrée
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 62px;
+    will-change: transform, opacity;
+  }
+  &__num {
+    font-family: var(--display);
+    font-weight: 620;
+    font-size: 20px;
+    color: var(--sapin);
+  }
+
+  &__filler {
+    height: 100%;
+  }
+}
+
+// scrub : deux marqueurs sur un même scroll - locked vs momentum
+.scrubcmp {
+  position: sticky;
+  top: 38px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 8px;
+
+  &__lane {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  &__tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mousse);
+  }
+  &__rail {
+    position: relative;
+    height: 32px;
+  }
+  &__chip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--sapin);
+    will-change: transform;
+
+    &--trail {
+      opacity: 0.7;
+    }
+  }
+}
+
+// snap : items plus courts que le conteneur, le recalage se voit
+.snapitem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92px;
+  background: var(--sapin);
+  color: var(--creme);
+
+  &:nth-child(even) {
+    background: var(--sous-bois);
+  }
+  &__n {
+    font-family: var(--display);
+    font-weight: 620;
+    font-size: 34px;
+  }
+}
+
+.snapstatus {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--sous-bois);
+  font-variant-numeric: tabular-nums;
+}
+
+// track : lecture brute de la progression sous le scroller
+.scrollcol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 200px;
+
+  &__track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--ink-wash);
+    overflow: hidden;
+  }
+  &__fill {
+    height: 100%;
+    background: var(--sapin);
+    transform-origin: left center;
+    transform: scaleX(0);
+    will-change: transform;
+  }
+  &__label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--sous-bois);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 @media (max-width: 440px) {
   .content {
     padding: 24px 16px 80px;
