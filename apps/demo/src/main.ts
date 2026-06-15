@@ -8,6 +8,7 @@ import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections
 import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
+import { svgDraw, svgMotionPath } from './sections/svg'
 import { textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
@@ -75,6 +76,13 @@ const pages: Page[] = [
     title: 'Drag & FLIP',
     blurb: '<code>@underlying/gestures</code> - drag and fling with the pointer\'s velocity handed straight into physics, plus FLIP layout transitions that spring to their new places and stay <em>interruptible</em>: mutate again mid-flight and each element retargets from its live velocity, never a restart.',
     sections: [dragPlayground, flipShuffle],
+  },
+  {
+    id: 'svg',
+    group: 'Guides',
+    title: 'SVG path',
+    blurb: '<code>@underlying/svg</code> animates SVG paths physics-first: <code>motionPath()</code> rides an element along a path - the progress is a live value you can flick, interrupt or scrub - and <code>draw()</code> draws a stroke on. No baked path tweens; both are just animatables. MorphSVG comes later.',
+    sections: [svgMotionPath, svgDraw],
   },
   {
     id: 'text',

@@ -1,0 +1,7 @@
+export { samplePath, resolvePathGeometry } from './geometry'
+export type { PathGeometry, PathInput, PathPoint, PathSampler, SamplePathOptions } from './geometry'
+export { bindPath, motionPath } from './motion-path'
+export type { MotionPath, MotionPathOptions, PathBindOptions } from './motion-path'
+export { bindDraw, draw } from './draw'
+export type { Draw, DrawElement, DrawInput, DrawOptions } from './draw'
+export type { ScalarControls } from './handle'
