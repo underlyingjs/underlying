@@ -71,4 +71,30 @@ describe('timeline - master repeat', () => {
     expect(x.get()).toBeCloseTo(100, 0)
     expect(settled).toBe(true)
   })
+
+  it('repeatDelay holds at the leg start between iterations', () => {
+    const driver = createManualDriver()
+    const scheduler = createScheduler(driver)
+    const x = animatable(0)
+    const tl = createTimeline({ scheduler, repeat: 1, repeatDelay: 300 }).to(x, 100, { duration: 200, ...lin })
+
+    // Small steps so the scheduler does not clamp the per-frame delta.
+    let t = 0
+    const advanceTo = (target: number): void => {
+      while (t < target) {
+        t += 16
+        driver.frame(t)
+      }
+    }
+
+    tl.play()
+    advanceTo(216) // iteration 0 (200ms) done, reset to the leg start; the 300ms hold begins
+    expect(x.get()).toBeCloseTo(0, 0)
+    advanceTo(420) // ~200ms into the hold - WITHOUT repeatDelay this would already be ~96
+    expect(x.get()).toBeCloseTo(0, 0)
+    advanceTo(580) // hold elapsed (~508ms), iteration 1 advancing again
+    expect(x.get()).toBeGreaterThan(5)
+    advanceTo(780) // iteration 1 done -> settles at the end
+    expect(x.get()).toBeCloseTo(100, 0)
+  })
 })

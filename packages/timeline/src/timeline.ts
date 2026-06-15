@@ -6,7 +6,7 @@ import { resolvePosition } from './position'
 import { warnOnce } from './warn'
 
 export interface TimelineOptions
-  extends Pick<PlaybackOptions, 'repeat' | 'repeatDelay' | 'yoyo' | 'paused' | 'timeScale'> {
+  extends Pick<PlaybackOptions, 'repeat' | 'repeatDelay' | 'yoyo' | 'timeScale'> {
   /** Frame loop. Tests inject createScheduler(createManualDriver()). Default the shared rAF loop. */
   scheduler?: Scheduler
   /** Tween defaults merged into every to/from/fromTo clip. */
@@ -101,7 +101,9 @@ export function createTimeline(options: TimelineOptions = {}): Timeline {
   let headMs = 0
   let direction: 1 | -1 = 1
   let done = false
+  let delayRemainingMs = 0 // inter-iteration hold for repeatDelay
   const masterRepeat = options.repeat ?? 0
+  const masterRepeatDelay = options.repeatDelay ?? 0
   const masterYoyo = options.yoyo ?? false
   let iterationsDone = 0
   let resolveFinished!: () => void
@@ -159,13 +161,21 @@ export function createTimeline(options: TimelineOptions = {}): Timeline {
     if (masterYoyo) direction = direction === 1 ? -1 : 1
     headMs = direction > 0 ? 0 : durationMs // start of the next leg
     seekAll(headMs)
+    delayRemainingMs = masterRepeatDelay // hold at the leg start before advancing again
   }
 
   const onFrame = ({ deltaMs }: { deltaMs: number }): void => {
     if (done) return
     const { durationMs } = ensureBuilt()
+    let step = deltaMs
+    if (delayRemainingMs > 0) {
+      delayRemainingMs -= step
+      if (delayRemainingMs > 0) return // holding between iterations (repeatDelay)
+      step = -delayRemainingMs // spend only the leftover time once the hold elapsed
+      delayRemainingMs = 0
+    }
     const prev = headMs
-    headMs += deltaMs * direction
+    headMs += step * direction
     if (direction > 0 && headMs >= durationMs) {
       fireCalls(prev, durationMs)
       reachedEnd(durationMs)
