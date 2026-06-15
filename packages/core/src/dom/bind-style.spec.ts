@@ -45,7 +45,43 @@ describe('bindStyle', () => {
     const rotate = animatable(45, { scheduler })
     bindStyle(element, { scale, rotate }, { scheduler })
 
-    expect(element.style.transform).toBe('scale(2) rotate(45deg)')
+    expect(element.style.transform).toBe('rotate(45deg) scale(2)') // canonical order: rotate before scale
+  })
+
+  it('formats the 3D, skew and per-axis channels in canonical order', () => {
+    const { scheduler, element } = setup()
+    const b = (v: number) => animatable(v, { scheduler })
+    bindStyle(
+      element,
+      {
+        perspective: b(800),
+        x: b(10),
+        rotateX: b(15),
+        rotateY: b(30),
+        rotateZ: b(5),
+        skewX: b(8),
+        skewY: b(4),
+        scale: b(1.2),
+        scaleX: b(2),
+        scaleY: b(3),
+      },
+      { scheduler },
+    )
+
+    expect(element.style.transform).toBe(
+      'perspective(800px) translate3d(10px, 0px, 0) rotateX(15deg) rotateY(30deg) rotateZ(5deg) skewX(8deg) skewY(4deg) scale(1.2) scaleX(2) scaleY(3)',
+    )
+  })
+
+  it('omits perspective at or below 0 (perspective(0) would collapse the element)', () => {
+    const { scheduler, element } = setup()
+    bindStyle(
+      element,
+      { perspective: animatable(0, { scheduler }), rotateY: animatable(45, { scheduler }) },
+      { scheduler },
+    )
+
+    expect(element.style.transform).toBe('rotateY(45deg)')
   })
 
   it('writes the transform once per frame even when x and y both move', () => {
