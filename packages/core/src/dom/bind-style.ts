@@ -1,16 +1,10 @@
 import { getSharedScheduler } from '../scheduler/shared'
 import type { Scheduler } from '../scheduler/scheduler'
 import type { Animatable } from '../value/animatable'
-import { formatTransform, type TransformChannels } from './transform'
+import { formatTransform, TRANSFORM_KEYS, type TransformChannel, type TransformChannels } from './transform'
 
-export interface StyleBindings {
-  /** translateX, px */
-  x?: Animatable
-  /** translateY, px */
-  y?: Animatable
-  scale?: Animatable
-  /** degrees */
-  rotate?: Animatable
+/** Each channel is an Animatable bound to one transform function (or opacity). */
+export type StyleBindings = Partial<Record<TransformChannel, Animatable>> & {
   opacity?: Animatable
 }
 
@@ -31,9 +25,11 @@ export function bindStyle(
   options: BindStyleOptions = {},
 ): () => void {
   const scheduler = options.scheduler ?? getSharedScheduler()
-  const { x, y, scale, rotate, opacity } = bindings
-  const hasTransform =
-    x !== undefined || y !== undefined || scale !== undefined || rotate !== undefined
+  const { opacity } = bindings
+  const transformBindings = TRANSFORM_KEYS.map((key) => [key, bindings[key]] as const).filter(
+    (entry): entry is readonly [TransformChannel, Animatable] => entry[1] !== undefined,
+  )
+  const hasTransform = transformBindings.length > 0
 
   let transformDirty = false
   let opacityDirty = false
@@ -42,10 +38,7 @@ export function bindStyle(
 
   const writeTransform = () => {
     const channels: TransformChannels = {}
-    if (x !== undefined) channels.x = x.get()
-    if (y !== undefined) channels.y = y.get()
-    if (scale !== undefined) channels.scale = scale.get()
-    if (rotate !== undefined) channels.rotate = rotate.get()
+    for (const [key, value] of transformBindings) channels[key] = value.get()
     element.style.transform = formatTransform(channels)
   }
 
@@ -89,10 +82,7 @@ export function bindStyle(
   const markTransformDirty = () => {
     transformDirty = true
   }
-  track(x, markTransformDirty)
-  track(y, markTransformDirty)
-  track(scale, markTransformDirty)
-  track(rotate, markTransformDirty)
+  for (const [, value] of transformBindings) track(value, markTransformDirty)
   track(opacity, () => {
     opacityDirty = true
   })

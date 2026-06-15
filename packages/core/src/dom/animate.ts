@@ -14,10 +14,10 @@ import { bindProperty, type PropertyBinding } from './bind-property'
 import { bindStyle } from './bind-style'
 import { normalizeKeyframes, runKeyframeChain, type ChainOps, type KeyframeChain } from './keyframes'
 import { readStyle, toKebab, type StyleReader } from './read-style'
-import { formatTransform, type TransformChannels } from './transform'
+import { formatTransform, TRANSFORM_KEYS, type TransformChannel, type TransformChannels } from './transform'
 import { createMeasure } from './units'
 
-type Channel = 'x' | 'y' | 'scale' | 'rotate' | 'opacity'
+type Channel = TransformChannel | 'opacity'
 
 /** A CSS value the registry path animates: a number or a CSS string. */
 export type AnimateValue = number | string
@@ -50,10 +50,24 @@ export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
 // First touch of a channel starts from its CSS-neutral value; afterwards the
 // cached animatable carries the real state across calls - that is what makes
 // a second animate() an interruption instead of a parallel animation.
-const INITIAL: Record<Channel, number> = { x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }
+const INITIAL: Record<Channel, number> = {
+  perspective: 0,
+  x: 0,
+  y: 0,
+  rotateX: 0,
+  rotateY: 0,
+  rotateZ: 0,
+  rotate: 0,
+  skewX: 0,
+  skewY: 0,
+  scale: 1,
+  scaleX: 1,
+  scaleY: 1,
+  opacity: 1,
+}
 
-const TRANSFORM_CHANNELS: ReadonlyArray<Channel> = ['x', 'y', 'scale', 'rotate']
-const NUMERIC_CHANNELS = new Set<string>(['x', 'y', 'scale', 'rotate', 'opacity'])
+const TRANSFORM_CHANNELS: ReadonlyArray<Channel> = TRANSFORM_KEYS
+const NUMERIC_CHANNELS = new Set<string>([...TRANSFORM_KEYS, 'opacity'])
 
 /** The slice of a WAAPI Animation the delegation relies on (testable shape). */
 export interface DelegatedAnimation {
