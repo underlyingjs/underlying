@@ -1211,7 +1211,7 @@ pre {
   stroke-linecap: round;
 }
 
-.svgdemo__rider {
+.svgdemo__plane {
   fill: var(--sapin);
   transform-box: fill-box;
   transform-origin: center;
@@ -1221,6 +1221,13 @@ pre {
   stroke: var(--sapin);
   stroke-width: 3;
   stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.svgdemo__morph {
+  fill: var(--tint);
+  stroke: var(--sapin);
+  stroke-width: 2.5;
   stroke-linejoin: round;
 }
 

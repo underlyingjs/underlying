@@ -74,7 +74,7 @@ Live, interruptible physics is the default - for a single value (core, scroll's 
 | [`@underlying/timeline`](packages/timeline) | Seekable timelines: labels, relative positions, nesting, stagger - scrubbable, physics-shaped | beta |
 | [`@underlying/gestures`](packages/gestures) | Drag, fling and interruptible FLIP - pointer velocity into physics, layout transitions that retarget mid-flight | beta |
 | [`@underlying/text`](packages/text) | Accessible split (chars / words / lines), physics reveal, scramble, typewriter | beta |
-| [`@underlying/svg`](packages/svg) | SVG path animation: ride an element along a path (`motionPath`), draw a stroke on (`draw`) - physics-first, flick / interrupt / scrub | beta |
+| [`@underlying/svg`](packages/svg) | SVG path animation: ride a path (`motionPath`), draw a stroke on (`draw`), morph one shape into another (`morph`) - physics-first, flick / interrupt / scrub | beta |
 
 ## Install
 

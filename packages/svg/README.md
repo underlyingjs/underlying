@@ -8,14 +8,14 @@
 
 <p align="center">
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
-  <img alt="svg gzip" src="https://img.shields.io/badge/svg-~1.1%20kB%20gzip-1C3426" />
+  <img alt="svg gzip" src="https://img.shields.io/badge/svg-~1.6%20kB%20gzip-1C3426" />
   <img alt="built on" src="https://img.shields.io/badge/built%20on-%40underlying%2Fcore-1C3426" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
 
 > Beta. The API may still move before 1.0.
 
-SVG path animation for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core) - MotionPath and DrawSVG. The progress of both is a single live value, so where other libraries bake a path tween, here you can flick a marker down a path and let it settle, interrupt a stroke mid-draw, or hand the same progress to scroll. No new engine: it samples the path with the native `getPointAtLength`/`getTotalLength` and drives core's `animatable`.
+SVG path animation for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core) - MotionPath, DrawSVG, and a resampling morph. The progress of each is a single live value, so where other libraries bake a path tween, here you can flick a marker down a path and let it settle, interrupt a stroke mid-draw, scrub a morph, or hand the same progress to scroll. No new engine: it samples the path with the native `getPointAtLength`/`getTotalLength` and drives core's `animatable`.
 
 ```sh
 npm install @underlying/svg @underlying/core
@@ -49,6 +49,21 @@ const line = draw('#signature')
 line.spring(1)               // draw it on
 line.to(0, { duration: 400 })// erase with a timed tween, still interruptible
 ```
+
+## `morph()`
+
+Turn one shape into another. Both outlines are resampled into points along their length and interpolated, so *any* two paths morph - you do not have to match their commands by hand. The fraction is live, so you can scrub it or grab it mid-morph.
+
+```ts
+import { morph } from '@underlying/svg'
+
+const m = morph(blob, starPathData, { closed: true })  // target: a `d` string or an element
+m.spring(1)   // morph to the star
+m.spring(0)   // morph back - interruptible
+m.set(0.5)    // hold it halfway
+```
+
+This is a resampling morph (smooth, handles arbitrary shapes); full command-preserving MorphSVG - sharp-corner fidelity and `shapeIndex` - is future work.
 
 ## The familiar one-call form
 
@@ -91,7 +106,7 @@ samplePath('#track').at(0.5)  // low-level: { x, y, angle } at progress 0.5
 - **Reduced motion** is inherited from core: a `spring`/`decay`/`to` on the driver auto-degrades under `prefers-reduced-motion`, so the element jumps to the target with no travel.
 - **Coordinate space.** `motionPath` writes the sampled point straight to the element's `transform`, so the element and the path should share a coordinate space (e.g. both inside the same SVG, or the element absolutely positioned over it).
 - **SSR.** Sampling needs the DOM; pass an element rather than a selector on the server, or call from an effect.
-- **MorphSVG** (shape-to-shape) is intentionally out of this package for now.
+- **Morph** here resamples both outlines into points and interpolates - it handles any two shapes, but it is not yet the full command-preserving MorphSVG (sharp corners can soften; raise `samples` for fidelity).
 
 ## License
 

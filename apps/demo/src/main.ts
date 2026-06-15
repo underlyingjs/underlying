@@ -8,7 +8,7 @@ import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections
 import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
-import { svgDraw, svgMotionPath } from './sections/svg'
+import { svgDraw, svgMorph, svgMotionPath } from './sections/svg'
 import { textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
@@ -81,8 +81,8 @@ const pages: Page[] = [
     id: 'svg',
     group: 'Guides',
     title: 'SVG path',
-    blurb: '<code>@underlying/svg</code> animates SVG paths physics-first: <code>motionPath()</code> rides an element along a path - the progress is a live value you can flick, interrupt or scrub - and <code>draw()</code> draws a stroke on. No baked path tweens; both are just animatables. MorphSVG comes later.',
-    sections: [svgMotionPath, svgDraw],
+    blurb: '<code>@underlying/svg</code> animates SVG paths physics-first: <code>motionPath()</code> rides an element along a path, <code>draw()</code> draws a stroke on, and <code>morph()</code> turns one shape into another. The progress of each is a live value you can flick, interrupt or scrub - no baked path tweens.',
+    sections: [svgMotionPath, svgDraw, svgMorph],
   },
   {
     id: 'text',
