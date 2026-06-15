@@ -7,17 +7,21 @@
     "@underlying/scroll": "0.1.0-beta.0",
     "@underlying/timeline": "0.1.0-beta.0",
     "@underlying/gestures": "0.1.0-beta.0",
-    "@underlying/text": "0.1.0-beta.0"
+    "@underlying/text": "0.1.0-beta.0",
+    "@underlying/svg": "0.1.0-beta.0"
   },
   "changesets": [
     "core-initial-beta",
+    "core-warning-wording",
     "gestures-initial-beta",
     "gestures-republish",
     "scroll-initial-beta",
     "scroll-republish",
     "sequence-live-composition",
+    "svg-initial-beta",
     "text-initial-beta",
     "timeline-initial-beta",
+    "timeline-repeat-delay",
     "value-model"
   ]
 }

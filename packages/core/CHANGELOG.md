@@ -1,5 +1,11 @@
 # @underlying/core
 
+## 0.1.0-beta.3
+
+### Patch Changes
+
+- ec2d1de: Docs: the unit-conversion fallback emits a one-time _console_ warning (it fires in every build), not a "dev" warning - corrected the README wording to match the always-on behavior.
+
 ## 0.1.0-beta.2
 
 ### Minor Changes
