@@ -1190,6 +1190,40 @@ pre {
   }
 }
 
+// ---- @underlying/svg demo: path canvas, rider, drawn stroke ----
+.svgdemo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.svgdemo__canvas {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  overflow: visible;
+}
+
+.svgdemo__track {
+  stroke: var(--ligne);
+  stroke-width: 2;
+  stroke-dasharray: 3 7;
+  stroke-linecap: round;
+}
+
+.svgdemo__rider {
+  fill: var(--sapin);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.svgdemo__sign {
+  stroke: var(--sapin);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 @media (max-width: 440px) {
   .content {
     padding: 24px 16px 80px;
