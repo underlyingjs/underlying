@@ -113,7 +113,7 @@ animate(meter, { '--progress': 0.8 })            // custom property
 
 Units convert by measuring once at the start (`240px` retargeted to `50%`
 rebases position *and* velocity). Unconvertible or unparseable values snap to
-the target with a one-time dev warning, never a throw.
+the target with a one-time console warning, never a throw.
 
 ## Keyframes
 
