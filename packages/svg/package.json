@@ -1,7 +1,7 @@
 {
   "name": "@underlying/svg",
   "version": "0.1.0-beta.0",
-  "description": "SVG path animation for @underlying/core: ride an element along a path or draw a stroke on, physics-first - flick, interrupt, retarget, or scrub. MotionPath and DrawSVG.",
+  "description": "SVG path animation for @underlying/core: ride a path, draw a stroke on, or morph one shape into another, physics-first - flick, interrupt, retarget, or scrub. MotionPath, DrawSVG and morph.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
   "keywords": [
@@ -9,6 +9,7 @@
     "svg",
     "motionpath",
     "drawsvg",
+    "morph",
     "path",
     "stroke",
     "physics",
