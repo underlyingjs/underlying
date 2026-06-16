@@ -1,6 +1,6 @@
 import './styles.scss'
 import { renderShowcase, type Page } from './showcase'
-import { gettingStarted, interruption, springs } from './sections/core'
+import { customPhysics, gettingStarted, interruption, springs } from './sections/core'
 import { colors, composite, keyframes, lengthsUnits } from './sections/value-model'
 import { gestures, setRelease } from './sections/gestures'
 import { composition } from './sections/composition'
@@ -27,8 +27,8 @@ const pages: Page[] = [
     id: 'core',
     group: 'Fundamentals',
     title: 'Core concepts',
-    blurb: 'No durations, no cubic-bezier guesswork. Tune stiffness and damping, and retarget at any time without a jump.',
-    sections: [springs, interruption],
+    blurb: 'No durations, no cubic-bezier guesswork. Tune stiffness and damping, and retarget at any time without a jump. Spring, decay, and tween are presets over one Simulation primitive you can extend.',
+    sections: [springs, interruption, customPhysics],
   },
   {
     id: 'value-model',

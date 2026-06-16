@@ -2,7 +2,7 @@ import { getReducedMotionBehavior, type ReducedMotionOverride } from '../a11y/co
 import { prefersReducedMotion } from '../a11y/reduced-motion'
 import { decaySimulation, type DecayOptions } from '../physics/decay'
 import { simulationMotion, type Motion } from '../physics/motion'
-import { SIMULATION_TIMESTEP_S, type SimulationState } from '../physics/simulation'
+import { SIMULATION_TIMESTEP_S, type Simulation, type SimulationState } from '../physics/simulation'
 import { springSimulation, type SpringOptions } from '../physics/spring'
 import { tweenMotion, type ToOptions } from '../physics/tween'
 import type { FrameInfo, Scheduler } from '../scheduler/scheduler'
@@ -23,6 +23,13 @@ export interface AnimatableOptions {
 export interface SetOptions {
   /** Seed a velocity (units/s) along with the value - external handoffs (WAAPI reclaim, gestures). */
   velocity?: number
+}
+
+export interface SimulateOptions {
+  /** Initial velocity (units/s); defaults to the value's current velocity. */
+  velocity?: number
+  /** Per-animation override of the reduced-motion behavior. */
+  reducedMotion?: ReducedMotionOverride
 }
 
 export interface Animatable {
@@ -46,6 +53,13 @@ export interface Animatable {
   decay(options?: DecayOptions): AnimationHandle
   /** Duration/easing escape hatch - still interruptible, with a readable derived velocity. */
   to(target: number, options?: ToOptions): AnimationHandle
+  /**
+   * Drive the value with a custom Simulation - the general physics mode that
+   * spring/decay/to specialize. Runs from the current position and velocity on
+   * the same fixed-timestep clock, fully interruptible. Bring your own
+   * acceleration (gravity, a force field, a bounce) and rest condition.
+   */
+  simulate(simulation: Simulation, options?: SimulateOptions): AnimationHandle
   on(event: 'change', listener: (value: number) => void): () => void
   on(event: 'rest', listener: () => void): () => void
   dispose(): void
@@ -204,6 +218,12 @@ export function animatable(initial: number, options: AnimatableOptions = {}): An
       const motion = tweenMotion(position, target, toOptions)
       const state = { position, velocity }
       if (shouldSkip(toOptions.reducedMotion)) return settleInstantly(motion, state)
+      return startAnimation(motion, state)
+    },
+    simulate(simulation, simulateOptions = {}) {
+      const motion = simulationMotion(simulation)
+      const state = { position, velocity: simulateOptions.velocity ?? velocity }
+      if (shouldSkip(simulateOptions.reducedMotion)) return settleInstantly(motion, state)
       return startAnimation(motion, state)
     },
     on(event: 'change' | 'rest', listener: (value: number) => void) {
