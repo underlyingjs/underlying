@@ -96,9 +96,24 @@ onScroll((y) => lag.target(y))            // momentum scrub, conserved velocity
 sequence().spring(a, 1).spring(b, 1, { overlap: 80 }).play()  // live cascade, interruptible
 ```
 
+## Transform channels
+
+The transform is driven as separate live channels: `x`, `y`, `scale`, `rotate`,
+plus `perspective`, `rotateX/Y/Z`, `skewX/Y`, `scaleX/Y`, and the pivot `originX` /
+`originY` (transform-origin). Each is its own interruptible spring, so a 3D card
+flip retargets mid-flight like any value. `perspective` is the `perspective()`
+function on the element itself - set it rather than spring it from nothing; and
+`transform-style: preserve-3d` is a CSS mode you put on the scene.
+
+```ts
+animate(card, { rotateY: 180 })                  // a real spring, interruptible
+animate(panel, { rotateX: 20, skewX: 6, scaleX: 1.2 })
+animate(square, { originX: 0, originY: 0 })       // animate the pivot
+```
+
 ## Any CSS property, colors, units
 
-Beyond the five transform/opacity channels, `animate()` accepts any CSS property
+Beyond those transform/opacity channels, `animate()` accepts any CSS property
 (and custom properties) as a string or number. Values decompose into scalar
 channels - each an interruptible spring - and reformat to a CSS string every
 frame.
