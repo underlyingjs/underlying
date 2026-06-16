@@ -30,6 +30,17 @@ export const TRANSFORM_KEYS = [
   'scaleY',
 ] as const satisfies readonly TransformChannel[]
 
+// transform-origin is a separate CSS property, not a transform function, so it
+// is its own little channel group: two percentages forming `X% Y%`.
+export type OriginChannel = 'originX' | 'originY'
+export type OriginChannels = Partial<Record<OriginChannel, number>>
+export const ORIGIN_KEYS = ['originX', 'originY'] as const satisfies readonly OriginChannel[]
+
+/** transform-origin from originX/originY percentages; an unset axis is center. */
+export function formatOrigin(c: OriginChannels): string {
+  return `${c.originX ?? 50}% ${c.originY ?? 50}%`
+}
+
 /**
  * Single source of the transform string format. The WAAPI delegation builds
  * its keyframes with it and the binding writes frames with it - both MUST

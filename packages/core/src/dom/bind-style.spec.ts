@@ -84,6 +84,36 @@ describe('bindStyle', () => {
     expect(element.style.transform).toBe('rotateY(45deg)')
   })
 
+  it('writes transform-origin from originX / originY percentages', () => {
+    const { scheduler, element } = setup()
+    bindStyle(
+      element,
+      { originX: animatable(0, { scheduler }), originY: animatable(100, { scheduler }) },
+      { scheduler },
+    )
+
+    expect(element.style.transformOrigin).toBe('0% 100%')
+  })
+
+  it('defaults an unset transform-origin axis to center', () => {
+    const { scheduler, element } = setup()
+    bindStyle(element, { originX: animatable(25, { scheduler }) }, { scheduler })
+
+    expect(element.style.transformOrigin).toBe('25% 50%')
+  })
+
+  it('writes transform and transform-origin as independent properties', () => {
+    const { scheduler, element } = setup()
+    bindStyle(
+      element,
+      { rotateY: animatable(45, { scheduler }), originX: animatable(0, { scheduler }) },
+      { scheduler },
+    )
+
+    expect(element.style.transform).toBe('rotateY(45deg)')
+    expect(element.style.transformOrigin).toBe('0% 50%')
+  })
+
   it('writes the transform once per frame even when x and y both move', () => {
     const { driver, scheduler, element } = setup()
     const x = animatable(0, { scheduler })
