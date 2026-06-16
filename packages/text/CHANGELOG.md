@@ -1,5 +1,12 @@
 # @underlying/text
 
+## 0.1.0-beta.3
+
+### Patch Changes
+
+- Updated dependencies [bf6b019]
+  - @underlying/core@0.1.0-beta.4
+
 ## 0.1.0-beta.2
 
 ### Patch Changes
