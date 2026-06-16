@@ -17,6 +17,13 @@ export interface TriggerOptions {
   toggle?: PlaybackHandle
   /** [onEnter, onLeave, onEnterBack, onLeaveBack]. Default ['play','none','none','none']. */
   toggleActions?: readonly [TriggerAction, TriggerAction, TriggerAction, TriggerAction]
+  /**
+   * Class kept on while the element is intersecting (added on enter, removed on
+   * leave) - the scroll-spy primitive. A bare string toggles it on the trigger
+   * element; `{ className, targets }` toggles it on other elements (e.g. a nav
+   * link for the section in view).
+   */
+  toggleClass?: string | { className: string; targets?: HTMLElement | readonly HTMLElement[] }
   onEnter?(): void
   onLeave?(): void
   onEnterBack?(): void
@@ -39,6 +46,7 @@ export function createTrigger(
   const axis = controller.axis
   const actions = options.toggleActions ?? DEFAULT_ACTIONS
   const handle = options.toggle
+  const spy = normalizeToggleClass(element, options.toggleClass)
   let intersecting = false
 
   const fire = (index: 0 | 1 | 2 | 3, callback: (() => void) | undefined): void => {
@@ -51,6 +59,7 @@ export function createTrigger(
       for (const entry of entries) {
         if (entry.isIntersecting === intersecting) continue // not a real crossing
         intersecting = entry.isIntersecting
+        if (spy) for (const el of spy.targets) el.classList.toggle(spy.className, intersecting)
         const below = fromBelow(entry, axis)
         if (intersecting) {
           if (below) fire(0, options.onEnter)
@@ -69,8 +78,23 @@ export function createTrigger(
   return {
     dispose() {
       observer.disconnect()
+      // Undo our own DOM mutation so a disposed scroll-spy never leaves a link lit.
+      if (spy) for (const el of spy.targets) el.classList.remove(spy.className)
     },
   }
+}
+
+// A bare string toggles on the trigger element itself; the object form names
+// other targets (one element or several).
+function normalizeToggleClass(
+  element: HTMLElement,
+  toggleClass: TriggerOptions['toggleClass'],
+): { className: string; targets: readonly HTMLElement[] } | null {
+  if (toggleClass === undefined) return null
+  if (typeof toggleClass === 'string') return { className: toggleClass, targets: [element] }
+  const t = toggleClass.targets
+  const targets = t === undefined ? [element] : Array.isArray(t) ? t : [t as HTMLElement]
+  return { className: toggleClass.className, targets }
 }
 
 // True when the element's leading edge is at or past the viewport's leading

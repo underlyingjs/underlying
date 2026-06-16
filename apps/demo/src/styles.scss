@@ -1190,6 +1190,115 @@ pre {
   }
 }
 
+// scrollTo : a docs-style in-page nav - a click springs the scroller to a
+// section, the active item tracks the scroll through trigger({ toggleClass })
+.docsnav {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  max-width: 460px;
+  height: 212px;
+
+  &__toc {
+    flex: 0 0 102px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 4px;
+  }
+  &__link {
+    appearance: none;
+    border: 0;
+    border-left: 2px solid transparent;
+    background: transparent;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 0 7px 7px 0;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--lichen);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+
+    &:hover {
+      color: var(--sous-bois);
+      background: var(--ink-wash);
+    }
+    &--active {
+      color: var(--sapin);
+      background: var(--tint);
+      border-left-color: var(--sapin);
+      font-weight: 560;
+    }
+  }
+
+  &__scroller {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--ligne);
+    border-radius: 10px;
+    background: #fff;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--mousse) transparent;
+  }
+  &__bar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--sous-bois);
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--ligne-soft);
+  }
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--sapin);
+  }
+
+  &__rail {
+    display: flex;
+    flex-direction: column;
+  }
+  &__sec {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-height: 124px;
+    padding: 16px 16px 18px;
+    border-bottom: 1px solid var(--ligne-soft);
+  }
+  &__kick {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--mousse);
+  }
+  &__h {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--sapin);
+  }
+  &__copy {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--sous-bois);
+  }
+}
+
 // ---- @underlying/svg demo: path canvas, rider, drawn stroke ----
 .svgdemo {
   width: 100%;

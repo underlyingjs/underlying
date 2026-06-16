@@ -256,3 +256,68 @@ t.on((p) => {
     ctx.onCleanup(() => scroll.dispose())
   },
 }
+
+const DOCS = [
+  { label: 'Overview', body: 'A physics-first scroll layer: scroll is a source, the engine is springs.' },
+  { label: 'Install', body: 'One package on top of the core. No plugins to register, no globals.' },
+  { label: 'Usage', body: 'Make a controller over any scroller, then scrub, pin, snap, or trigger.' },
+  { label: 'Reference', body: 'Every builder reads the same normalized 0..1 progress underneath.' },
+]
+
+export const scrollTo: Section = {
+  id: 'scroll-to',
+  group: 'Scroll',
+  title: 'scrollTo()',
+  tagline: 'Spring the page to a section - interruptible, clearing a sticky header.',
+  description: `
+    <p>In-page navigation, the way a docs site does it. Click an item and
+    <code>scrollTo()</code> springs the scroller to that section, landing just below
+    the sticky header through <code>offset</code>. Click another <em>mid-flight</em>
+    and it re-aims the spring already in motion - velocity carried, no hard cut - the
+    same interruptible physics the rest of the engine runs on. The active item tracks
+    the scroll on its own through <code>trigger({ toggleClass })</code> scroll-spy, so
+    the nav always shows where you are. Click around fast and watch it re-aim.</p>`,
+  code: `const scroll = createScroll({ scroller })
+
+link.addEventListener('click', () => scroll.scrollTo(section, { offset: -44 }))
+
+// the active link follows the scroll on its own (scroll-spy)
+scroll.trigger(section, {
+  range: ['-42%', '-42%'],                       // a thin band through the middle
+  toggleClass: { className: 'is-active', targets: link },
+})`,
+  run(ctx) {
+    const toc = h('nav', { class: 'docsnav__toc' })
+    const rail = h('div', { class: 'docsnav__rail' })
+    const bar = h('div', { class: 'docsnav__bar' }, h('i', { class: 'docsnav__dot' }), 'underlying / scroll')
+    const box = h('div', { class: 'docsnav__scroller' }, bar, rail)
+    ctx.stage.append(h('div', { class: 'docsnav' }, toc, box))
+
+    const scroll = createScroll({ scroller: box })
+    const offs: Array<() => void> = []
+    DOCS.forEach((item, i) => {
+      const link = h('button', { class: 'docsnav__link', type: 'button' }, item.label)
+      toc.append(link)
+      const sec = h('section', { class: 'docsnav__sec' },
+        h('span', { class: 'docsnav__kick' }, `0${i + 1}`),
+        h('h4', { class: 'docsnav__h' }, item.label),
+        h('p', { class: 'docsnav__copy' }, item.body),
+      )
+      rail.append(sec)
+
+      const onClick = (): void => {
+        scroll.scrollTo(sec, { offset: -44, spring: { stiffness: 120 } })
+      }
+      link.addEventListener('click', onClick)
+      const trig = scroll.trigger(sec, {
+        range: ['-42%', '-42%'],
+        toggleClass: { className: 'docsnav__link--active', targets: link },
+      })
+      offs.push(() => link.removeEventListener('click', onClick), () => trig.dispose())
+    })
+    ctx.onCleanup(() => {
+      for (const off of offs) off()
+      scroll.dispose()
+    })
+  },
+}

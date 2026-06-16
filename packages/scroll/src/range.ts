@@ -52,6 +52,27 @@ export function resolveRange(range: ScrollRange, box: Box, viewport: number): { 
   return { enter: resolveOffset(range[0], box, viewport), leave: resolveOffset(range[1], box, viewport) }
 }
 
+/** The element-edge and viewport-edge fractions of an `'<edge> <edge>'` offset. */
+export interface OffsetEdges {
+  /** 0 at the element's start edge, 1 at its end edge. */
+  readonly elem: number
+  /** 0 at the viewport's start (top/left), 1 at its end (bottom/right). */
+  readonly viewport: number
+}
+
+/**
+ * Split an `'<elementEdge> <viewportEdge>'` offset into its two fractions - what
+ * dev markers need to place a fixed viewport line and a content-following
+ * element line. Returns null for the numeric / `%` / `px` forms, which name a
+ * scroll position rather than an edge pair.
+ */
+export function offsetEdges(entry: OffsetEntry): OffsetEdges | null {
+  if (typeof entry === 'number' || entry.endsWith('px') || entry.endsWith('%')) return null
+  const space = entry.indexOf(' ')
+  if (space < 0) return null
+  return { elem: edgeFraction(entry.slice(0, space)), viewport: edgeFraction(entry.slice(space + 1)) }
+}
+
 /** Unclamped progress: < 0 before the range, > 1 after it. */
 export function rawProgress(scrollPos: number, enter: number, leave: number): number {
   const span = leave - enter

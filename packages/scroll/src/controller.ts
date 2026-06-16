@@ -1,7 +1,9 @@
 import { getSharedScheduler, type Scheduler } from '@underlying/core'
 import { createMotionPolicy, type MotionPolicy } from './a11y'
+import { createMarkers, type MarkerOptions } from './markers'
 import { createParallax, type ParallaxOptions, type ParallaxValue } from './parallax'
 import { createPin, type Pin, type PinOptions } from './pin'
+import { createScrollDriver, type ScrollToDriver, type ScrollToHandle, type ScrollToOptions } from './scroll-to'
 import { createScrub, type ScrubOptions, type ScrubTarget } from './scrub'
 import { createSnap, type SnapOptions } from './snap'
 import { createDomScrollSource } from './source-dom'
@@ -35,6 +37,15 @@ export interface ScrollController {
   snap(options: SnapOptions): Disposable
   /** Enter/leave triggers (IntersectionObserver), toggleActions-style. */
   trigger(element: HTMLElement, options: TriggerOptions): Disposable
+  /**
+   * Spring the scroller to a target - an absolute px position or an element
+   * brought into view. A scroll issued mid-flight re-aims the spring already in
+   * motion (velocity conserved); one from rest starts fresh. Returns a handle
+   * with `finished` and `cancel()`.
+   */
+  scrollTo(target: number | HTMLElement, options?: ScrollToOptions): ScrollToHandle
+  /** ScrollTrigger-style dev markers for a range. Dev-only; returns a disposer. */
+  markers(options?: MarkerOptions): Disposable
   /** Whole-scroller progress 0..1 (cheap; maxScroll-based). */
   progress(): number
   /** Re-measure every registered track. Call after layout the controller can't observe. */
@@ -65,6 +76,7 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
   let createdSource: ScrollSource | null = null
 
   const tracks = new Set<TrackInternal>()
+  let scrollDriver: ScrollToDriver | null = null
   let dirty = false
   let unsubscribeLoop: (() => void) | null = null
   let unsubscribeScroll: (() => void) | null = null
@@ -137,6 +149,13 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
     trigger(element, triggerOptions) {
       return createTrigger(controller, element, triggerOptions)
     },
+    scrollTo(target, scrollToOptions) {
+      scrollDriver ??= createScrollDriver(controller) // one shared spring: re-aim, never overlap
+      return scrollDriver.to(target, scrollToOptions)
+    },
+    markers(markerOptions) {
+      return createMarkers(controller, markerOptions)
+    },
     progress() {
       const s = ensureSource()
       const max = s.maxScroll()
@@ -147,6 +166,8 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
       for (const track of [...tracks]) track.refresh()
     },
     dispose() {
+      scrollDriver?.dispose()
+      scrollDriver = null
       unsubscribeLoop?.()
       unsubscribeScroll?.()
       unsubscribeResize?.()
