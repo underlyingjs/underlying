@@ -63,6 +63,18 @@ describe('animate - délégation WAAPI opportuniste', () => {
     expect(driver.pendingCount()).toBe(0) // le compositor travaille, pas notre boucle
   })
 
+  it('delegates transform-origin as its own keyframe property, alongside transform', () => {
+    const { element, animations, scheduler } = setupWaapi()
+    animate(element, { originX: 0, originY: 100, rotateY: 180 }, { duration: 400, easing: linear, scheduler })
+
+    expect(animations.length).toBe(1)
+    const [animation] = animations
+    expect(animation!.keyframes[0]!['transformOrigin']).toBe('50% 50%') // from the CSS-neutral center
+    expect(animation!.keyframes[1]!['transformOrigin']).toBe('0% 100%')
+    expect(animation!.keyframes[0]!['transform']).toBe('rotateY(0deg)')
+    expect(animation!.keyframes[1]!['transform']).toBe('rotateY(180deg)')
+  })
+
   it('never delegates springs - physics stays on the rAF loop', () => {
     const { driver, scheduler, element, animations } = setupWaapi()
     animate(element, { x: 100 }, { scheduler })

@@ -14,10 +14,19 @@ import { bindProperty, type PropertyBinding } from './bind-property'
 import { bindStyle } from './bind-style'
 import { normalizeKeyframes, runKeyframeChain, type ChainOps, type KeyframeChain } from './keyframes'
 import { readStyle, toKebab, type StyleReader } from './read-style'
-import { formatTransform, TRANSFORM_KEYS, type TransformChannel, type TransformChannels } from './transform'
+import {
+  formatOrigin,
+  formatTransform,
+  ORIGIN_KEYS,
+  TRANSFORM_KEYS,
+  type OriginChannel,
+  type OriginChannels,
+  type TransformChannel,
+  type TransformChannels,
+} from './transform'
 import { createMeasure } from './units'
 
-type Channel = TransformChannel | 'opacity'
+type Channel = TransformChannel | OriginChannel | 'opacity'
 
 /** A CSS value the registry path animates: a number or a CSS string. */
 export type AnimateValue = number | string
@@ -63,11 +72,13 @@ const INITIAL: Record<Channel, number> = {
   scale: 1,
   scaleX: 1,
   scaleY: 1,
+  originX: 50,
+  originY: 50,
   opacity: 1,
 }
 
 const TRANSFORM_CHANNELS: ReadonlyArray<Channel> = TRANSFORM_KEYS
-const NUMERIC_CHANNELS = new Set<string>([...TRANSFORM_KEYS, 'opacity'])
+const NUMERIC_CHANNELS = new Set<string>([...TRANSFORM_KEYS, ...ORIGIN_KEYS, 'opacity'])
 
 /** The slice of a WAAPI Animation the delegation relies on (testable shape). */
 export interface DelegatedAnimation {
@@ -208,28 +219,34 @@ const delegateMultiKeyframe = (
 
   const n = [...channels.values()][0]?.length ?? 2
 
-  // A transform keyframe overrides the whole property: carry the untouched
-  // transform channels along as constants across every frame.
-  if ([...channels.keys()].some((channel) => channel !== 'opacity')) {
-    for (const channel of TRANSFORM_CHANNELS) {
+  // A transform / transform-origin keyframe overrides the whole property, so
+  // carry the untouched channels of that group along as constants every frame.
+  const animatedKeys = [...channels.keys()]
+  const carry = (group: ReadonlyArray<Channel>): void => {
+    for (const channel of group) {
       const value = entry.values[channel]
       if (value !== undefined && !channels.has(channel)) {
         channels.set(channel, new Array<number>(n).fill(value.get()))
       }
     }
   }
+  if (animatedKeys.some((c) => c !== 'opacity' && c !== 'originX' && c !== 'originY')) carry(TRANSFORM_CHANNELS)
+  if (animatedKeys.some((c) => c === 'originX' || c === 'originY')) carry(ORIGIN_KEYS)
 
   const linearEasing = toLinearEasing(easing)
   const keyframes: Record<string, string>[] = []
   for (let i = 0; i < n; i++) {
     const frame: Record<string, string> = {}
     const transform: TransformChannels = {}
+    const origin: OriginChannels = {}
     for (const [channel, frames] of channels) {
       const value = frames[i] ?? 0
       if (channel === 'opacity') frame['opacity'] = String(value)
+      else if (channel === 'originX' || channel === 'originY') origin[channel] = value
       else transform[channel] = value
     }
     if (Object.keys(transform).length > 0) frame['transform'] = formatTransform(transform)
+    if (Object.keys(origin).length > 0) frame['transformOrigin'] = formatOrigin(origin)
     // Multi-keyframe: the easing rides each keyframe but the last - WAAPI applies
     // a keyframe's easing across the interval to the next one (so the JS reclaim
     // and the compositor agree on per-segment timing).

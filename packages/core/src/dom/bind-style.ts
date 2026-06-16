@@ -1,10 +1,19 @@
 import { getSharedScheduler } from '../scheduler/shared'
 import type { Scheduler } from '../scheduler/scheduler'
 import type { Animatable } from '../value/animatable'
-import { formatTransform, TRANSFORM_KEYS, type TransformChannel, type TransformChannels } from './transform'
+import {
+  formatOrigin,
+  formatTransform,
+  ORIGIN_KEYS,
+  TRANSFORM_KEYS,
+  type OriginChannel,
+  type OriginChannels,
+  type TransformChannel,
+  type TransformChannels,
+} from './transform'
 
-/** Each channel is an Animatable bound to one transform function (or opacity). */
-export type StyleBindings = Partial<Record<TransformChannel, Animatable>> & {
+/** Each channel is an Animatable bound to one transform function, transform-origin axis, or opacity. */
+export type StyleBindings = Partial<Record<TransformChannel | OriginChannel, Animatable>> & {
   opacity?: Animatable
 }
 
@@ -29,9 +38,12 @@ export function bindStyle(
   const transformBindings = TRANSFORM_KEYS.map((key) => [key, bindings[key]] as const).filter(
     (entry): entry is readonly [TransformChannel, Animatable] => entry[1] !== undefined,
   )
-  const hasTransform = transformBindings.length > 0
+  const originBindings = ORIGIN_KEYS.map((key) => [key, bindings[key]] as const).filter(
+    (entry): entry is readonly [OriginChannel, Animatable] => entry[1] !== undefined,
+  )
 
   let transformDirty = false
+  let originDirty = false
   let opacityDirty = false
   let cancelFlush: (() => void) | null = null
   const unsubscribers: Array<() => void> = []
@@ -42,6 +54,12 @@ export function bindStyle(
     element.style.transform = formatTransform(channels)
   }
 
+  const writeOrigin = () => {
+    const channels: OriginChannels = {}
+    for (const [key, value] of originBindings) channels[key] = value.get()
+    element.style.transformOrigin = formatOrigin(channels)
+  }
+
   const writeOpacity = () => {
     if (opacity !== undefined) element.style.opacity = String(opacity.get())
   }
@@ -50,6 +68,10 @@ export function bindStyle(
     if (transformDirty) {
       transformDirty = false
       writeTransform()
+    }
+    if (originDirty) {
+      originDirty = false
+      writeOrigin()
     }
     if (opacityDirty) {
       opacityDirty = false
@@ -82,13 +104,18 @@ export function bindStyle(
   const markTransformDirty = () => {
     transformDirty = true
   }
+  const markOriginDirty = () => {
+    originDirty = true
+  }
   for (const [, value] of transformBindings) track(value, markTransformDirty)
+  for (const [, value] of originBindings) track(value, markOriginDirty)
   track(opacity, () => {
     opacityDirty = true
   })
 
   // The element reflects the current values from bind time, synchronously.
-  if (hasTransform) writeTransform()
+  if (transformBindings.length > 0) writeTransform()
+  if (originBindings.length > 0) writeOrigin()
   writeOpacity()
 
   return () => {
