@@ -116,6 +116,7 @@ function asParallaxValue(out: Animatable, dispose: () => void): ParallaxValue {
     spring: out.spring,
     decay: out.decay,
     to: out.to,
+    simulate: out.simulate,
     on: out.on,
     dispose,
   }

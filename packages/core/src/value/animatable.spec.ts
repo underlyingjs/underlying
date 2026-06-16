@@ -375,4 +375,46 @@ describe('animatable', () => {
     driver.frame(16)
     expect(onChange).not.toHaveBeenCalled()
   })
+
+  describe('simulate (custom physics)', () => {
+    it('drives the value with a custom acceleration', () => {
+      const { driver, value } = setup(0)
+      const handle = value.simulate({
+        acceleration: () => 1000, // a constant downward pull, units/s^2
+        rest: () => null, // never settles on its own
+      })
+      expect(value.isAnimating()).toBe(true)
+      for (let t = 0; t <= 200; t += 16) driver.frame(t)
+      // ~0.2s at 1000 u/s^2: velocity ~200, position ~ 0.5*1000*0.2^2 = 20
+      expect(value.velocity()).toBeGreaterThan(150)
+      expect(value.get()).toBeGreaterThan(10)
+      handle.stop()
+      expect(value.isAnimating()).toBe(false)
+    })
+
+    it('settles when its own rest condition is met', () => {
+      const { driver, value } = setup(0)
+      value.simulate(
+        {
+          acceleration: (_position, velocity) => -velocity * 8, // viscous drag
+          rest: (position, velocity) => (Math.abs(velocity) < 0.5 ? position : null),
+        },
+        { velocity: 400 },
+      )
+      driveToRest(driver, value)
+      expect(value.isAnimating()).toBe(false)
+      expect(value.velocity()).toBe(0)
+      expect(value.get()).toBeGreaterThan(0) // glided forward, then stopped
+    })
+
+    it('is interruptible: a spring reclaims it mid-flight, velocity conserved', () => {
+      const { driver, value } = setup(0)
+      value.simulate({ acceleration: () => 1000, rest: () => null })
+      for (let t = 0; t <= 100; t += 16) driver.frame(t)
+      expect(value.velocity()).toBeGreaterThan(0)
+      value.spring(0) // hand off to a spring from the live position+velocity
+      driveToRest(driver, value, 16, 10_000)
+      expect(value.get()).toBeCloseTo(0, 0)
+    })
+  })
 })

@@ -1299,6 +1299,51 @@ pre {
   }
 }
 
+// custom physics : two balls dropped side by side - spring ease vs gravity bounce
+.dropdemo {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+
+  &__lane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  &__court {
+    position: relative;
+    width: 56px;
+    height: 174px;
+  }
+  &__ball {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-left: -10px;
+    will-change: transform;
+  }
+  &__floor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--ligne);
+  }
+  &__tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mousse);
+  }
+}
+
 // ---- @underlying/svg demo: path canvas, rider, drawn stroke ----
 .svgdemo {
   width: 100%;

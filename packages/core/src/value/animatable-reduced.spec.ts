@@ -80,6 +80,20 @@ describe('animatable under prefers-reduced-motion (zéro configuration)', () => 
     expect(value.isAnimating()).toBe(false)
   })
 
+  it('a custom simulate() fast-forwards to its rest', () => {
+    stubReducedMotion(true)
+    const { value } = setup(0)
+    value.simulate(
+      {
+        acceleration: (_position, velocity) => -velocity * 8, // viscous drag
+        rest: (position, velocity) => (Math.abs(velocity) < 0.5 ? position : null),
+      },
+      { velocity: 400 },
+    )
+    expect(value.isAnimating()).toBe(false) // settled in one synchronous pass, no frames
+    expect(value.get()).toBeGreaterThan(0)
+  })
+
   it("per-animation 'allow' opts out (essential motion, e.g. gesture-driven)", () => {
     stubReducedMotion(true)
     const { driver, value } = setup(0)
