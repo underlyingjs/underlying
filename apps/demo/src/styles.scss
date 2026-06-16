@@ -1344,6 +1344,20 @@ pre {
   color: var(--sapin);
 }
 
+// ---- named-ease demo card ----
+.ease__card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 136px;
+  height: 66px;
+  border-radius: var(--radius);
+  background: var(--sapin);
+  color: var(--creme);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
 @media (max-width: 440px) {
   .content {
     padding: 24px 16px 80px;
