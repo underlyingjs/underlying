@@ -8,10 +8,12 @@
     "@underlying/timeline": "0.1.0-beta.0",
     "@underlying/gestures": "0.1.0-beta.0",
     "@underlying/text": "0.1.0-beta.0",
-    "@underlying/svg": "0.1.0-beta.0"
+    "@underlying/svg": "0.1.0-beta.0",
+    "@underlying/utils": "0.1.0-beta.0"
   },
   "changesets": [
     "core-initial-beta",
+    "core-named-eases",
     "core-transform-channels",
     "core-warning-wording",
     "gestures-initial-beta",
@@ -23,6 +25,7 @@
     "text-initial-beta",
     "timeline-initial-beta",
     "timeline-repeat-delay",
+    "utils-initial-beta",
     "value-model"
   ]
 }

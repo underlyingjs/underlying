@@ -1,5 +1,12 @@
 # @underlying/scroll
 
+## 0.1.0-beta.6
+
+### Patch Changes
+
+- Updated dependencies [a27ed4d]
+  - @underlying/core@0.1.0-beta.5
+
 ## 0.1.0-beta.5
 
 ### Patch Changes
