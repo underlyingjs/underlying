@@ -1,5 +1,12 @@
 # @underlying/svg
 
+## 0.1.0-beta.2
+
+### Patch Changes
+
+- Updated dependencies [bf6b019]
+  - @underlying/core@0.1.0-beta.4
+
 ## 0.1.0-beta.1
 
 ### Minor Changes

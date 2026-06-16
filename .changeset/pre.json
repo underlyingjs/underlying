@@ -12,6 +12,7 @@
   },
   "changesets": [
     "core-initial-beta",
+    "core-transform-channels",
     "core-warning-wording",
     "gestures-initial-beta",
     "gestures-republish",
