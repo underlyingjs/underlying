@@ -41,6 +41,23 @@ function setup() {
   return { driver, scheduler, source, scroll: createScroll({ scheduler, source }) }
 }
 
+// A minimal element that only needs a working classList for toggleClass tests.
+function elWithClass(): HTMLElement {
+  const classes = new Set<string>()
+  return {
+    classList: {
+      toggle(name: string, force?: boolean): boolean {
+        const on = force === undefined ? !classes.has(name) : force
+        if (on) classes.add(name)
+        else classes.delete(name)
+        return on
+      },
+      contains: (name: string) => classes.has(name),
+      remove: (name: string) => classes.delete(name),
+    },
+  } as unknown as HTMLElement
+}
+
 beforeEach(() => {
   ;(globalThis as { IntersectionObserver?: unknown }).IntersectionObserver = MockIntersectionObserver
 })
@@ -98,6 +115,35 @@ describe('trigger', () => {
     expect(handle.isPaused()).toBe(false)
   })
 
+  it('toggleClass adds the class while intersecting and removes it on leave', () => {
+    const { scroll } = setup()
+    const element = elWithClass()
+    scroll.trigger(element, { toggleClass: 'is-active' })
+    const io = MockIntersectionObserver.last
+    if (io === null) throw new Error('observer not created')
+
+    io.emit(true, 900) // enter
+    expect(element.classList.contains('is-active')).toBe(true)
+    io.emit(false, -200) // leave
+    expect(element.classList.contains('is-active')).toBe(false)
+  })
+
+  it('toggleClass { className, targets } drives other elements (scroll-spy)', () => {
+    const { scroll } = setup()
+    const link = elWithClass()
+    const second = elWithClass()
+    scroll.trigger(el, { toggleClass: { className: 'nav-active', targets: [link, second] } })
+    const io = MockIntersectionObserver.last
+    if (io === null) throw new Error('observer not created')
+
+    io.emit(true, 900) // section enters -> light up its nav links
+    expect(link.classList.contains('nav-active')).toBe(true)
+    expect(second.classList.contains('nav-active')).toBe(true)
+    io.emit(false, 1100) // leaveBack -> dim them
+    expect(link.classList.contains('nav-active')).toBe(false)
+    expect(second.classList.contains('nav-active')).toBe(false)
+  })
+
   it('dispose() disconnects the observer', () => {
     const { scroll } = setup()
     const trig = scroll.trigger(el, { onEnter: () => {} })
@@ -106,5 +152,18 @@ describe('trigger', () => {
     expect(io.observed.length).toBe(1)
     trig.dispose()
     expect(io.observed.length).toBe(0)
+  })
+
+  it('dispose() strips an active toggleClass so no link stays lit', () => {
+    const { scroll } = setup()
+    const link = elWithClass()
+    const trig = scroll.trigger(el, { toggleClass: { className: 'nav-active', targets: link } })
+    const io = MockIntersectionObserver.last
+    if (io === null) throw new Error('observer not created')
+
+    io.emit(true, 900) // section in view -> link lit
+    expect(link.classList.contains('nav-active')).toBe(true)
+    trig.dispose() // teardown must remove the class it added
+    expect(link.classList.contains('nav-active')).toBe(false)
   })
 })

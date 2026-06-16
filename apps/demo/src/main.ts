@@ -5,7 +5,7 @@ import { colors, composite, keyframes, lengthsUnits } from './sections/value-mod
 import { gestures, setRelease } from './sections/gestures'
 import { composition } from './sections/composition'
 import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
-import { scrollParallax, scrollScrub, scrollSnap, scrollTrack, scrollTrigger } from './sections/scroll'
+import { scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
 import { svgDraw, svgMorph, svgMotionPath } from './sections/svg'
@@ -62,8 +62,8 @@ const pages: Page[] = [
     id: 'scroll',
     group: 'Guides',
     title: 'Scroll',
-    blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>pin()</code>, <code>snap()</code>, and <code>trigger()</code>, all on the one rAF loop. Each demo drives its own scroll container.',
-    sections: [scrollScrub, scrollParallax, scrollTrigger, scrollSnap, scrollTrack],
+    blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>pin()</code>, <code>snap()</code>, and <code>trigger()</code>, plus a spring-driven <code>scrollTo()</code> and dev <code>markers()</code>, all on the one rAF loop. Each demo drives its own scroll container.',
+    sections: [scrollScrub, scrollParallax, scrollTrigger, scrollTo, scrollSnap, scrollTrack],
   },
   {
     id: 'timeline',
