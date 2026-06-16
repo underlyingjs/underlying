@@ -19,6 +19,7 @@
   <a href="https://www.npmjs.com/package/@underlying/gestures"><img alt="@underlying/gestures on npm" src="https://img.shields.io/npm/v/@underlying/gestures?label=gestures&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/text"><img alt="@underlying/text on npm" src="https://img.shields.io/npm/v/@underlying/text?label=text&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/svg"><img alt="@underlying/svg on npm" src="https://img.shields.io/npm/v/@underlying/svg?label=svg&color=1C3426" /></a>
+  <a href="https://www.npmjs.com/package/@underlying/utils"><img alt="@underlying/utils on npm" src="https://img.shields.io/npm/v/@underlying/utils?label=utils&color=1C3426" /></a>
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
   <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
   <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />
@@ -75,6 +76,7 @@ Live, interruptible physics is the default - for a single value (core, scroll's 
 | [`@underlying/gestures`](packages/gestures) | Drag, fling and interruptible FLIP - pointer velocity into physics, layout transitions that retarget mid-flight | beta |
 | [`@underlying/text`](packages/text) | Accessible split (chars / words / lines), physics reveal, scramble, typewriter | beta |
 | [`@underlying/svg`](packages/svg) | SVG path animation: ride a path (`motionPath`), draw a stroke on (`draw`), morph one shape into another (`morph`) - physics-first, flick / interrupt / scrub | beta |
+| [`@underlying/utils`](packages/utils) | Named eases (`power`, `back`, `elastic`, `bounce`, `steps`, `cubicBezier`) by function or string, plus `clamp` / `mapRange` / `interpolate` / `snap` / `wrap` / `random` | beta |
 
 ## Install
 

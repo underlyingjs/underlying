@@ -14,6 +14,7 @@
     "@underlying/scroll": "workspace:*",
     "@underlying/svg": "workspace:*",
     "@underlying/text": "workspace:*",
+    "@underlying/utils": "workspace:*",
     "@underlying/timeline": "workspace:*"
   },
   "devDependencies": {

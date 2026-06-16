@@ -1,0 +1,70 @@
+{
+  "name": "@underlying/utils",
+  "version": "0.1.0-beta.0",
+  "description": "Named eases (power, sine, expo, back, elastic, bounce, steps), cubicBezier, and animation helpers (clamp, mapRange, interpolate, snap, wrap, random) for @underlying/core. GSAP-parity, tree-shakeable.",
+  "license": "MIT",
+  "author": "underlyi.ng <contact@underlyi.ng>",
+  "keywords": [
+    "animation",
+    "easing",
+    "ease",
+    "utils",
+    "interpolate",
+    "maprange",
+    "clamp",
+    "physics"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/underlyingjs/underlying.git",
+    "directory": "packages/utils"
+  },
+  "homepage": "https://github.com/underlyingjs/underlying#readme",
+  "bugs": "https://github.com/underlyingjs/underlying/issues",
+  "type": "module",
+  "sideEffects": [
+    "./dist/register.js",
+    "./dist/register.cjs"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./register": {
+      "types": "./dist/register.d.ts",
+      "import": "./dist/register.js",
+      "require": "./dist/register.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "size": "node scripts/check-size.mjs"
+  },
+  "dependencies": {
+    "@underlying/core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

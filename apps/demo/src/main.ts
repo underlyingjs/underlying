@@ -11,6 +11,7 @@ import { dragPlayground, flipShuffle } from './sections/drag-flip'
 import { svgDraw, svgMorph, svgMotionPath } from './sections/svg'
 import { textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { flip3d, menuOrigin } from './sections/transform3d'
+import { namedEases } from './sections/eases'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -34,7 +35,7 @@ const pages: Page[] = [
     group: 'Fundamentals',
     title: 'Value model',
     blurb: 'Beyond the five transform/opacity channels, <code>animate()</code> drives any CSS property - lengths with unit conversion, colors, composite values, and keyframe arrays.',
-    sections: [lengthsUnits, colors, composite, keyframes, flip3d, menuOrigin],
+    sections: [lengthsUnits, colors, composite, keyframes, flip3d, menuOrigin, namedEases],
   },
   {
     id: 'gestures',
