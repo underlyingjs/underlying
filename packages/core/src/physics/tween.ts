@@ -1,12 +1,14 @@
 import type { ReducedMotionOverride } from '../a11y/config'
-import { easeInOutCubic, type Easing } from './easings'
+import { resolveEasing, type EasingInput } from './easing-registry'
+import { easeInOutCubic } from './easings'
 import type { SeekableMotion } from './motion'
 import { SIMULATION_TIMESTEP_S, type SimulationState } from './simulation'
 
 export interface ToOptions {
   /** ms */
   duration?: number
-  easing?: Easing
+  /** A function, or a GSAP-style name once @underlying/utils is imported ('power2.out'). */
+  easing?: EasingInput
   /** Per-animation override of the reduced-motion behavior. */
   reducedMotion?: ReducedMotionOverride
 }
@@ -20,7 +22,7 @@ export interface ToOptions {
  */
 export function tweenMotion(from: number, to: number, options: ToOptions = {}): SeekableMotion {
   const durationS = (options.duration ?? 300) / 1000
-  const easing = options.easing ?? easeInOutCubic
+  const easing = resolveEasing(options.easing ?? easeInOutCubic)
   let elapsedS = 0
 
   const positionAt = (t: number): number => {

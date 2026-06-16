@@ -1,5 +1,6 @@
 import { getReducedMotionBehavior, type ReducedMotionBehavior } from '../a11y/config'
 import { prefersReducedMotion } from '../a11y/reduced-motion'
+import { resolveEasing, type EasingInput } from '../physics/easing-registry'
 import { easeInOutCubic, type Easing } from '../physics/easings'
 import type { SpringOptions } from '../physics/spring'
 import type { ToOptions } from '../physics/tween'
@@ -50,7 +51,7 @@ export type AnimateTargets = Partial<Record<Channel, number | NumericKeyframes>>
 export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
   /** ms - providing a duration switches to the tween escape hatch. */
   duration?: number
-  easing?: Easing
+  easing?: EasingInput
   scheduler?: Scheduler
   /** Element-level reduced-motion strategy - 'fade' keeps opacity AND colors animated. */
   reducedMotion?: ReducedMotionBehavior
@@ -538,7 +539,7 @@ const animatePropertyKeyframes = (
     }
     const chain = runKeyframeChain({ teleport, waypoints }, ops, {
       ...(options.duration !== undefined ? { duration: options.duration } : {}),
-      easing: options.easing ?? easeInOutCubic,
+      easing: resolveEasing(options.easing ?? easeInOutCubic),
       reduced,
     })
     return startChain(entry, property, chain)
@@ -620,7 +621,7 @@ const handleNumeric = (
         lengths.add(1 + norm.waypoints.length)
       }
       if (lengths.size === 1 && scalars.length + norms.length > 0) {
-        return delegateMultiKeyframe(entry, element, scalars, norms, options.duration, options.easing ?? easeInOutCubic)
+        return delegateMultiKeyframe(entry, element, scalars, norms, options.duration, resolveEasing(options.easing ?? easeInOutCubic))
       }
     }
   }
@@ -672,7 +673,7 @@ const animateNumericJs = (
     }
     const chain = runKeyframeChain(normalized, ops, {
       ...(options.duration !== undefined ? { duration: options.duration } : {}),
-      easing: options.easing ?? easeInOutCubic,
+      easing: resolveEasing(options.easing ?? easeInOutCubic),
       reduced,
     })
     handles.push(startChain(entry, channel, chain))
