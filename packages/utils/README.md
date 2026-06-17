@@ -13,7 +13,6 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
 
-> Beta. The API may still move before 1.0.
 
 The named-ease and helpers layer for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core): the full named-ease library, `cubicBezier`, and the small helpers you reach for (`clamp`, `mapRange`, `interpolate`, `snap`, `wrap`, `random`). Tree-shakeable - you pay for what you import.
 

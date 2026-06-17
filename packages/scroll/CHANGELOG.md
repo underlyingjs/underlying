@@ -1,5 +1,10 @@
 # @underlying/scroll
 
+## 1.0.0
+
+- First stable release. Scroll as a source: `scrub()`, `parallax()`, `pin()`, `trigger()`, `snap()`, and a spring-driven `scrollTo()`, all on one rAF loop. Leaving beta: the API is frozen and the @underlying suite now versions together.
+
+
 ## 0.1.0-beta.8
 
 ### Patch Changes
@@ -11,7 +16,7 @@
 
 ### Minor Changes
 
-- 50930a6: Programmatic scroll, scroll-spy, and dev markers. `scroll.scrollTo(target, options)` springs the scroller to an absolute position or an element brought into view - it runs on the same `follow()` spring as the momentum scrub, so a `scrollTo` issued mid-flight re-aims the spring already in motion with velocity conserved (no restart jolt), and one from rest starts fresh. `offset` clears a sticky header, `align` picks the edge pair to settle on, reduced motion (and `immediate`) jump instantly, and it returns a `{ finished, cancel }` handle. `trigger()` gains `toggleClass` - a string on the element, or `{ className, targets }` to light other elements (the scroll-spy primitive, e.g. the nav link for the section in view); the class is stripped on dispose so nothing stays lit. `markers()` draws a ScrollTrigger-style dev overlay: a solid line on the element's start/end edges (they travel with the content) and a dashed line at each scroller position they fire against, for the window or an element scroller on either axis. Dev-only; switch it off for production.
+- 50930a6: Programmatic scroll, scroll-spy, and dev markers. `scroll.scrollTo(target, options)` springs the scroller to an absolute position or an element brought into view - it runs on the same `follow()` spring as the momentum scrub, so a `scrollTo` issued mid-flight re-aims the spring already in motion with velocity conserved (no restart jolt), and one from rest starts fresh. `offset` clears a sticky header, `align` picks the edge pair to settle on, reduced motion (and `immediate`) jump instantly, and it returns a `{ finished, cancel }` handle. `trigger()` gains `toggleClass` - a string on the element, or `{ className, targets }` to light other elements (the scroll-spy primitive, e.g. the nav link for the section in view); the class is stripped on dispose so nothing stays lit. `markers()` draws a dev overlay: a solid line on the element's start/end edges (they travel with the content) and a dashed line at each scroller position they fire against, for the window or an element scroller on either axis. Dev-only; switch it off for production.
 
 ## 0.1.0-beta.6
 

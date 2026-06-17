@@ -13,7 +13,6 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
 
-> Beta. The API may still move before 1.0.
 
 Split text into chars, words and lines you can animate - without breaking the things naive text-splitting historically breaks. The screen reader still reads the whole text, copy/paste is intact, and emoji stay whole.
 

@@ -1,5 +1,10 @@
 # @underlying/svg
 
+## 1.0.0
+
+- First stable release. `motionPath()`, `draw()`, `morph()` and command-preserving `morphCommands()` - each progress a live value you can flick, interrupt or scrub. Leaving beta: the API is frozen and the @underlying suite now versions together.
+
+
 ## 0.1.0-beta.5
 
 ### Minor Changes

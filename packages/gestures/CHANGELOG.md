@@ -1,5 +1,10 @@
 # @underlying/gestures
 
+## 1.0.0
+
+- First stable release. `draggable()` (momentum snap, edge resistance, axis lock) and `observe()` (unified wheel/pointer/touch). Note: the translate-only `flip()` was removed - use `@underlying/flip`. Leaving beta: the API is frozen and the @underlying suite now versions together.
+
+
 ## 0.1.0-beta.6
 
 ### Minor Changes

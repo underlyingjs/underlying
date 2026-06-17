@@ -1,5 +1,10 @@
 # @underlying/flip
 
+## 1.0.0
+
+- First stable release. `flip()` inverts position and size in one pass and springs to identity, interruptibly; `snapshot()`/`play()` for shared-element transitions. Leaving beta: the API is frozen and the @underlying suite now versions together.
+
+
 ## 0.1.0-beta.1
 
 ### Minor Changes
