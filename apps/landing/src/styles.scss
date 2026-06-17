@@ -113,7 +113,8 @@ body {
   height: 100%;
   border-radius: 50%;
   background: var(--sapin);
-  will-change: transform;
+  opacity: 0; // the live fade takes over on bind; this only avoids a first-paint flash
+  will-change: transform, opacity;
 }
 
 .hero__thesis {
@@ -242,5 +243,424 @@ body {
   .hero__cue::after,
   .hero__thesis::after {
     animation: none;
+  }
+}
+
+// ---- beat 01 : the proof -------------------------------------------------
+.beat--proof {
+  position: relative;
+  min-height: 100svh;
+  background: var(--creme);
+  border-top: 1px solid var(--ligne-soft);
+}
+
+// printed-essay section number, mirroring the hero rail
+.beat__rail {
+  position: absolute;
+  top: 28px;
+  left: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mousse);
+
+  &::before {
+    content: '';
+    width: 22px;
+    height: 1px;
+    background: var(--ligne);
+  }
+}
+
+.proof {
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: center;
+  gap: clamp(24px, 5vh, 52px);
+  padding: 12vmin 6vmin 9vmin;
+}
+
+.proof__lede {
+  text-align: center;
+}
+.proof__head {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(26px, 5vw, 56px);
+  letter-spacing: -0.02em;
+  color: var(--sapin);
+}
+.proof__sub {
+  margin: 10px auto 0;
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.4vw, 14px);
+  color: var(--sous-bois);
+}
+
+.proof__stage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 6vw, 96px);
+  align-items: stretch;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.lane {
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 14px;
+  justify-items: center;
+}
+.lane__tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mousse);
+  padding: 4px 11px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+}
+
+// the column the puck falls down
+.lane__track {
+  position: relative;
+  height: clamp(170px, 32vh, 280px);
+  width: 1px;
+  margin: 0 auto;
+  border-left: 1px dashed var(--ligne);
+}
+.lane__base {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 1px;
+  background: var(--lichen);
+}
+.puck {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  margin-left: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--sapin);
+  will-change: transform; // draggable writes translateY here
+}
+.lane--live .puck,
+.lane--baked .puck {
+  cursor: grab;
+  touch-action: none;
+}
+.lane--live .puck:active,
+.lane--baked .puck:active {
+  cursor: grabbing;
+}
+
+.lane__readout {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--mousse);
+}
+.lane__vel {
+  color: var(--sous-bois);
+  font-variant-numeric: tabular-nums; // figures hold their column as they change
+}
+.lane--live .lane__vel {
+  color: var(--sapin);
+}
+
+.lane__note {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mousse);
+  transition: color 0.25s ease;
+
+  &.is-revealed {
+    color: var(--sapin);
+  }
+}
+.lane--baked .lane__note.is-revealed {
+  color: var(--lichen);
+}
+
+.proof__verdict {
+  min-height: 1.4em;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.4vw, 14px);
+  color: var(--sapin);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+
+  &.is-shown {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proof__verdict {
+    transition: none;
+  }
+}
+
+// ---- beat 02 : the rail (horizontal-from-vertical) -----------------------
+.beat--rail {
+  position: relative;
+  background: var(--creme);
+  border-top: 1px solid var(--ligne-soft);
+  // height is set in JS to (viewport + horizontal travel): the sticky stage then
+  // stays pinned for exactly the slide.
+}
+
+// the pinned window; the rail is centered in it and clipped to the viewport. The
+// whole stage is the grab surface - throw the rail from anywhere in it.
+.rail-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  cursor: grab;
+
+  &.is-grabbing {
+    cursor: grabbing;
+  }
+}
+
+.rail {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 7vmin;
+  padding-inline: 14vmin;
+  will-change: transform; // bindStyle writes translateX off the live railX
+}
+
+.rail__word {
+  flex: 0 0 auto;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(40px, 9vw, 132px);
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+  color: var(--sous-bois); // alive, not a greyed recording
+  white-space: nowrap;
+  user-select: none;
+}
+.rail__word--accent {
+  color: var(--sapin); // the live half of the line
+}
+
+// ---- the close : the honest part + footer --------------------------------
+.beat--close {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 14vmin 6vmin 9vmin;
+  background: var(--creme);
+  border-top: 1px solid var(--ligne-soft);
+}
+
+.close {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  display: grid;
+  justify-items: center;
+  gap: clamp(20px, 3.5vh, 36px);
+  text-align: center;
+}
+
+.close__head {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(28px, 5.2vw, 62px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--sapin);
+
+  em {
+    font-style: normal;
+    text-decoration: underline;
+    text-decoration-color: var(--lichen);
+    text-decoration-thickness: 0.055em;
+    text-underline-offset: 0.1em;
+  }
+}
+
+.close__body {
+  margin: 0;
+  max-width: 56ch;
+  font-family: var(--body);
+  font-size: clamp(13px, 1.5vw, 16px);
+  line-height: 1.62;
+  color: var(--sous-bois);
+}
+
+.close__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 22px;
+  margin-top: 4px;
+}
+
+.close__install {
+  position: relative;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--sapin);
+  background: var(--tint);
+  border: 1px solid var(--ligne);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: var(--lichen);
+  }
+}
+.close__prompt {
+  color: var(--mousse); // the dimmed shell prompt
+}
+.close__copied {
+  position: absolute;
+  top: -10px;
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--sapin);
+  color: var(--creme);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+
+  &.is-shown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close__link {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--sapin);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ligne);
+  padding-bottom: 2px;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: var(--lichen);
+  }
+}
+
+// GitHub given a touch more presence: a bordered chip with the mark
+.close__gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--sapin);
+  text-decoration: none;
+  padding: 8px 13px;
+  border: 1px solid var(--ligne);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    border-color: var(--lichen);
+    background: var(--tint);
+  }
+}
+.close__gh-mark {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.close__top {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mousse);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--sapin);
+  }
+}
+
+// the loop closing on the wordmark the page opened with
+.close__mark {
+  margin: clamp(28px, 5vh, 56px) 0 0;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(20px, 3vw, 30px);
+  letter-spacing: -0.02em;
+  color: var(--ligne);
+  user-select: none;
+}
+.close__dot {
+  color: var(--sapin); // the protagonist, home
+}
+
+.rail__hint,
+.rail__verdict {
+  position: absolute;
+  left: 50%;
+  bottom: 7vmin;
+  transform: translateX(-50%);
+  margin: 0;
+  max-width: 90vw;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--sous-bois);
+  text-align: center;
+}
+.rail__hint {
+  transition: opacity 0.5s ease;
+
+  &.is-gone {
+    opacity: 0;
+  }
+}
+.rail__verdict {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+
+  &.is-shown {
+    opacity: 1;
   }
 }
