@@ -753,6 +753,118 @@ body {
   text-align: center;
 }
 
+// ---- beat 05 : depth (pinned parallax planes) ----------------------------
+.beat--depth {
+  position: relative;
+  background: var(--creme);
+  border-top: 1px solid var(--ligne-soft);
+  // height set in JS = viewport + the pin span
+}
+.depth-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.depth__wash {
+  position: absolute;
+  width: clamp(280px, 46vw, 540px);
+  height: clamp(280px, 46vw, 540px);
+  border-radius: 28px;
+  background: var(--tint);
+  will-change: transform;
+}
+.depth__card {
+  position: relative;
+  width: clamp(220px, 34vw, 360px);
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--ligne);
+  border-radius: 18px;
+  background: var(--creme);
+  box-shadow: 0 1px 0 var(--ligne-soft);
+  will-change: transform;
+}
+.depth__face {
+  position: absolute;
+  inset: 14% 16%;
+  border-left: 1px solid var(--ligne);
+  border-top: 1px solid var(--ligne-soft);
+}
+.depth__chip {
+  position: absolute;
+  padding: 5px 11px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--mousse);
+  white-space: nowrap;
+  opacity: 0;
+  transition: color 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+  will-change: transform, opacity;
+
+  &.is-live {
+    opacity: 1;
+    color: var(--sapin);
+    border-color: var(--lichen);
+  }
+}
+.depth__chip--a {
+  top: 8%;
+  left: -18%;
+}
+.depth__chip--b {
+  top: 46%;
+  right: -22%;
+}
+.depth__chip--c {
+  bottom: 6%;
+  left: -10%;
+}
+.depth__claim {
+  position: absolute;
+  left: 50%;
+  bottom: 12vmin;
+  transform: translateX(-50%);
+  margin: 0;
+  max-width: 34ch;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(20px, 3.2vw, 36px);
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--lichen);
+  opacity: 0;
+  transition: opacity 0.4s ease, color 0.4s ease;
+
+  &.is-live {
+    opacity: 1;
+    color: var(--sapin);
+  }
+}
+.depth__why {
+  position: absolute;
+  left: 50%;
+  bottom: 5vmin;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--sous-bois);
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .depth__claim,
+  .depth__chip {
+    transition: none;
+  }
+}
+
 // ---- beat 08 : the panorama (what is in the box) -------------------------
 .beat--panorama {
   position: relative;
