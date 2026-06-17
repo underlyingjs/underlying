@@ -12,8 +12,11 @@
   },
   "scripts": {
     "demo": "pnpm --filter @underlying/core build && pnpm --filter underlying-demo dev",
+    "landing": "pnpm --filter \"underlying-landing^...\" build && pnpm --filter underlying-landing dev",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
+    "build:landing": "pnpm --filter \"underlying-landing...\" build",
+    "build:docs": "pnpm --filter \"underlying-demo...\" build",
     "typecheck": "pnpm -r typecheck",
     "size": "pnpm -r size",
     "changeset": "changeset",
