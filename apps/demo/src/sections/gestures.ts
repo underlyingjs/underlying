@@ -1,4 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
+import { draggable, observe } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -111,6 +112,116 @@ animatable(initial).decay({ velocity, min, max })`,
         { value: 'spring', label: 'spring back to center' },
       ], (value) => (mode = value)),
     )
+  },
+}
+
+const CARD_NAMES = ['Aurora', 'Basalt', 'Cinder', 'Drift', 'Ember']
+
+export const carousel: Section = {
+  id: 'carousel',
+  group: 'Gestures',
+  title: 'Drag snap',
+  tagline: 'Flick through cards - momentum picks the card, the ends rubber-band.',
+  description: `
+    <p>A carousel is a draggable that snaps. <code>draggable</code> takes
+    <code>snap</code> targets (here a card-width grid) and, on release, projects where
+    the flick's momentum would land, snaps to the nearest card, and springs there - a
+    gentle drag steps one card, a hard flick skips several. <code>edgeResistance</code>
+    rubber-bands the pull past the first and last card. All physics, all interruptible:
+    grab it again mid-glide and it retargets from its live velocity.</p>`,
+  code: `import { draggable } from '@underlying/gestures'
+
+draggable(strip, {
+  axis: 'x',
+  bounds: { x: [-(cards - 1) * STEP, 0] },
+  snap: { x: STEP },              // a card-width grid; momentum picks the target
+  edgeResistance: 0.82,           // rubber-band past the ends
+})`,
+  run(ctx) {
+    const count = CARD_NAMES.length
+    const CARD = 120
+    const STEP = CARD + 12 // card width + gap
+    const strip = h('div', { class: 'carousel__strip' })
+    CARD_NAMES.forEach((name, i) => {
+      strip.append(
+        h('div', { class: 'carousel__card' },
+          h('span', { class: 'carousel__num' }, `0${i + 1}`),
+          h('span', { class: 'carousel__label' }, name),
+        ),
+      )
+    })
+    const viewport = h('div', { class: 'carousel__viewport' }, strip)
+    const dots = h('div', { class: 'carousel__dots' })
+    const dotEls = CARD_NAMES.map(() => h('i', { class: 'carousel__dot' }))
+    for (const dot of dotEls) dots.append(dot)
+    ctx.stage.append(h('div', { class: 'carousel' }, viewport, dots))
+
+    const drag = draggable(strip, {
+      axis: 'x',
+      bounds: { x: [-(count - 1) * STEP, 0] },
+      snap: { x: STEP },
+      edgeResistance: 0.82,
+      spring: { stiffness: 200, damping: 26 },
+    })
+    const setActive = (): void => {
+      const i = Math.min(count - 1, Math.max(0, Math.round(-drag.x.get() / STEP)))
+      dotEls.forEach((dot, k) => dot.classList.toggle('carousel__dot--on', k === i))
+    }
+    const off = drag.x.on('change', setActive)
+    setActive()
+    ctx.onCleanup(() => {
+      off()
+      drag.dispose()
+    })
+  },
+}
+
+export const unifiedInput: Section = {
+  id: 'observer',
+  group: 'Gestures',
+  title: 'observe()',
+  tagline: 'One read of wheel, trackpad, and touch - drag or scroll to scrub.',
+  description: `
+    <p><code>observe()</code> unifies wheel, trackpad, pointer, and touch into one
+    normalized stream: per-event deltas, accumulated totals, velocity, and a dominant
+    axis, fed to directional and change callbacks with a tolerance dead-zone and a
+    debounced stop. Here one handler scrubs the value - <em>drag up or scroll up</em>
+    to raise it, down to lower it - identical on a mouse, a trackpad, or a phone. It is
+    the seam under scroll-jacking, swipe nav, and design-tool number scrubbing.</p>`,
+  code: `import { observe } from '@underlying/gestures'
+
+observe({
+  target: field,
+  type: ['wheel', 'pointer'],
+  preventDefault: true,
+  onChange: (s) => { value = clamp(value - s.deltaY * 0.2, 0, 100) },
+})`,
+  run(ctx) {
+    let value = 50
+    const num = h('span', { class: 'scrub__num' }, '50')
+    const fill = h('i', { class: 'scrub__fill' })
+    const field = h('div', { class: 'scrub__field' },
+      num,
+      h('div', { class: 'scrub__bar' }, fill),
+      h('span', { class: 'scrub__hint' }, 'drag or scroll'),
+    )
+    ctx.stage.append(field)
+    const render = (): void => {
+      num.textContent = String(Math.round(value))
+      fill.style.transform = `scaleX(${value / 100})`
+    }
+    render()
+    const obs = observe({
+      target: field,
+      type: ['wheel', 'pointer'],
+      preventDefault: true,
+      wheelSpeed: 0.5,
+      onChange: (state) => {
+        value = Math.min(100, Math.max(0, value - state.deltaY * 0.2))
+        render()
+      },
+    })
+    ctx.onCleanup(() => obs.dispose())
   },
 }
 

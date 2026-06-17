@@ -2,7 +2,7 @@ import './styles.scss'
 import { renderShowcase, type Page } from './showcase'
 import { customPhysics, gettingStarted, interruption, springs } from './sections/core'
 import { colors, composite, keyframes, lengthsUnits } from './sections/value-model'
-import { gestures, setRelease } from './sections/gestures'
+import { carousel, gestures, setRelease, unifiedInput } from './sections/gestures'
 import { composition } from './sections/composition'
 import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
 import { scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger } from './sections/scroll'
@@ -41,8 +41,8 @@ const pages: Page[] = [
     id: 'gestures',
     group: 'Guides',
     title: 'Gestures',
-    blurb: 'Velocity is a first-class citizen, so handing a gesture off into a spring or an inertial glide is a single argument.',
-    sections: [gestures, setRelease],
+    blurb: 'Velocity is a first-class citizen, so handing a gesture off into a spring or an inertial glide is a single argument. draggable() adds momentum-aware snap, edge resistance, and axis lock; observe() unifies wheel, trackpad, and touch.',
+    sections: [gestures, carousel, unifiedInput, setRelease],
   },
   {
     id: 'composition',
