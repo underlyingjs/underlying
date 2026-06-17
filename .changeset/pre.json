@@ -14,10 +14,12 @@
   "changesets": [
     "core-initial-beta",
     "core-named-eases",
+    "core-simulate-custom-physics",
     "core-transform-channels",
     "core-warning-wording",
     "gestures-initial-beta",
     "gestures-republish",
+    "gestures-snap-observer",
     "scroll-initial-beta",
     "scroll-republish",
     "scroll-scrollto-markers",
