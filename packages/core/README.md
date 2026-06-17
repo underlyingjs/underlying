@@ -4,12 +4,14 @@
 
 <p align="center">
   <strong>Physics-first web animation.</strong> Interruptible by design, accessible by default,
-  <br />zero dependencies, ~9.5 kB gzip (a transforms-only import tree-shakes to ~2.4 kB).
+  <br />zero dependencies. The full surface is 10.07 kB gzip; the primitives alone
+  <br />(animatable + bindStyle + physics, no value model) tree-shake to 3.04 kB.
 </p>
 
 <p align="center">
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
-  <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
+  <img alt="full surface gzip" src="https://img.shields.io/badge/full%20surface-10.07%20kB%20gzip-1C3426" />
+  <img alt="primitives gzip" src="https://img.shields.io/badge/primitives-3.04%20kB%20gzip-1C3426" />
   <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
@@ -29,6 +31,21 @@
 ```sh
 npm install @underlying/core
 ```
+
+## Bundle size
+
+All numbers are measured gzip (level 9) on the built ESM bundle, tree-shaken:
+
+| Import | gzip | What it pulls in |
+| --- | --- | --- |
+| Full surface (`import * as core`) | 10.07 kB | everything the package entry exports |
+| Primitives only (`animatable` + `bindStyle` + physics) | 3.04 kB | no value model - the registry and CSS parsers stay tree-shaken |
+| `animate()` import graph | 9.04 kB | `animate()` deliberately pulls the registry and the four built-in value parsers |
+| `@underlying/core/playback` | 5.36 kB | net cost on top of a core you already ship (it imports the shared core chunk) |
+
+The split is real: if you only ever touch `animatable`/`bindStyle`/`simulate`, you
+ship none of the value model. Reaching for `animate()` opts you into the registry
+and the length/color/complex/number parsers.
 
 ## Quick start
 
@@ -78,10 +95,13 @@ values - interruption with velocity conservation, not parallel animations.
 ## Playback (opt-in)
 
 Springs stay live; tweens are seekable. `@underlying/core/playback` is a separate
-bundle entry (~5.3 kB gzip on top of the core) that adds pause / timeScale /
+bundle entry (5.36 kB gzip net on top of the core) that adds pause / timeScale /
 reverse / seek, a `bake()` bridge that samples a spring into a scrubbable clip,
 `follow()` for momentum scrub, and `sequence()` - the live, interruptible twin of
 `@underlying/timeline` (a cascade you grab mid-flight, not a baked table you scrub).
+The same entry exports `animatePlayback()` (the playback-aware twin of `animate()`)
+and `timeScope()` (a child scheduler whose `pause()` / `timeScale` dilate every
+animation inside it - the time-dilation seam the whole layer rides on).
 
 ```ts
 import { playable, follow, sequence } from '@underlying/core/playback'
@@ -153,6 +173,56 @@ const onRelease = (px: number, v: number) => {
 }
 
 releaseStyle(panel)  // forget the element: dispose channels, remove our inline styles, start cold next time
+```
+
+## Custom physics
+
+Spring, decay, and tween are presets over one primitive: a `Simulation` - an
+acceleration plus a rest condition. `value.simulate()` runs anything on the same
+fixed-timestep clock, from the current position and velocity, fully interruptible.
+
+```ts
+import { animatable } from '@underlying/core'
+
+// gravity plus a damped floor: an accelerating fall, a decaying bounce
+const bounce = {
+  acceleration: (pos, vel) => (pos > floor ? G - K * (pos - floor) - C * vel : G),
+  rest: (pos, vel) => (pos >= floor && Math.abs(vel) < 3 ? floor : null),
+}
+const y = animatable(0)
+y.simulate(bounce)   // the same engine behind spring/decay/to
+```
+
+For physics that is not bound to an `Animatable` - a canvas particle system,
+confetti, a 2D field - reach for the `@underlying/core/physics` subpath. It is the
+bring-your-own-loop seam: `stepSimulation(sim, state, dt)` is the single
+semi-implicit Euler step the whole engine runs on, and `SIMULATION_TIMESTEP_S`
+(1/120 s) is the fixed timestep to drive it with.
+
+```ts
+import { stepSimulation, SIMULATION_TIMESTEP_S, type Simulation } from '@underlying/core/physics'
+
+let state = { position: 0, velocity: 0 }
+state = stepSimulation(simulation, state, SIMULATION_TIMESTEP_S)  // your loop, your render
+```
+
+## Easing
+
+Springs need no easing, but the duration escape hatch (`{ duration }`) takes an
+`easing`. Pass a function, or a named ease by string. `easeInCubic`,
+`easeOutCubic`, `easeInOutCubic`, and `linear` are exported straight from
+`@underlying/core`. The named ease families (`power2.out`, `elastic.out(1, 0.3)`,
+`steps(...)`, ...) live in `@underlying/utils`; a one-time
+`import '@underlying/utils/register'` registers them so the string forms resolve.
+Wire your own with `registerEasing(name, factory)`, or resolve a string yourself
+with `resolveEasing(input)`.
+
+```ts
+import { animate, easeOutCubic } from '@underlying/core'
+import '@underlying/utils/register'  // registers the named ease families (once)
+
+animate(box, { x: 300 }, { duration: 400, easing: easeOutCubic })
+animate(box, { x: 0 }, { duration: 400, easing: 'elastic.out(1, 0.3)' })
 ```
 
 ## Custom value types

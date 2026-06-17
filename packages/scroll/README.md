@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
-  <img alt="scroll gzip" src="https://img.shields.io/badge/scroll-~4%20kB%20gzip-1C3426" />
+  <img alt="scroll gzip" src="https://img.shields.io/badge/scroll-5.50%20kB%20gzip-1C3426" />
   <img alt="built on" src="https://img.shields.io/badge/built%20on-%40underlying%2Fcore-1C3426" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
@@ -102,6 +102,31 @@ scroll.trigger(card, {
 scroll.trigger(card, { toggle: clip, toggleActions: ['play', 'pause', 'resume', 'reverse'] })
 ```
 
+## scrollTo - spring the scroller to a target
+
+```ts
+// Spring the scroller to an absolute px position or an element brought into
+// view. Returns a ScrollToHandle - { finished, cancel() }.
+const handle = scroll.scrollTo(section, { offset: -80 })  // land 80px below the top
+await handle.finished                                     // resolves on arrival
+
+// align picks which '<elementEdge> <viewportEdge>' pair to bring together.
+// Default 'start start' - the section's top lands at the viewport top.
+scroll.scrollTo(section, { align: 'center center', offset: -44 })
+
+// One follow() is shared across calls, so a scrollTo issued mid-flight RE-AIMS
+// the spring already in motion - velocity conserved, no restart jolt. Pass your
+// own spring, or immediate for a hard jump (always on under reduced motion).
+scroll.scrollTo(1200, { spring: { stiffness: 120 } })
+scroll.scrollTo(0, { immediate: true })
+
+handle.cancel()  // freeze the scroller where it is; finished resolves
+```
+
+`scrollTo()` never aims past the reachable range, and the handle's `finished`
+never rejects - it resolves on arrival, or when the scroll is canceled or
+superseded by a later call.
+
 ## Snap
 
 ```ts
@@ -121,6 +146,44 @@ t.progress()                 // read synchronously
 t.on((p) => render(p))       // or subscribe
 
 scroll.dispose()             // tears down the loop, observers, and every binding
+```
+
+## More on the controller
+
+```ts
+// markers(): dev-only overlay for a range. Solid lines travel with the content
+// (the element's enter/leave edges); dashed lines are the fixed scroller
+// positions they fire against. When a solid meets a dashed of the same colour,
+// that edge fires. Reads the DOM live - never ship it on.
+const m = scroll.markers({ target: section, label: 'hero' })
+m.dispose()
+
+// progress(): whole-scroller progress 0..1 (scrollPos / maxScroll), read
+// synchronously. Cheaper than a track() when you only need the page fraction.
+scroll.progress()
+
+// refresh(): re-measure every registered track. Call after a layout change the
+// controller can't observe (a font swap, an image load, a panel that expands).
+scroll.refresh()
+```
+
+## SSR and tests
+
+Nothing touches browser globals at import, and the DOM source is created lazily
+on the first builder call. For server rendering or a headless test, inject a
+deterministic source with `createManualScrollSource()` and drive it by hand -
+the same seam the core exposes with its manual driver.
+
+```ts
+import { createScroll, createManualScrollSource } from '@underlying/scroll'
+
+const source = createManualScrollSource({ viewportSize: 800, maxScroll: 2000 })
+const scroll = createScroll({ source })
+
+source.setBox(section, { start: 1000, size: 600 }) // place an element (content coords)
+source.emitScroll(500)                             // move the scroll, fire listeners
+source.emitResize()                                // trigger a re-measure pass
+scroll.progress()                                  // assert against a known number
 ```
 
 ## The offset grammar

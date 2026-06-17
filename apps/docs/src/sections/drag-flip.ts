@@ -16,6 +16,16 @@ export const dragPlayground: Section = {
   code: `import { draggable } from '@underlying/gestures'
 
 draggable(card, { bounds: panel, release: 'inertia' })  // grab, fling, glide`,
+  api: `draggable(el: HTMLElement, options?: DraggableOptions): Draggable
+interface DraggableOptions {
+  axis?: 'x' | 'y' | 'both'; lockAxis?: boolean
+  bounds?: HTMLElement | { x?: [number, number]; y?: [number, number] }
+  snap?: { x?: SnapTo; y?: SnapTo }; liveSnap?: boolean; edgeResistance?: number
+  release?: 'inertia' | 'spring' | 'free'  // default 'inertia'
+  spring?: SpringOptions; decay?: DecayOptions
+  onStart?(): void; onEnd?(velocity: { x: number; y: number }): void
+}
+interface Draggable { readonly x: Animatable; readonly y: Animatable; dispose(): void }`,
   run(ctx) {
     const field = h('div', { class: 'dragfield' })
     const card = h('div', { class: 'dragcard' }, 'drag me')
@@ -47,6 +57,12 @@ export const flipShuffle: Section = {
 // wrap any DOM change - flip measures First/Last and springs position + size
 flip(tiles, () => reorder(grid), { stiffness: 320, damping: 26 })
 flip(tiles, () => grid.classList.toggle('list'), { stiffness: 300, damping: 28 })`,
+  api: `flip(targets: FlipTargets, mutate: () => void, options?: FlipOptions): void
+type FlipTargets = HTMLElement | Iterable<HTMLElement>
+interface FlipOptions extends SpringOptions {
+  scale?: boolean      // invert size too, not only position. Default true
+  scheduler?: Scheduler
+}`,
   run(ctx) {
     const grid = h('div', { class: 'flipgrid' })
     const tiles = Array.from({ length: 9 }, (_, i) =>

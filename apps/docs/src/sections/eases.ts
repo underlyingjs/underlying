@@ -21,6 +21,10 @@ import { animate } from '@underlying/core'
 
 animate(card, { x: 0, opacity: 1 }, { duration: 900, easing: 'elastic.out(1, 0.6)' })
 animate(card, { y: 0 }, { duration: 600, easing: 'back.out(2)' })`,
+  api: `interface EaseFamily { in: Easing; out: Easing; inOut: Easing }   // Easing = (t: number) => number
+// fixed: power1-4 (= quad/cubic/quart/quint), sine, expo, circ, bounce, none (linear)
+// configurable: back(overshoot?), elastic(amplitude?, period?), steps(count), cubicBezier(x1, y1, x2, y2)
+registerEases(): void   // run by the '@underlying/utils/register' entry; resolves the names by string`,
   run(ctx) {
     const card = h('div', { class: 'ease__card' }, 'power2.out')
     ctx.stage.append(card)

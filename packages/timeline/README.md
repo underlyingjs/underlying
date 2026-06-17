@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
-  <img alt="timeline gzip" src="https://img.shields.io/badge/timeline-~3%20kB%20gzip-1C3426" />
+  <img alt="timeline gzip" src="https://img.shields.io/badge/timeline-2.68%20kB%20gzip-1C3426" />
   <img alt="built on" src="https://img.shields.io/badge/built%20on-%40underlying%2Fcore-1C3426" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
@@ -65,6 +65,7 @@ timeline()
   .from(title.y, -40, { duration: 500 })            // from -40 to the current value
   .fromTo(card.opacity, 0, 1, { at: '<' })          // explicit start and end
   .spring(hero.scale, 1.1, { stiffness: 200 })      // baked once at build
+  .decay(banner.x, { velocity: 900, max: 320 })     // baked inertial glide to rest
   .stagger(cards, (c) => playable(c.y).to(0, { paused: true }), { each: 80, from: 'center' })
   .call(() => done(), '>')                          // a side-effect marker
   .add(otherTimeline, '+=200')                      // nest a timeline (it is a handle)
@@ -72,18 +73,48 @@ timeline()
 
 Sequential clips on one value chain from the prior clip's exit, velocity conserved at the seam.
 
+`decay(value, options?)` drops a baked inertial glide: from the value's state at the clip start it coasts on `velocity` and slows on a `timeConstant` (ms), the same decay the core runs live. Because a timeline is seekable it bakes the glide to rest once, so `velocity` here is an explicit number, not a live hand-off. `DecayClipOptions` is `{ at?, duration?, easing? }` (the position grammar, plus the inherited tween defaults) merged with the core `DecayOptions`:
+
+```ts
+timeline().decay(box.x, {
+  at: '<',              // position grammar, like every other verb
+  velocity: 900,        // units/s the glide starts on (default: the value's current velocity)
+  timeConstant: 325,    // ms; higher = longer glide. total distance ~ velocity * timeConstant
+  min: 0, max: 320,     // optional clamp: crossing an edge turns the glide into a spring back to it
+  restSpeed: 0.1,       // rest when |velocity| drops below this (units/s)
+})
+```
+
+The `min` / `max` clamp is baked too: if the coast crosses an edge it springs back to it, and the whole bounded path is recorded into the seekable table.
+
 ## The position grammar
 
 ```
 number            absolute ms (negative clamped to 0)
+'250'             absolute ms (numeric string, same as the number)
 'label'           a named position
-'<' / '>'         start / end of the most-recently-added clip
+'<' / '>'         start / end of the most-recently-added clip ('>' is the default)
 '<N' / '>N'       prev start / end shifted by N ms (negative ok: '<-100')
+'<+=N' / '>-=N'   same, explicit-sign form
 '+=N' / '-=N'     N ms relative to the timeline END
 'label+=N'        a label shifted by N ms
 ```
 
 `label(name, at?)` names a position; `shiftCursor(to)` moves the insertion point without adding a clip.
+
+## Introspection
+
+Three read-only methods report the resolved schedule. Each forces a build (the schedule resolves and physics children bake) on first call, so the numbers are exact, not estimates.
+
+```ts
+tl.resolve('settled+=100')  // number: a Position resolved to absolute ms in this timeline
+tl.labelTime('settled')     // number | undefined: a label's absolute ms (undefined if no such label)
+tl.layout()                 // ReadonlyArray<{ start: number; duration: number }>: every child's frozen span
+```
+
+- `resolve(position)` runs any position through the same grammar the verbs use and returns absolute ms - the way to read where a `'<+=80'` or `'label-=50'` actually lands.
+- `labelTime(name)` is the direct label lookup; `undefined` means the label was never set.
+- `layout()` is the tooling and scroll-snap entry point: one `{ start, duration }` per child in build order, so you can place snap points or markers at clip boundaries without re-deriving the schedule.
 
 ## Scrub it with scroll
 

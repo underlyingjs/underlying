@@ -137,6 +137,15 @@ draggable(strip, {
   snap: { x: STEP },              // a card-width grid; momentum picks the target
   edgeResistance: 0.82,           // rubber-band past the ends
 })`,
+  api: `draggable(el: HTMLElement, options?: {
+  axis?: 'x' | 'y' | 'both'
+  bounds?: HTMLElement | { x?: [number, number]; y?: [number, number] }
+  snap?: { x?: SnapTo; y?: SnapTo }   // increment | stops[] | (value) => value
+  liveSnap?: boolean
+  edgeResistance?: number             // 0 = free .. 1 = a hard wall
+  release?: 'inertia' | 'spring' | 'free'
+  spring?: SpringOptions; decay?: DecayOptions
+}): { x: Animatable; y: Animatable; dispose(): void }`,
   run(ctx) {
     const count = CARD_NAMES.length
     const CARD = 120
@@ -196,6 +205,15 @@ observe({
   preventDefault: true,
   onChange: (s) => { value = clamp(value - s.deltaY * 0.2, 0, 100) },
 })`,
+  api: `observe(options?: {
+  target?: HTMLElement | Window
+  type?: ('wheel' | 'pointer' | 'touch')[]
+  tolerance?: number; dragMinimum?: number; wheelSpeed?: number
+  axis?: 'x' | 'y'; preventDefault?: boolean
+  onChange?(s: ObserverState): void   // also onPress/onRelease/onDrag/onWheel
+  onUp?, onDown?, onLeft?, onRight?, onStop?: (s: ObserverState) => void
+}): { enable(): void; disable(): void; dispose(): void; isEnabled: boolean }
+// ObserverState: deltaX/Y, totalX/Y, velocityX/Y, axis, isDragging, event`,
   run(ctx) {
     let value = 50
     const num = h('span', { class: 'scrub__num' }, '50')

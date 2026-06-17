@@ -64,6 +64,8 @@ export const slowMo: Section = {
 
 play.timeScale(0.25)   // quarter speed, identical motion
 play.timeScale(1)      // back to real time`,
+  api: `timeScale(rate: number): this   // set the dilation; 0 acts like pause
+timeScale(): number             // read the current rate`,
   run(ctx) {
     const track = lane()
     const box = h('div', { class: 'obj obj--chip' })
@@ -107,6 +109,9 @@ export const scrub: Section = {
   code: `const clip = animatePlayback(box, { x: 280, rotate: 360 }, { duration: 2000, paused: true })
 
 scrubber.addEventListener('input', () => clip.progress(scrubber.valueAsNumber / 100))`,
+  api: `seek(timeMs: number): this       // jump the playhead to an absolute time (ms)
+progress(p: number): this        // write normalized progress 0..1
+progress(): number               // read it back`,
   run(ctx) {
     const track = lane()
     const box = h('div', { class: 'obj obj--chip' })

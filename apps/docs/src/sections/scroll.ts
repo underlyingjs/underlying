@@ -36,6 +36,10 @@ const locked = playable(xa).to(168, { paused: true, easing: linear })
 const trail = playable(xb).to(168, { paused: true, easing: linear })
 scroll.scrub(locked, { smooth: false })   // tracks the scroll exactly
 scroll.scrub(trail, { smooth: 0.16 })      // trails it by ~0.16s, momentum`,
+  api: `type ScrubTarget = PlaybackHandle | ((p: number) => void)
+interface ScrubOptions { target?: HTMLElement; range?: ScrollRange; track?: Track;
+  smooth?: false | number; spring?: SpringOptions }  // false = locked, number = catch-up seconds
+scroll.scrub(target: ScrubTarget, options?: ScrubOptions): Disposable`,
   run(ctx) {
     const { box, rail } = scroller('scroller__rail scroller__rail--tall')
     const lockedChip = h('div', { class: 'obj scrubcmp__chip' })
@@ -89,6 +93,10 @@ const far = scroll.parallax({ output: [-26, 26] })     // drifts down
 const near = scroll.parallax({ output: [54, -54] })    // drifts up, faster
 bindStyle(farDot, { y: far })
 bindStyle(nearDot, { y: near })`,
+  api: `interface ParallaxOptions { target?: HTMLElement; range?: ScrollRange;
+  output: readonly [number, number]; smooth?: number; spring?: SpringOptions }  // px at p=0 and p=1
+type ParallaxValue = Animatable & Disposable
+scroll.parallax(options: ParallaxOptions): ParallaxValue`,
   run(ctx) {
     const { box, rail } = scroller('scroller__rail scroller__rail--tall')
     const layers = h('div', { class: 'scroller__layers' })
@@ -136,6 +144,12 @@ scroll.trigger(card, {
   onEnter: () => { opacity.spring(1); y.spring(0) },
   onLeaveBack: () => { opacity.spring(0.12); y.spring(20) },
 })`,
+  api: `type TriggerAction = 'play' | 'pause' | 'resume' | 'reverse' | 'restart' | 'reset' | 'none'
+interface TriggerOptions { range?: ScrollRange; toggle?: PlaybackHandle;
+  toggleActions?: readonly [TriggerAction, TriggerAction, TriggerAction, TriggerAction]  // [enter, leave, enterBack, leaveBack]
+  toggleClass?: string | { className: string; targets?: HTMLElement | readonly HTMLElement[] }
+  onEnter?(): void; onLeave?(): void; onEnterBack?(): void; onLeaveBack?(): void }
+scroll.trigger(element: HTMLElement, options: TriggerOptions): Disposable`,
   run(ctx) {
     const { box, rail } = scroller('scroller__rail scroller__rail--list')
     ctx.stage.append(box)
@@ -190,6 +204,10 @@ scroll.snap({
   },
   onSnap: (p) => { status.textContent = 'snapped' },
 })`,
+  api: `interface SnapOptions {
+  to: number | readonly number[] | ((p: number, direction: 1 | -1) => number)  // step, stops, or resolver
+  directional?: boolean; spring?: SpringOptions; onSnap?(progress: number): void }
+scroll.snap(options: SnapOptions): Disposable`,
   run(ctx) {
     const { box, rail } = scroller('scroller__rail scroller__rail--flush')
     const item = 92
@@ -238,6 +256,10 @@ t.on((p) => {
   fill.style.transform = \`scaleX(\${p})\`
   label.textContent = \`\${Math.round(p * 100)}%\`
 })`,
+  api: `interface TrackOptions { target?: HTMLElement; range?: ScrollRange }  // omit target for the whole scroller
+interface Track { progress(): number; raw(): number;
+  on(listener: (p: number) => void): () => void; refresh(): void; dispose(): void }
+scroll.track(options?: TrackOptions): Track`,
   run(ctx) {
     const { box, rail } = scroller('scroller__rail scroller__rail--tall')
     rail.append(h('div', { class: 'scroller__filler' }))
@@ -286,6 +308,10 @@ scroll.trigger(section, {
   range: ['-42%', '-42%'],                       // a thin band through the middle
   toggleClass: { className: 'is-active', targets: link },
 })`,
+  api: `interface ScrollToOptions { align?: OffsetEntry; offset?: number;  // align default 'start start'
+  spring?: SpringOptions; immediate?: boolean; onArrive?(): void }
+interface ScrollToHandle { readonly finished: Promise<void>; cancel(): void }
+scroll.scrollTo(target: number | HTMLElement, options?: ScrollToOptions): ScrollToHandle`,
   run(ctx) {
     const toc = h('nav', { class: 'docsnav__toc' })
     const rail = h('div', { class: 'docsnav__rail' })
