@@ -118,10 +118,11 @@ export const customPhysics: Section = {
     <code>Simulation</code> - an acceleration plus a rest condition.
     <code>value.simulate(yourSimulation)</code> runs anything on the same
     fixed-timestep clock, fully interruptible. Drop both: the left ball
-    <em>springs</em> to the floor (smooth, decelerating into place); the right
-    falls under <em>gravity</em> and bounces, energy lost each time - an
-    accelerating fall and a decaying bounce no spring can draw. Same engine, your
-    physics.</p>`,
+    <em>springs</em> to the floor and eases gently to a stop - a spring
+    decelerates into its target and never passes it, so it cannot bounce. The
+    right falls under <em>gravity</em>, slams in, and bounces, energy lost each
+    time - an accelerating fall and a decaying bounce no spring can draw. Same
+    engine, your physics.</p>`,
   code: `import { animatable } from '@underlying/core'
 
 // your acceleration, your rest condition
@@ -147,7 +148,7 @@ y.simulate(bounce)            // the same engine behind spring/decay/to`,
     const drop = (): void => {
       yA.set(0)
       yB.set(0)
-      yA.spring(FLOOR, { stiffness: 120, damping: 22 }) // ~critically damped: eases down, no overshoot
+      yA.spring(FLOOR, { stiffness: 120, damping: 22 }) // critically damped: eases gently to a stop, no overshoot
       yB.simulate(gravityBounce(FLOOR))
     }
     ctx.controls.append(button('drop', drop))
