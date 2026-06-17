@@ -15,9 +15,9 @@
 
 > Beta. The API may still move before 1.0.
 
-The GSAP-parity layer for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core): the full named-ease library, `cubicBezier`, and the small helpers you reach for (`clamp`, `mapRange`, `interpolate`, `snap`, `wrap`, `random`). Tree-shakeable - you pay for what you import.
+The named-ease and helpers layer for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core): the full named-ease library, `cubicBezier`, and the small helpers you reach for (`clamp`, `mapRange`, `interpolate`, `snap`, `wrap`, `random`). Tree-shakeable - you pay for what you import.
 
-> Note: for **live** motion a spring already gives you overshoot and settle, physically. Named eases are for **baked** motion - a timed tween, a scrubbable timeline - and for porting existing GSAP code.
+> Note: for **live** motion a spring already gives you overshoot and settle, physically. Named eases are for **baked** motion - a timed tween, a scrubbable timeline - and for porting existing named-ease code.
 
 ```sh
 npm install @underlying/utils @underlying/core
@@ -44,9 +44,9 @@ steps(5)               // a 5-step staircase
 cubicBezier(0.25, 0.1, 0.25, 1)   // paste from any easing visualiser
 ```
 
-## Named eases by string (GSAP-style)
+## Named eases by string
 
-Import the side-effect entry once and `@underlying/core` resolves ease names - so GSAP code ports across unchanged:
+Import the side-effect entry once and `@underlying/core` resolves ease names - so existing ease-name code ports across unchanged:
 
 ```ts
 import '@underlying/utils/register'
@@ -56,7 +56,7 @@ animate(card, { y: 0 }, { duration: 900, easing: 'elastic.out(1, 0.3)' })
 animate(card, { y: 0 }, { duration: 600, easing: 'cubicBezier(0.25, 0.1, 0.25, 1)' })
 ```
 
-A name with no variant defaults to `.out` (GSAP convention). An unknown name warns once and falls back, never throws.
+A name with no variant defaults to `.out` (by convention). An unknown name warns once and falls back, never throws.
 
 ## Helpers
 

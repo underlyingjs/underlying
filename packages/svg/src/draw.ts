@@ -15,7 +15,7 @@ export interface DrawOptions {
   scheduler?: Scheduler
   /** Initial draw fraction, 0..1 (0 hidden, 1 drawn). Default 0. */
   from?: number
-  /** Spring to this fraction on creation - the GSAP-familiar one-call form. */
+  /** Spring to this fraction on creation - a familiar one-call form. */
   to?: number
 }
 

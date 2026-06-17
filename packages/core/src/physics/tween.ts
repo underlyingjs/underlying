@@ -7,7 +7,7 @@ import { SIMULATION_TIMESTEP_S, type SimulationState } from './simulation'
 export interface ToOptions {
   /** ms */
   duration?: number
-  /** A function, or a GSAP-style name once @underlying/utils is imported ('power2.out'). */
+  /** A function, or a named ease by string once @underlying/utils is imported ('power2.out'). */
   easing?: EasingInput
   /** Per-animation override of the reduced-motion behavior. */
   reducedMotion?: ReducedMotionOverride

@@ -1,6 +1,6 @@
 import { registerEasing, type Easing, type EasingVariant } from '@underlying/core'
 
-/** An ease family: the three GSAP variants of one curve. */
+/** An ease family: the three variants of one curve. */
 export interface EaseFamily {
   in: Easing
   out: Easing
@@ -23,7 +23,7 @@ const fromOut = (easeOut: (t: number) => number): EaseFamily => ({
 
 const power = (exponent: number): EaseFamily => fromIn((t) => t ** exponent)
 
-/** power1 = quad, power2 = cubic, power3 = quart, power4 = quint (GSAP naming). */
+/** power1 = quad, power2 = cubic, power3 = quart, power4 = quint (the conventional names). */
 export const power1: EaseFamily = power(2)
 export const power2: EaseFamily = power(3)
 export const power3: EaseFamily = power(4)

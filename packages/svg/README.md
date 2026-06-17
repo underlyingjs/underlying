@@ -15,7 +15,7 @@
 
 > Beta. The API may still move before 1.0.
 
-SVG path animation for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core) - MotionPath, DrawSVG, and a resampling morph. The progress of each is a single live value, so where other libraries bake a path tween, here you can flick a marker down a path and let it settle, interrupt a stroke mid-draw, scrub a morph, or hand the same progress to scroll. No new engine: it samples the path with the native `getPointAtLength`/`getTotalLength` and drives core's `animatable`.
+SVG path animation for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core) - ride a path, draw a stroke, and a resampling morph. The progress of each is a single live value, so where other libraries bake a path tween, here you can flick a marker down a path and let it settle, interrupt a stroke mid-draw, scrub a morph, or hand the same progress to scroll. No new engine: it samples the path with the native `getPointAtLength`/`getTotalLength` and drives core's `animatable`.
 
 ```sh
 npm install @underlying/svg @underlying/core
@@ -63,11 +63,11 @@ m.spring(0)   // morph back - interruptible
 m.set(0.5)    // hold it halfway
 ```
 
-This is a resampling morph (smooth, handles arbitrary shapes); full command-preserving MorphSVG - sharp-corner fidelity and `shapeIndex` - is future work.
+This is a resampling morph (smooth, handles arbitrary shapes); a full command-preserving morph - sharp-corner fidelity and `shapeIndex` - is future work.
 
 ## The familiar one-call form
 
-Both accept a `{ to }` kickoff that reads like `gsap.to(el, { motionPath })` or `{ drawSVG }` - but springs under the hood, and the handle is still there for the live wins.
+Both accept a `{ to }` kickoff that reads like a one-call tween - but springs under the hood, and the handle is still there for the live wins.
 
 ```ts
 motionPath(marker, '#track', { to: 1, autoRotate: true })
@@ -88,7 +88,7 @@ createScroll({ scroller }).scrub(ride.t)   // marker follows the path as you scr
 
 ## Bring your own driver
 
-The handles are built on thin binders. If you already have an `Animatable` (or want to control the value yourself, GSAP-style), bind it directly:
+The handles are built on thin binders. If you already have an `Animatable` (or want to control the value yourself), bind it directly:
 
 ```ts
 import { bindPath, bindDraw, samplePath } from '@underlying/svg'
@@ -106,7 +106,7 @@ samplePath('#track').at(0.5)  // low-level: { x, y, angle } at progress 0.5
 - **Reduced motion** is inherited from core: a `spring`/`decay`/`to` on the driver auto-degrades under `prefers-reduced-motion`, so the element jumps to the target with no travel.
 - **Coordinate space.** `motionPath` writes the sampled point straight to the element's `transform`, so the element and the path should share a coordinate space (e.g. both inside the same SVG, or the element absolutely positioned over it).
 - **SSR.** Sampling needs the DOM; pass an element rather than a selector on the server, or call from an effect.
-- **Morph** here resamples both outlines into points and interpolates - it handles any two shapes, but it is not yet the full command-preserving MorphSVG (sharp corners can soften; raise `samples` for fidelity).
+- **Morph** here resamples both outlines into points and interpolates - it handles any two shapes, but it is not yet a full command-preserving morph (sharp corners can soften; raise `samples` for fidelity).
 
 ## License
 

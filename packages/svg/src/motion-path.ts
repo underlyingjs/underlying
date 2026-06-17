@@ -15,7 +15,7 @@ export interface PathBindOptions extends SamplePathOptions {
 export interface MotionPathOptions extends PathBindOptions {
   /** Initial progress, 0..1. Default 0. */
   from?: number
-  /** Spring to this progress on creation - the GSAP-familiar one-call form. */
+  /** Spring to this progress on creation - a familiar one-call form. */
   to?: number
 }
 

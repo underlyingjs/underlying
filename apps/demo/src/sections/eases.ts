@@ -6,7 +6,7 @@ export const namedEases: Section = {
   id: 'named-eases',
   group: 'Value model',
   title: 'Named eases',
-  tagline: 'Paste a GSAP ease by name - the card enters with that exact curve.',
+  tagline: 'Paste a named ease by string - the card enters with that exact curve.',
   description: `
     <p>For <em>baked</em> motion (a timed tween, a scrubbable timeline) you still want named
     eases. <code>@underlying/utils</code> brings the full set - <code>power1-4</code>,
