@@ -1,0 +1,246 @@
+// underlyi.ng landing - charte v2 (two inks, no accent hue: MOTION is the accent).
+@font-face {
+  font-family: 'Fraunces Soft';
+  src: url('/fraunces-soft.woff2') format('woff2');
+  font-weight: 620;
+  font-display: swap;
+}
+
+:root {
+  --sapin: #1c3426;
+  --creme: #faf9f6;
+  --mousse: #a3a9a2;
+  --lichen: #8c948c;
+  --sous-bois: #4a5a4e;
+  --ligne: #e2e0da;
+  --ligne-soft: #ecebe4;
+  --tint: #f1efe8;
+
+  --display: 'Fraunces Soft', Georgia, 'Times New Roman', serif;
+  --body: 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'SF Mono', 'Cascadia Code', ui-monospace, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--creme);
+  color: var(--sapin);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+// ---- hero ----------------------------------------------------------------
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 6vmin;
+  overflow: hidden; // the disc can be flung; the spring brings it home
+}
+
+// left rail: a printed-essay section number
+.hero__rail {
+  position: absolute;
+  top: 28px;
+  left: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mousse);
+
+  &::before {
+    content: '';
+    width: 22px;
+    height: 1px;
+    background: var(--ligne);
+  }
+}
+
+.hero__field {
+  position: relative;
+  text-align: center;
+}
+
+.hero__word {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(52px, 13vw, 184px);
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  color: var(--sapin);
+  user-select: none;
+  // hold the layout steady; the dot is rendered by the live disc instead
+}
+
+.hero__dot {
+  color: transparent; // the period's place is kept, the disc draws it
+}
+
+.hero__disc {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  cursor: grab;
+  touch-action: none;
+  z-index: 3;
+  will-change: transform;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+.hero__disc-core {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--sapin);
+  will-change: transform;
+}
+
+.hero__thesis {
+  margin: clamp(22px, 3vh, 40px) auto 0;
+  min-height: 1.5em;
+  max-width: 38ch;
+  font-family: var(--mono);
+  font-size: clamp(12.5px, 1.5vw, 15px);
+  letter-spacing: 0.01em;
+  color: var(--sous-bois);
+
+  &::after {
+    content: '';
+    display: inline-block;
+    width: 0.5ch;
+    height: 1.05em;
+    margin-left: 1px;
+    vertical-align: -0.18em;
+    background: var(--lichen);
+    animation: caret 1.05s step-end infinite;
+  }
+  &.is-typed::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.hero__grab {
+  display: block;
+  margin-top: 18px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--mousse);
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+
+  &.is-gone {
+    opacity: 0;
+  }
+}
+
+.hero__cue {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mousse);
+
+  &::after {
+    content: '';
+    width: 1px;
+    height: 26px;
+    background: linear-gradient(var(--ligne), transparent);
+    animation: cue 2.2s ease-in-out infinite;
+    transform-origin: top;
+  }
+}
+@keyframes cue {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+// the live feature-credit chip: lights the instant a feature fires
+.credit {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--mousse);
+  opacity: 0.7;
+  transition: color 0.25s ease, opacity 0.25s ease, border-color 0.25s ease;
+  z-index: 5;
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ligne);
+    transition: background 0.25s ease, transform 0.25s ease;
+  }
+
+  &--lit {
+    opacity: 1;
+    color: var(--sapin);
+    border-color: var(--lichen);
+
+    .credit__dot {
+      background: var(--sapin);
+      transform: scale(1.25);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__cue::after,
+  .hero__thesis::after {
+    animation: none;
+  }
+}
