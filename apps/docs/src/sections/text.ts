@@ -16,6 +16,11 @@ export const textSplit: Section = {
 
 const s = split(headline, { type: ['words'] })  // s.chars / s.words / s.lines
 s.revert()                                        // restore, byte-identical`,
+  api: `split(el, options?): Split
+interface SplitOptions { type?: ('chars' | 'words' | 'lines')[];  // default ['words']
+  a11y?: 'copy' | 'label' | 'off';  // default 'copy'
+  locale?: string; resize?: boolean }  // resize default true when 'lines'
+interface Split { chars: HTMLElement[]; words: HTMLElement[]; lines: HTMLElement[]; revert(): void }`,
   run(ctx) {
     const para = h('p', { class: 'textdemo__split' }, 'Split me by word, character or line. ✨')
     ctx.stage.append(para)
@@ -55,6 +60,13 @@ export const textReveal: Section = {
   code: `import { reveal } from '@underlying/text'
 
 reveal(headline, { by: 'words', each: 55, from: { y: 26, opacity: 0 } })`,
+  api: `reveal(el, options?): Reveal
+interface RevealOptions { by?: 'chars' | 'words' | 'lines';  // default 'words'
+  each?: number;  // ms between pieces, default 40
+  from?: { x?; y?; scale?; opacity? };  // default { y: 24, opacity: 0 }
+  duration?: number;  // ms tween instead of the default spring
+  stiffness?: number; damping?: number; a11y?; locale?; scheduler? }
+interface Reveal { split: Split; finished: Promise<void>; stop(): void; revert(): void }`,
   run(ctx) {
     const headline = h('h2', { class: 'textdemo__headline' }, 'Physics, not curves. ✨')
     ctx.stage.append(headline)
@@ -86,6 +98,11 @@ export const textScramble: Section = {
   code: `import { scramble } from '@underlying/text'
 
 scramble(title, 'underlying')`,
+  api: `scramble(el, text, options?): TextEffect
+interface ScrambleOptions { duration?: number;  // total ms, default 1400
+  chars?: string;  // glyph pool for not-yet-decoded positions
+  locale?: string; scheduler?: Scheduler }
+interface TextEffect { finished: Promise<void>; stop(): void }`,
   run(ctx) {
     const word = h('div', { class: 'textdemo__big' }, 'underlying')
     ctx.stage.append(word)
@@ -116,6 +133,10 @@ export const textTypewriter: Section = {
   code: `import { typewriter } from '@underlying/text'
 
 typewriter(line, 'physics-first.')`,
+  api: `typewriter(el, text, options?): TextEffect
+interface TypewriterOptions { duration?: number;  // total ms, default max(400, length * 55)
+  locale?: string; scheduler?: Scheduler }
+interface TextEffect { finished: Promise<void>; stop(): void }`,
   run(ctx) {
     const line = h('div', { class: 'textdemo__line' }, 'physics-first.')
     ctx.stage.append(line)

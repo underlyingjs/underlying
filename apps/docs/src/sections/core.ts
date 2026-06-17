@@ -80,6 +80,8 @@ export const interruption: Section = {
 
 animate(chip, { x: 240 })   // launch
 animate(chip, { x: 0 })     // interrupt: continues from the live velocity`,
+  api: `// a repeat animate() retargets the same value; the handle never rejects
+interface AnimationHandle { readonly finished: Promise<void>; stop(): void }`,
   run(ctx) {
     const track = h('div', { style: 'position:absolute;inset:18px;display:flex;align-items:center' })
     const chip = h('div', { class: 'obj obj--chip' })
@@ -131,6 +133,11 @@ const bounce = {
   rest: (pos, vel) => pos >= floor && Math.abs(vel) < 3 ? floor : null,
 }
 y.simulate(bounce)            // the same engine behind spring/decay/to`,
+  api: `interface Simulation {
+  acceleration(position: number, velocity: number): number   // units/s^2
+  rest(position: number, velocity: number): number | null    // settled pos, or null while moving
+}
+value.simulate(simulation: Simulation, options?: { velocity?: number }): AnimationHandle`,
   run(ctx) {
     const lane = (tag: string): { col: HTMLElement; ball: HTMLElement } => {
       const ball = h('div', { class: 'obj obj--dot dropdemo__ball' })

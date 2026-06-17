@@ -39,6 +39,9 @@ const ride = motionPath(plane, '#route', { autoRotate: true })
 ride.spring(1)     // fly to the end
 ride.flick(1.1)    // throw it down the route; inertia lands it
 ride.spring(0.4)   // retarget mid-flight, momentum kept`,
+  api: `motionPath(element: HTMLElement | SVGElement, path: string | SVGPathElement, options?: MotionPathOptions): MotionPath
+interface MotionPathOptions { autoRotate?: boolean | number; from?: number; to?: number; tangentEpsilon?: number }
+interface MotionPath extends ScalarControls { readonly t: Animatable }`,
   run(ctx) {
     const wrap = canvas(`
       <path class="svgdemo__track" d="${FLIGHT_D}" fill="none" />
@@ -79,6 +82,9 @@ export const svgDraw: Section = {
 const line = draw('#signature')
 line.spring(1)   // draw it on
 line.spring(0)   // erase - interruptible mid-stroke`,
+  api: `draw(path: string | DrawElement, options?: DrawOptions): Draw
+interface DrawOptions { from?: number; to?: number }
+interface Draw extends ScalarControls { readonly fraction: Animatable }`,
   run(ctx) {
     const wrap = canvas(`<path class="svgdemo__sign" d="${SIGN_D}" fill="none" />`)
     ctx.stage.append(wrap)
@@ -113,6 +119,9 @@ export const svgMorph: Section = {
 const m = morph(blob, starPathData, { closed: true })
 m.spring(1)   // morph to the star
 m.spring(0)   // morph back - interruptible`,
+  api: `morph(element: MorphElement, target: string | PathGeometry, options?: MorphOptions): Morph
+interface MorphOptions { samples?: number; closed?: boolean; from?: number; to?: number }
+interface Morph extends ScalarControls { readonly fraction: Animatable }`,
   run(ctx) {
     const wrap = canvas(`<path class="svgdemo__morph" d="${CIRCLE_D}" />`)
     ctx.stage.append(wrap)
@@ -146,6 +155,9 @@ export const svgMorphSharp: Section = {
 const m = morphCommands(icon, stopSquareData)
 m.spring(1)   // play -> stop, corners stay sharp
 m.spring(0)   // back - interruptible`,
+  api: `morphCommands(element: MorphElement, target: string | { getAttribute(name: string): string | null }, options?: MorphCommandsOptions): Morph
+interface MorphCommandsOptions { from?: number; to?: number }  // no arc (A) support - use morph() for arcs
+interface Morph extends ScalarControls { readonly fraction: Animatable }`,
   run(ctx) {
     const wrap = canvas(`<path class="svgdemo__morph" d="${PLAY_D}" />`)
     ctx.stage.append(wrap)

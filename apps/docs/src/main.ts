@@ -62,7 +62,7 @@ const pages: Page[] = [
     id: 'scroll',
     group: 'Guides',
     title: 'Scroll',
-    blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>pin()</code>, <code>snap()</code>, and <code>trigger()</code>, plus a spring-driven <code>scrollTo()</code> and dev <code>markers()</code>, all on the one rAF loop. Each demo drives its own scroll container.',
+    blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams, all on the one rAF loop. The demos below each drive their own scroll container: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>trigger()</code>, a spring-driven <code>scrollTo()</code>, momentum <code>snap()</code>, and a raw <code>track()</code>. The package also ships <code>pin()</code> and dev <code>markers()</code>.',
     sections: [scrollScrub, scrollParallax, scrollTrigger, scrollTo, scrollSnap, scrollTrack],
   },
   {
@@ -76,7 +76,7 @@ const pages: Page[] = [
     id: 'drag-flip',
     group: 'Guides',
     title: 'Drag & FLIP',
-    blurb: '<code>@underlying/gestures</code> - drag and fling with the pointer\'s velocity handed straight into physics, plus FLIP layout transitions that spring to their new places and stay <em>interruptible</em>: mutate again mid-flight and each element retargets from its live velocity, never a restart.',
+    blurb: '<code>@underlying/gestures</code> drags and flings with the pointer\'s velocity handed straight into physics; <code>@underlying/flip</code> springs layout transitions to their new places and keeps them <em>interruptible</em>: mutate again mid-flight and each element retargets from its live velocity, never a restart.',
     sections: [dragPlayground, flipShuffle],
   },
   {

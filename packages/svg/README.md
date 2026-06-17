@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
-  <img alt="svg gzip" src="https://img.shields.io/badge/svg-~1.6%20kB%20gzip-1C3426" />
+  <img alt="svg gzip" src="https://img.shields.io/badge/svg-3.23%20kB%20gzip-1C3426" />
   <img alt="built on" src="https://img.shields.io/badge/built%20on-%40underlying%2Fcore-1C3426" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
@@ -63,15 +63,32 @@ m.spring(0)   // morph back - interruptible
 m.set(0.5)    // hold it halfway
 ```
 
-This is a resampling morph (smooth, handles arbitrary shapes); a full command-preserving morph - sharp-corner fidelity and `shapeIndex` - is future work.
+This is a resampling morph (smooth, handles arbitrary shapes). When you need corners to stay sharp, reach for `morphCommands()` below.
+
+## `morphCommands()`
+
+A command-preserving morph that keeps corners razor-sharp. Instead of resampling both outlines into points, it parses the `d` commands into cubic segments, subdivides the sparser shape so anchors map to anchors (de Casteljau, so original corners stay crisp), aligns closed rings by rotation and winding, and interpolates each anchor and control. The result is real curves with sharp corners the whole way across. The fraction is live, so you can scrub it or grab it mid-morph.
+
+```ts
+import { morphCommands } from '@underlying/svg'
+
+const m = morphCommands(icon, stopSquareData)  // target: a `d` string or an element with a `d`
+m.spring(1)   // play triangle -> stop square, every corner stays sharp
+m.spring(0)   // back - interruptible
+m.set(0.5)    // hold it halfway
+```
+
+There is no arc (`A`) command support - use `morph()` for paths with arcs or arbitrary shapes.
 
 ## The familiar one-call form
 
-Both accept a `{ to }` kickoff that reads like a one-call tween - but springs under the hood, and the handle is still there for the live wins.
+`motionPath`, `draw`, `morph`, and `morphCommands` all accept a `{ to }` kickoff that reads like a one-call tween - but springs under the hood, and the handle is still there for the live wins.
 
 ```ts
 motionPath(marker, '#track', { to: 1, autoRotate: true })
 draw('#signature', { to: 1 })
+morph(blob, starPathData, { to: 1, closed: true })
+morphCommands(icon, stopSquareData, { to: 1 })
 ```
 
 ## Composing - drive the same path from scroll or a timeline
@@ -101,12 +118,14 @@ t.decay({ velocity: 2.4 })
 samplePath('#track').at(0.5)  // low-level: { x, y, angle } at progress 0.5
 ```
 
+`resolvePathGeometry(input)` is exported too - the low-level resolver that turns a selector or element into a geometry source (the same step `samplePath` does internally), if you want to measure or sample a path yourself.
+
 ## Notes
 
 - **Reduced motion** is inherited from core: a `spring`/`decay`/`to` on the driver auto-degrades under `prefers-reduced-motion`, so the element jumps to the target with no travel.
 - **Coordinate space.** `motionPath` writes the sampled point straight to the element's `transform`, so the element and the path should share a coordinate space (e.g. both inside the same SVG, or the element absolutely positioned over it).
 - **SSR.** Sampling needs the DOM; pass an element rather than a selector on the server, or call from an effect.
-- **Morph** here resamples both outlines into points and interpolates - it handles any two shapes, but it is not yet a full command-preserving morph (sharp corners can soften; raise `samples` for fidelity).
+- **Morph** comes in two flavours. `morph()` resamples both outlines into points and interpolates - it handles any two shapes, but sharp corners can soften (raise `samples` for fidelity). `morphCommands()` preserves the commands and keeps corners crisp, but has no arc (`A`) support; use `morph()` for arcs.
 
 ## License
 

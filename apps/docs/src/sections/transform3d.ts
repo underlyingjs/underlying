@@ -17,6 +17,11 @@ export const flip3d: Section = {
 
 // the scene holds the CSS perspective; the card is transform-style: preserve-3d
 animate(card, { rotateY: 180 })   // a live spring - flip again mid-turn, it bends back`,
+  api: `// each transform channel is its own interruptible spring (degrees / unitless / px)
+animate(el, {
+  x?, y?, scale?, rotate?,
+  rotateX?, rotateY?, rotateZ?, skewX?, skewY?, scaleX?, scaleY?, perspective?,
+}: AnimateTargets, options?: AnimateOptions): AnimationHandle`,
   run(ctx) {
     const card = h(
       'div',
@@ -62,6 +67,8 @@ export const menuOrigin: Section = {
 
 setStyle(menu, { originX: 0, originY: 0, scale: 0 })  // anchored to the corner, collapsed
 animate(menu, { scale: 1, opacity: 1 })               // grows out of the button`,
+  api: `// originX / originY are live transform-origin channels, in percent (0 = edge, 50 = center)
+setStyle(el, { originX?: number, originY?: number, ... }, options?: { velocity?: number }): void`,
   run(ctx) {
     const panel = h(
       'div',

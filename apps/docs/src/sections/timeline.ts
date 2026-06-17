@@ -86,6 +86,17 @@ const tl = timeline()
   .stagger(rows, (o) => playable(o).to(1, { paused: true }), { each: 70, at: '<+=80' }) // cascade
 
 scrubber.addEventListener('input', () => tl.progress(scrubber.valueAsNumber / 100))`,
+  api: `timeline(options?: TimelineOptions): Timeline   // a seekable PlaybackHandle plus verbs
+interface Timeline {
+  to(value, target, options?: ClipOptions): this        // ClipOptions: { at?: Position; duration?; easing? }
+  from(value, start, options?): this
+  fromTo(value, start, target, options?): this
+  spring(value, target, options?: SpringClipOptions): this   // ClipOptions & SpringOptions, baked
+  stagger<T>(items: readonly T[], build: (item: T, i: number) => PlaybackHandle,
+    options: { each: number; from?: 'start' | 'end' | 'center' | number; at?: Position }): this
+  label(name, at?: Position): this; call(fn, at?: Position): this
+  seek(ms): this; progress(p?: number): this | number; play(): this; reverse(): this
+}`,
   run(ctx) {
     const { card, tl } = revealCard(ctx)
     ctx.stage.append(card)
@@ -168,6 +179,14 @@ const scroll = createScroll({ scroller })
 const tl = timeline().to(card.opacity, 1).spring(avatar.scale, 1, { at: '<' }) /* ... */
 
 scroll.scrub(tl)   // locked: scroll position -> tl.progress(p), no special-casing`,
+  api: `createScroll(options?: { scroller?: HTMLElement }): ScrollController
+interface ScrollController {
+  // target is a seekable handle (the timeline) or a raw (p: number) => void
+  scrub(target: ScrubTarget, options?: ScrubOptions): Disposable
+}
+interface ScrubOptions {
+  smooth?: false | number   // false (default) = locked, frame-exact; number = momentum catch-up
+}`,
   run(ctx) {
     const { card, tl } = revealCard(ctx)
     const rail = h('div', { class: 'scroller__rail scroller__rail--tall' }, h('div', { class: 'tlsticky' }, card))
@@ -238,6 +257,14 @@ const gather = () => sequence()
   .spring(a.x, homeAx).spring(a.y, homeAy, { overlap: 0 })
   .spring(b.x, homeBx, { overlap: 70 })   // 70 ms after the previous leg starts
   /* ...the rest of the row... */ .play()`,
+  api: `sequence(options?: SequenceOptions): Sequence   // live, NOT seekable - no seek/progress/duration
+interface Sequence {
+  // each leg starts when the previous rests, or 'overlap' ms after it STARTS (the cascade)
+  spring(value, target, options?: SpringLegOptions): this   // LegOptions: { overlap?: number }
+  to(value, target, options?): this; decay(value, options?: DecayLegOptions): this
+  play(): this; stop(): void; readonly finished: Promise<void>
+}
+value.decay({ velocity, min?, max? }): AnimationHandle   // live bounded glide, interruptible`,
   run(ctx) {
     const CHIP = 40
     const N = 5

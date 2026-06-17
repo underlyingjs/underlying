@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
-  <img alt="utils gzip" src="https://img.shields.io/badge/utils-~1.3%20kB%20gzip-1C3426" />
+  <img alt="utils gzip" src="https://img.shields.io/badge/utils-1.35%20kB%20gzip-1C3426" />
   <img alt="built on" src="https://img.shields.io/badge/built%20on-%40underlying%2Fcore-1C3426" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
@@ -44,6 +44,31 @@ steps(5)               // a 5-step staircase
 cubicBezier(0.25, 0.1, 0.25, 1)   // paste from any easing visualiser
 ```
 
+`power1`-`power4` also carry their conventional names - `quad`, `cubic`, `quart`, `quint` are the same families (`quad === power1`, `cubic === power2`, `quart === power3`, `quint === power4`), so you can import whichever name reads better. `none` is the linear identity (`t => t`):
+
+```ts
+import { cubic, quint, none } from '@underlying/utils'
+
+animate(card, { y: 0 }, { duration: 600, easing: cubic.inOut })   // same as power2.inOut
+animate(card, { x: 0 }, { duration: 400, easing: none })          // constant rate, no curve
+```
+
+### Writing your own
+
+A family is the three variants of one curve - the `EaseFamily` shape, where each `Easing` is `(t: number) => number`:
+
+```ts
+import type { EaseFamily } from '@underlying/utils'
+
+const myEase: EaseFamily = {
+  in: (t) => t * t,
+  out: (t) => 1 - (1 - t) * (1 - t),
+  inOut: (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2),
+}
+
+animate(card, { y: 0 }, { duration: 600, easing: myEase.out })
+```
+
 ## Named eases by string
 
 Import the side-effect entry once and `@underlying/core` resolves ease names - so existing ease-name code ports across unchanged:
@@ -57,6 +82,14 @@ animate(card, { y: 0 }, { duration: 600, easing: 'cubicBezier(0.25, 0.1, 0.25, 1
 ```
 
 A name with no variant defaults to `.out` (by convention). An unknown name warns once and falls back, never throws.
+
+The `/register` entry calls `registerEases()` for you (and also wires up `cubicBezier`). If you would rather register the named families explicitly - in app code, or without importing the side-effect entry - call it yourself:
+
+```ts
+import { registerEases } from '@underlying/utils'
+
+registerEases()   // registers power1-4, quad/cubic/quart/quint, sine, expo, circ, back, elastic, bounce, steps, none/linear
+```
 
 ## Helpers
 
