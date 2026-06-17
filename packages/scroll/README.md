@@ -14,7 +14,7 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
 
-> Beta - the API may still move before 1.0. Part of [underlying](https://github.com/underlyingjs/underlying), a physics-first motion library with first-class framework adapters (Angular first).
+> Part of [underlying](https://github.com/underlyingjs/underlying), a physics-first motion library with first-class framework adapters (Angular first).
 
 ## Why
 

@@ -13,7 +13,6 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
 
-> Beta. The API may still move before 1.0.
 
 SVG path animation for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core) - ride a path, draw a stroke, and a resampling morph. The progress of each is a single live value, so where other libraries bake a path tween, here you can flick a marker down a path and let it settle, interrupt a stroke mid-draw, scrub a morph, or hand the same progress to scroll. No new engine: it samples the path with the native `getPointAtLength`/`getTotalLength` and drives core's `animatable`.
 

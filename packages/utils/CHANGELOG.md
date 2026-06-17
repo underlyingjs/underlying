@@ -1,5 +1,10 @@
 # @underlying/utils
 
+## 1.0.0
+
+- First stable release. Named ease families and helpers (clamp, mapRange, interpolate, snap, wrap, random...), tree-shakeable, with a `/register` entry for string eases. Leaving beta: the API is frozen and the @underlying suite now versions together.
+
+
 ## 0.1.0-beta.2
 
 ### Patch Changes

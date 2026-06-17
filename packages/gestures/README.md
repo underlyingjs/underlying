@@ -13,7 +13,6 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
 
-> Beta. The API may still move before 1.0.
 
 Pointer gestures for [`@underlying/core`](https://github.com/underlyingjs/underlying/tree/main/packages/core). The hard part is the handoff: at release a gesture's velocity must flow into the motion seamlessly. Because every value in core carries its velocity, that handoff is one argument away. For layout and shared-element transitions, see [`@underlying/flip`](https://github.com/underlyingjs/underlying/tree/main/packages/flip).
 
