@@ -795,86 +795,66 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  display: grid;
-  place-items: center;
   overflow: hidden;
-}
-.depth__wash {
-  position: absolute;
-  width: clamp(240px, 40vw, 460px);
-  height: clamp(240px, 40vw, 460px);
-  border-radius: 28px;
-  background: var(--tint);
-  will-change: transform;
-}
-.depth__card {
-  position: relative;
-  width: clamp(200px, 30vw, 300px);
-  aspect-ratio: 4 / 5;
   border: 1px solid var(--ligne);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--creme);
-  box-shadow: 0 22px 50px rgba(28, 52, 38, 0.12), 0 1px 0 var(--ligne-soft); // lifts the mid plane
-  will-change: transform;
 }
-.depth__face {
+// the FIXED reference: it never moves, so the layers visibly slide over it
+.depth__grid {
   position: absolute;
-  inset: 14% 16%;
-  border-left: 1px solid var(--ligne);
-  border-top: 1px solid var(--ligne-soft);
+  inset: 0;
+  background-image: radial-gradient(var(--ligne) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
+  opacity: 0.55;
 }
-.depth__chip {
+.depth__layers {
   position: absolute;
-  padding: 5px 11px;
-  border: 1px solid var(--ligne);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
+  inset: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.depth__layer {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  will-change: transform; // bindStyle writes translateY at this layer's own rate
+}
+.depth__shape--ring {
+  width: clamp(78px, 11vw, 124px);
+  height: clamp(78px, 11vw, 124px);
+  border: 1.5px solid var(--lichen);
+  border-radius: 50%;
+}
+.depth__shape--card {
+  width: clamp(72px, 10vw, 104px);
+  height: clamp(92px, 13vw, 132px);
+  border: 1.5px solid var(--sapin);
+  border-radius: 12px;
+  background: var(--creme);
+}
+.depth__shape--dot {
+  width: clamp(40px, 6vw, 60px);
+  height: clamp(40px, 6vw, 60px);
+  border-radius: 50%;
+  background: var(--sapin);
+}
+.depth__rate {
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   color: var(--mousse);
-  white-space: nowrap;
-  opacity: 0;
-  transition: color 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
-  will-change: transform, opacity;
-
-  &.is-live {
-    opacity: 1;
-    color: var(--sapin);
-    border-color: var(--lichen);
-  }
-}
-.depth__chip--a {
-  top: 7%;
-  left: -4%;
-}
-.depth__chip--b {
-  top: 45%;
-  right: -10%;
-}
-.depth__chip--c {
-  bottom: 8%;
-  left: 4%;
 }
 .depth__foot {
   align-self: end;
-  display: grid;
-  gap: 8px;
   text-align: center;
 }
 .depth__claim {
   margin: 0;
-  font-family: var(--display);
-  font-weight: 620;
-  font-size: clamp(20px, 3.2vw, 34px);
-  letter-spacing: -0.02em;
-  color: var(--sapin);
-}
-.depth__why {
-  margin: 0;
   font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: clamp(12px, 1.4vw, 14px);
+  letter-spacing: 0.04em;
   color: var(--sous-bois);
 }
 
