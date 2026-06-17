@@ -1,0 +1,62 @@
+{
+  "name": "@underlying/flip",
+  "version": "0.1.0-beta.0",
+  "description": "Physics-first FLIP for @underlying/core: animate layout and shared-element transitions from old place to new, position and size - interruptible, retargeting mid-flight from live velocity.",
+  "license": "MIT",
+  "author": "underlyi.ng <contact@underlyi.ng>",
+  "keywords": [
+    "animation",
+    "flip",
+    "layout",
+    "transition",
+    "shared-element",
+    "physics",
+    "spring"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/underlyingjs/underlying.git",
+    "directory": "packages/flip"
+  },
+  "homepage": "https://github.com/underlyingjs/underlying#readme",
+  "bugs": "https://github.com/underlyingjs/underlying/issues",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "size": "node scripts/check-size.mjs"
+  },
+  "dependencies": {
+    "@underlying/core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}
