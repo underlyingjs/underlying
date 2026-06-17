@@ -1087,23 +1087,26 @@ pre {
 .flipgrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  width: 178px;
+  gap: 8px;
+  width: 184px;
   margin: 0 auto;
   justify-content: center;
+
+  &--list {
+    flex-wrap: nowrap;
+    flex-direction: column;
+  }
 }
 .flipgrid__item {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 10px;
-  background: var(--sapin);
-  color: var(--creme);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 14px;
-  user-select: none;
+  flex: 0 0 auto;
+  will-change: transform;
+}
+.flipgrid--list .flipgrid__item {
+  width: 184px;
+  height: 30px;
 }
 
 // @underlying/text demo

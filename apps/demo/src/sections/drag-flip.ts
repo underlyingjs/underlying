@@ -1,4 +1,5 @@
-import { draggable, flip } from '@underlying/gestures'
+import { flip } from '@underlying/flip'
+import { draggable } from '@underlying/gestures'
 import { button, h, type Section } from '../showcase'
 
 export const dragPlayground: Section = {
@@ -26,26 +27,31 @@ draggable(card, { bounds: panel, release: 'inertia' })  // grab, fling, glide`,
   },
 }
 
+const FLIP_SHADES = ['--sapin', '--sous-bois', '--lichen', '--mousse']
+
 export const flipShuffle: Section = {
   id: 'flip-shuffle',
   group: 'Drag & FLIP',
   title: 'flip()',
-  tagline: 'Physics-first FLIP - mash shuffle and it stays fluid.',
+  tagline: 'Measure, mutate, then spring position AND size - fluid even mid-flight.',
   description: `
-    <p>Reorder the grid and the tiles spring to their new places - overshoot and
-    all, because the play is a real spring, not a baked curve. The point is
-    interruption: hit <strong>shuffle</strong> again while they are still moving
-    and each tile retargets <em>from its live position and velocity</em>. The
-    motion bends into the new layout instead of restarting - a baked FLIP can't
-    do that. The whole choreography is <code>getBoundingClientRect</code> +
-    <code>@underlying/core</code> springs.</p>`,
-  code: `import { flip } from '@underlying/gestures'
+    <p><code>@underlying/flip</code> measures each tile's box before and after a
+    DOM change, then springs it from old to new - <em>both position and size</em>,
+    overshoot and all, because the play is a real spring, not a baked curve.
+    <strong>Shuffle</strong> reorders them; <strong>grid / list</strong> resizes
+    them. The point is interruption: press a button again while they are still
+    moving and each tile retargets <em>from its live position and velocity</em>,
+    so the motion bends into the new layout instead of restarting.</p>`,
+  code: `import { flip } from '@underlying/flip'
 
-shuffleBtn.onclick = () =>
-  flip(tiles, () => reorder(grid), { stiffness: 320, damping: 26 })`,
+// wrap any DOM change - flip measures First/Last and springs position + size
+flip(tiles, () => reorder(grid), { stiffness: 320, damping: 26 })
+flip(tiles, () => grid.classList.toggle('list'), { stiffness: 300, damping: 28 })`,
   run(ctx) {
     const grid = h('div', { class: 'flipgrid' })
-    const tiles = Array.from({ length: 9 }, (_, i) => h('div', { class: 'flipgrid__item' }, String(i + 1)))
+    const tiles = Array.from({ length: 9 }, (_, i) =>
+      h('div', { class: 'flipgrid__item', style: `background: var(${FLIP_SHADES[i % FLIP_SHADES.length] ?? '--sapin'})` }),
+    )
     for (const tile of tiles) grid.append(tile)
     ctx.stage.append(grid)
 
@@ -54,6 +60,13 @@ shuffleBtn.onclick = () =>
         for (const tile of [...tiles].sort(() => Math.random() - 0.5)) grid.append(tile)
       }, { stiffness: 320, damping: 26 })
     }
-    ctx.controls.append(button('shuffle', shuffle))
+    let list = false
+    const toggleView = (): void => {
+      flip(tiles, () => {
+        list = !list
+        grid.classList.toggle('flipgrid--list', list)
+      }, { stiffness: 300, damping: 28 })
+    }
+    ctx.controls.append(button('shuffle', shuffle), button('grid / list', toggleView))
   },
 }
