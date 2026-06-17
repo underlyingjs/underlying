@@ -1,3 +1,4 @@
+import type { Simulation } from '@underlying/core'
 import { draggable, type Draggable } from '@underlying/gestures'
 import type { ScrollController } from '@underlying/scroll'
 
@@ -69,7 +70,13 @@ export function initProof({ mount, scroll, fireCredit }: ProofDeps): void {
   // The scroll-follow is smooth (no bounce while you scrub); the release is
   // livelier, so a throw visibly overshoots and springs back - the bend you feel.
   const chaseSpring = { stiffness: 120, damping: 18 }
-  const releaseSpring = { stiffness: 160, damping: 11 } // underdamped enough that the bounce is clearly visible
+  // On release the live puck BOUNCES off the floor: gravity pulls it down onto the
+  // baseline (scrollTarget) and a stiff, damped floor pushes it back up, losing
+  // energy each hit - it lands on the line and bounces, instead of springing down
+  // through it. A couple of decaying bounces, then it rests on the floor.
+  const GRAVITY = 2600
+  const FLOOR_STIFFNESS = 8000
+  const FLOOR_DAMPING = 52
   // Bounds are mutated in place on each measure; draggable re-reads them per grab.
   const bakedBounds = { y: [0, 0] as [number, number] }
   const liveBounds = { y: [0, 0] as [number, number] }
@@ -132,12 +139,20 @@ export function initProof({ mount, scroll, fireCredit }: ProofDeps): void {
     },
     onEnd: ({ y: velocity }) => {
       liveDragging = false
-      liveDrag.y.spring(scrollTarget, { ...releaseSpring, velocity })
+      const floor = scrollTarget
+      const bounce: Simulation = {
+        acceleration: (position, currentVelocity) => {
+          const below = position - floor
+          return below > 0 ? GRAVITY - FLOOR_STIFFNESS * below - FLOOR_DAMPING * currentVelocity : GRAVITY
+        },
+        rest: (position, currentVelocity) => (position >= floor - 0.4 && Math.abs(currentVelocity) < 7 ? floor : null),
+      }
+      liveDrag.y.simulate(bounce, { velocity })
       pokedLive = true
       liveNote.classList.add('is-revealed')
       if (!pokedBaked) showVerdict('The live one took your throw and kept its velocity home.')
       settle()
-      fireCredit('@underlying/core - spring, velocity conserved')
+      fireCredit('@underlying/core - simulate, a real bounce off the floor')
     },
   })
 
