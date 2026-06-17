@@ -1344,6 +1344,120 @@ pre {
   }
 }
 
+// drag snap : a carousel that flicks and snaps to cards, rubber-banding at the ends
+.carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+
+  &__viewport {
+    position: relative;
+    width: 100%;
+    max-width: 276px;
+    overflow: hidden;
+    border-radius: 12px;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+  &__strip {
+    display: flex;
+    gap: 12px;
+    width: max-content;
+    will-change: transform;
+  }
+  &__card {
+    flex: 0 0 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 4px;
+    height: 132px;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--sapin);
+    color: var(--creme);
+    user-select: none;
+  }
+  &__num {
+    font-family: var(--mono);
+    font-size: 11px;
+    opacity: 0.7;
+  }
+  &__label {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 18px;
+  }
+  &__dots {
+    display: flex;
+    gap: 8px;
+  }
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ligne);
+    transition: background 0.15s;
+
+    &--on {
+      background: var(--sapin);
+    }
+  }
+}
+
+// observe() : a value you scrub with wheel, trackpad, or drag - one handler
+.scrub {
+  &__field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 220px;
+    padding: 24px 20px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid var(--ligne);
+    cursor: ns-resize;
+    touch-action: none;
+    user-select: none;
+  }
+  &__num {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 44px;
+    color: var(--sapin);
+    font-variant-numeric: tabular-nums;
+  }
+  &__bar {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--ink-wash);
+    overflow: hidden;
+  }
+  &__fill {
+    display: block;
+    height: 100%;
+    background: var(--sapin);
+    transform-origin: left center;
+    transform: scaleX(0.5);
+    will-change: transform;
+  }
+  &__hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mousse);
+  }
+}
+
 // ---- @underlying/svg demo: path canvas, rider, drawn stroke ----
 .svgdemo {
   width: 100%;

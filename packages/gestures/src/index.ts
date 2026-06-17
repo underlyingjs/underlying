@@ -1,5 +1,7 @@
 export { draggable } from './draggable'
-export type { Draggable, DraggableOptions, DragAxis, DragBounds, DragRelease } from './draggable'
+export type { Draggable, DraggableOptions, DragAxis, DragBounds, DragRelease, SnapTo } from './draggable'
+export { observe } from './observer'
+export type { Observer, ObserverInput, ObserverOptions, ObserverState } from './observer'
 export { flip } from './flip'
 export type { FlipOptions, FlipTargets } from './flip'
 export { VelocityTracker } from './velocity'
