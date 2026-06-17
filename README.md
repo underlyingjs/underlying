@@ -94,7 +94,7 @@ pnpm test        # Vitest
 pnpm typecheck   # strict TypeScript
 pnpm build       # ESM + CJS + types
 pnpm size        # gzip budget gate
-pnpm demo        # interactive docs site
+pnpm docs        # interactive docs site
 ```
 
 ## License
