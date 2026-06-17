@@ -808,41 +808,42 @@ body {
   background-size: 26px 26px;
   opacity: 0.55;
 }
-.depth__layers {
+.depth__words {
   position: absolute;
   inset: 0;
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
+  padding: clamp(18px, 5%, 56px) 6vmin;
 }
-.depth__layer {
-  display: grid;
-  justify-items: center;
-  gap: 14px;
-  will-change: transform; // bindStyle writes translateY at this layer's own rate
+.depth__row {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(10px, 1.5vw, 18px);
+  will-change: transform; // bindStyle writes translateY at this row's own rate
 }
-.depth__shape--ring {
-  width: clamp(78px, 11vw, 124px);
-  height: clamp(78px, 11vw, 124px);
-  border: 1.5px solid var(--lichen);
-  border-radius: 50%;
+.depth__word {
+  font-family: var(--display);
+  font-weight: 620;
+  letter-spacing: -0.03em;
+  line-height: 0.85;
 }
-.depth__shape--card {
-  width: clamp(72px, 10vw, 104px);
-  height: clamp(92px, 13vw, 132px);
-  border: 1.5px solid var(--sapin);
-  border-radius: 12px;
-  background: var(--creme);
+.depth__row--far .depth__word {
+  font-size: clamp(58px, 15vw, 188px);
+  color: rgba(28, 52, 38, 0.1); // a huge faint watermark, far back
 }
-.depth__shape--dot {
-  width: clamp(40px, 6vw, 60px);
-  height: clamp(40px, 6vw, 60px);
-  border-radius: 50%;
-  background: var(--sapin);
+.depth__row--mid .depth__word {
+  font-size: clamp(32px, 6vw, 72px);
+  color: var(--sous-bois);
+}
+.depth__row--near .depth__word {
+  font-size: clamp(52px, 12vw, 148px);
+  color: var(--sapin);
 }
 .depth__rate {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: clamp(10px, 1.1vw, 12px);
   letter-spacing: 0.12em;
   color: var(--mousse);
 }
