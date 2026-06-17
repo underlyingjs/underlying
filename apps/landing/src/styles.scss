@@ -602,6 +602,157 @@ body {
   }
 }
 
+// ---- beat 04 : the sheet (a thumb-tracking bottom sheet) -----------------
+.beat--sheet {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 12vmin 6vmin 9vmin;
+  background: var(--creme);
+  border-top: 1px solid var(--ligne-soft);
+}
+.sheet-stage {
+  width: 100%;
+  max-width: 720px;
+  display: grid;
+  justify-items: center;
+  gap: clamp(20px, 4vh, 40px);
+}
+.sheet__head {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(24px, 4.6vw, 52px);
+  letter-spacing: -0.02em;
+  color: var(--sapin);
+  text-align: center;
+}
+.sheet__sub {
+  margin: 8px 0 0;
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.4vw, 14px);
+  color: var(--sous-bois);
+  text-align: center;
+}
+
+// the device frame: the sheet is clipped to it, the scrim sits inside it
+.sheet-phone {
+  position: relative;
+  width: clamp(248px, 70vw, 320px);
+  height: clamp(420px, 64vh, 540px);
+  border: 1px solid var(--ligne);
+  border-radius: 28px;
+  background: var(--tint);
+  overflow: hidden;
+  touch-action: pan-y; // native page scroll outside the sheet
+}
+.sheet-phone__app {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 26px 22px;
+}
+.sheet-phone__line {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--ligne-soft);
+}
+.sheet-phone__line--wide {
+  width: 70%;
+}
+.sheet-phone__line--short {
+  width: 40%;
+}
+
+// the scrim: opacity driven live off the sheet's y (darkens toward sapin as it rises)
+.sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--sapin);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+// the sheet card: translateY written by draggable off the live y value
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 86%;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 16px;
+  padding: 12px 22px 26px;
+  background: var(--creme);
+  border-top-left-radius: 22px;
+  border-top-right-radius: 22px;
+  box-shadow: 0 -1px 0 var(--ligne), 0 -18px 40px rgba(28, 52, 38, 0.08);
+  touch-action: none; // the sheet owns the vertical gesture
+  cursor: grab;
+  will-change: transform;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+.sheet__grip {
+  justify-self: center;
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--mousse);
+  margin-top: 6px;
+}
+.sheet__head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.sheet__title {
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: 18px;
+  color: var(--sapin);
+}
+.sheet__detent {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mousse);
+}
+.sheet__body {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+.sheet__row {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--sapin);
+  border-bottom: 1px solid var(--ligne-soft);
+  padding-bottom: 10px;
+}
+.sheet__row--soft {
+  color: var(--sous-bois);
+}
+.sheet__verdict {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.4vw, 14px);
+  letter-spacing: 0.06em;
+  color: var(--sapin);
+  text-align: center;
+}
+
 // ---- beat 08 : the panorama (what is in the box) -------------------------
 .beat--panorama {
   position: relative;
