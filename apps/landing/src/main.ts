@@ -1,7 +1,11 @@
 import './styles.scss'
 import { animatable, bindStyle, type Simulation } from '@underlying/core'
 import { draggable } from '@underlying/gestures'
+import { createScroll } from '@underlying/scroll'
 import { typewriter } from '@underlying/text'
+import { initProof } from './beat-proof'
+import { initRail } from './beat-rail'
+import { initClose } from './beat-close'
 
 const app = document.getElementById('app')
 if (app === null) throw new Error('underlyi.ng: no #app')
@@ -29,6 +33,7 @@ const pick = <T extends Element>(selector: string): T => {
 }
 
 const field = pick<HTMLElement>('.hero__field')
+const word = pick<HTMLElement>('.hero__word')
 const dot = pick<HTMLElement>('.hero__dot')
 const disc = pick<HTMLElement>('[data-disc]')
 const core = pick<HTMLElement>('.hero__disc-core')
@@ -47,22 +52,54 @@ const fireCredit = (text: string): void => {
   creditTimer = setTimeout(() => credit.classList.remove('credit--lit'), 1500)
 }
 
-// The protagonist disc breathes - a perpetual, lightly energetic oscillation
-// around scale 1, driven by a bring-your-own Simulation (an undamped spring that
-// never rests). It is never perfectly still.
-const breath = animatable(1)
-bindStyle(core, { scale: breath })
-const oscillator: Simulation = { acceleration: (position) => -6 * (position - 1), rest: () => null }
-breath.simulate(oscillator, { velocity: 0.18 })
+// The protagonist disc IS the wordmark's period made physical. Three live values
+// share its inner core through one transform: it falls onto the baseline (a
+// spring), then breathes forever (an undamped Simulation), and it fades in as it
+// arrives so it reads as landing, not teleporting.
+const drop = animatable(-220) // vertical offset from the baseline home, px; starts above
+const fade = animatable(0) // hidden until the fall begins
+const breath = animatable(1) // perpetual scale oscillation around 1
+bindStyle(core, { y: drop, scale: breath, opacity: fade })
 
-// Place the disc exactly over the wordmark's dot, and follow the dot when the
-// face swaps in (font load) or the viewport resizes.
+const oscillator: Simulation = { acceleration: (position) => -6 * (position - 1), rest: () => null }
+const startBreath = (): void => {
+  breath.simulate(oscillator, { velocity: 0.18 })
+}
+
+// Size the disc to the wordmark's real period and seat it on the text baseline,
+// re-measured when the face swaps in (font load) or the viewport resizes. Font
+// metrics come from a canvas context so the seam tracks the actual glyph, not a
+// magic offset that would drift as the clamp() font-size scales.
+let measureCtx: CanvasRenderingContext2D | null | undefined
+const periodMetrics = (): { ascent: number; descent: number; rise: number } => {
+  const cs = getComputedStyle(word)
+  const size = parseFloat(cs.fontSize)
+  if (measureCtx === undefined) measureCtx = document.createElement('canvas').getContext('2d')
+  if (measureCtx === null) return { ascent: size * 0.8, descent: size * 0.2, rise: size * 0.06 }
+  measureCtx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+  const m = measureCtx.measureText('.')
+  const ascent = m.fontBoundingBoxAscent || size * 0.8
+  const descent = m.fontBoundingBoxDescent || size * 0.2
+  const rise = ((m.actualBoundingBoxAscent || size * 0.07) - (m.actualBoundingBoxDescent || 0)) / 2
+  return { ascent, descent, rise }
+}
+
 const placeDisc = (): void => {
+  const fontSize = parseFloat(getComputedStyle(word).fontSize)
+  const size = Math.max(13, Math.round(fontSize * 0.12))
+  disc.style.width = `${size}px`
+  disc.style.height = `${size}px`
+
   const d = dot.getBoundingClientRect()
+  const w = word.getBoundingClientRect()
   const f = field.getBoundingClientRect()
-  const size = disc.offsetWidth || 15
-  disc.style.left = `${d.left - f.left + d.width / 2 - size / 2}px`
-  disc.style.top = `${d.top - f.top + d.height / 2 - size / 2}px`
+  const { ascent, descent, rise } = periodMetrics()
+  // baseline within a single line box: half-leading (can be negative) plus ascent
+  const baselineFromTop = w.height / 2 + (ascent - descent) / 2
+  const cx = d.left - f.left + d.width / 2
+  const cy = w.top - f.top + baselineFromTop - rise
+  disc.style.left = `${cx - size / 2}px`
+  disc.style.top = `${cy - size / 2}px`
 }
 placeDisc()
 void document.fonts?.ready.then(placeDisc)
@@ -92,4 +129,27 @@ const startThesis = (): void => {
     thesis.classList.add('is-typed')
   })
 }
-void document.fonts?.ready.then(() => setTimeout(startThesis, 450))
+
+// The period falls onto the baseline and settles, then begins to breathe. The
+// spring's velocity is conserved into the overshoot; only once it rests does the
+// perpetual breath take over.
+const dropIn = (): void => {
+  fireCredit('@underlying/core - spring')
+  void fade.to(1, { duration: 220 })
+  void drop.spring(0, { stiffness: 150, damping: 16 }).finished.then(startBreath)
+}
+
+// Sequence the opening once the display face is in: re-seat the period on the
+// real glyph metrics, type the thesis, then let the period fall.
+void document.fonts?.ready.then(() => {
+  placeDisc()
+  window.setTimeout(startThesis, 200)
+  window.setTimeout(dropIn, 900)
+})
+
+// Below the hero: one scroll controller drives the page. Beat 01 proves the
+// thesis (live vs baked); beat 02 exhibits it as horizontal-from-vertical scroll.
+const scroll = createScroll()
+initProof({ mount: app, scroll, fireCredit })
+initRail({ mount: app, scroll, fireCredit })
+initClose({ mount: app, scroll, fireCredit })
