@@ -8,6 +8,7 @@ import { initRail } from './beat-rail'
 import { initGallery } from './beat-gallery'
 import { initSheet } from './beat-sheet'
 import { initDepth } from './beat-depth'
+import { initRoute } from './beat-route'
 import { initPanorama } from './beat-panorama'
 import { initClose } from './beat-close'
 
@@ -159,5 +160,6 @@ initRail({ mount: app, scroll, fireCredit })
 initGallery({ mount: app, scroll, fireCredit })
 initSheet({ mount: app, scroll, fireCredit })
 initDepth({ mount: app, scroll, fireCredit })
+initRoute({ mount: app, scroll, fireCredit })
 initPanorama({ mount: app, scroll, fireCredit })
 initClose({ mount: app, scroll, fireCredit })
