@@ -16,7 +16,7 @@ interface CloseDeps {
 export function initClose({ mount, scroll, fireCredit }: CloseDeps): void {
   const section = document.createElement('section')
   section.className = 'beat beat--close'
-  section.setAttribute('data-beat', '03')
+  section.setAttribute('data-beat', '09')
   section.innerHTML = `
     <div class="beat__rail">09 / the honest part</div>
     <div class="close">
@@ -25,7 +25,7 @@ export function initClose({ mount, scroll, fireCredit }: CloseDeps): void {
       <div class="close__cta">
         <button class="close__install" data-install type="button" aria-label="Copy the install command">
           <span class="close__prompt">npm i</span> @underlying/core
-          <span class="close__copied" data-copied>copied</span>
+          <span class="close__copied" data-copied role="status" aria-live="polite">copied</span>
         </button>
         <a class="close__link" href="https://docs.underlyi.ng">Documentation</a>
         <a class="close__gh" href="https://github.com/underlyingjs/underlying" target="_blank" rel="noreferrer" aria-label="underlying on GitHub">
