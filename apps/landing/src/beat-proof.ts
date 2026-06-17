@@ -69,7 +69,7 @@ export function initProof({ mount, scroll, fireCredit }: ProofDeps): void {
   // The scroll-follow is smooth (no bounce while you scrub); the release is
   // livelier, so a throw visibly overshoots and springs back - the bend you feel.
   const chaseSpring = { stiffness: 120, damping: 18 }
-  const releaseSpring = { stiffness: 150, damping: 14 }
+  const releaseSpring = { stiffness: 160, damping: 11 } // underdamped enough that the bounce is clearly visible
   // Bounds are mutated in place on each measure; draggable re-reads them per grab.
   const bakedBounds = { y: [0, 0] as [number, number] }
   const liveBounds = { y: [0, 0] as [number, number] }
