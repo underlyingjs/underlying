@@ -5,6 +5,7 @@ import { createScroll } from '@underlying/scroll'
 import { typewriter } from '@underlying/text'
 import { initProof } from './beat-proof'
 import { initRail } from './beat-rail'
+import { initGallery } from './beat-gallery'
 import { initClose } from './beat-close'
 
 const app = document.getElementById('app')
@@ -152,4 +153,5 @@ void document.fonts?.ready.then(() => {
 const scroll = createScroll()
 initProof({ mount: app, scroll, fireCredit })
 initRail({ mount: app, scroll, fireCredit })
+initGallery({ mount: app, scroll, fireCredit })
 initClose({ mount: app, scroll, fireCredit })

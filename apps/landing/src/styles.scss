@@ -468,6 +468,140 @@ body {
   color: var(--sapin); // the live half of the line
 }
 
+// ---- beat 03 : the gallery (flip) ----------------------------------------
+.beat--gallery {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 12vmin 6vmin;
+  background: var(--creme);
+  border-top: 1px solid var(--ligne-soft);
+}
+
+.gallery {
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  gap: clamp(24px, 4vh, 44px);
+}
+.gallery__lede {
+  text-align: center;
+}
+.gallery__head {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(26px, 5vw, 56px);
+  letter-spacing: -0.02em;
+  color: var(--sapin);
+}
+.gallery__sub {
+  margin: 10px auto 0;
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.4vw, 14px);
+  color: var(--sous-bois);
+}
+
+.gallery__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.6vw, 16px);
+  // no transition on grid-template / sizes: flip owns every layout move
+}
+
+.frame {
+  position: relative;
+  margin: 0;
+  cursor: pointer;
+  border: 1px solid var(--ligne);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--tint);
+  transform-origin: 0 0; // flip pins the top-left; match it so the caption holds
+  will-change: transform;
+  transition: opacity 0.3s ease; // ONLY opacity may transition
+
+  &:focus-visible {
+    outline: 2px solid var(--lichen);
+    outline-offset: 2px;
+  }
+}
+
+.frame__plate {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, var(--sapin), var(--sous-bois));
+}
+.frame--b .frame__plate {
+  background: linear-gradient(150deg, var(--sous-bois), var(--lichen));
+}
+.frame--c .frame__plate {
+  background: linear-gradient(120deg, var(--sapin), var(--lichen));
+}
+.frame--d .frame__plate {
+  background: linear-gradient(160deg, var(--lichen), var(--sapin));
+}
+.frame--e .frame__plate {
+  background: linear-gradient(135deg, var(--sous-bois), var(--sapin));
+}
+.frame--f .frame__plate {
+  background: linear-gradient(150deg, var(--lichen), var(--sous-bois));
+}
+
+.frame__cap {
+  position: absolute;
+  left: 12px;
+  top: 11px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--creme);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+// the opened frame grows to a full-width hero; the rest dim
+.frame.is-open {
+  grid-column: 1 / -1;
+  cursor: zoom-out;
+}
+.frame.is-open .frame__plate {
+  aspect-ratio: 2 / 1;
+}
+.frame.is-open .frame__cap {
+  opacity: 1;
+}
+.frame.is-dim {
+  opacity: 0.5;
+}
+
+.gallery__verdict {
+  min-height: 1.4em;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.4vw, 14px);
+  color: var(--sapin);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+
+  &.is-shown {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame,
+  .frame__cap,
+  .gallery__verdict {
+    transition: none;
+  }
+}
+
 // ---- the close : the honest part + footer --------------------------------
 .beat--close {
   position: relative;
