@@ -162,18 +162,27 @@ const dropIn = (): void => {
 // live disc can draw it. Once the letters land, the disc falls onto the baseline
 // and the thesis types in.
 void document.fonts?.ready.then(() => {
-  const revealed = reveal(word, { by: 'chars', each: 46, from: { y: 22, opacity: 0 } })
+  // The arrival pace lives here: `each` is the gap between letters (ms) and the
+  // soft spring (lower stiffness) lets each one float in slowly. Widen `each` to
+  // slow it further; tighten it to quicken.
+  const revealed = reveal(word, {
+    by: 'chars',
+    each: 58,
+    from: { y: 26, opacity: 0 },
+    stiffness: 150,
+    damping: 19,
+  })
   word.style.opacity = '1'
   fireCredit('@underlying/text - split, staggered reveal')
   periodAnchor = revealed.split.chars.find((char) => char.textContent === '.') ?? null
   periodAnchor?.style.setProperty('color', 'transparent')
-  // The letters are visually in by ~1s; drop the period onto its (settled) slot,
-  // then type the thesis - without waiting for every spring to fully rest.
+  // The wordmark is in by ~1s; drop the period onto its slot as the letters finish,
+  // then type the thesis.
   window.setTimeout(() => {
     placeDisc()
     dropIn()
-  }, 1000)
-  window.setTimeout(startThesis, 1350)
+  }, 1050)
+  window.setTimeout(startThesis, 1400)
 })
 
 // Below the hero: one scroll controller drives the page. Beat 01 proves the
