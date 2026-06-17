@@ -1,0 +1,25 @@
+{
+  "name": "underlying-landing",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@underlying/core": "workspace:*",
+    "@underlying/flip": "workspace:*",
+    "@underlying/gestures": "workspace:*",
+    "@underlying/scroll": "workspace:*",
+    "@underlying/svg": "workspace:*",
+    "@underlying/text": "workspace:*",
+    "@underlying/timeline": "workspace:*"
+  },
+  "devDependencies": {
+    "sass": "^1.77.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
