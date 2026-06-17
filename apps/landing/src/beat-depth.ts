@@ -22,19 +22,23 @@ export function initDepth({ mount, scroll, fireCredit }: DepthDeps): void {
   section.innerHTML = `
     <div class="depth-stage" data-stage>
       <div class="beat__rail">05 / depth</div>
+      <header class="depth__lede">
+        <h2 class="depth__head">One value. Three depths.</h2>
+        <p class="depth__sub">Scroll - the same number moves every layer at its own rate.</p>
+      </header>
       <div class="depth__wash" data-wash aria-hidden="true"></div>
       <figure class="depth__card" data-card>
-        <span class="depth__chip depth__chip--a" data-chip>live, not baked</span>
+        <span class="depth__chip depth__chip--a" data-chip>live</span>
         <span class="depth__chip depth__chip--b" data-chip>interruptible</span>
-        <span class="depth__chip depth__chip--c" data-chip>depth from scroll</span>
+        <span class="depth__chip depth__chip--c" data-chip>scroll-driven</span>
         <div class="depth__face"></div>
       </figure>
       <div class="depth__script">
-        <p class="depth__claim" data-claim>It holds still while the page moves around it.</p>
-        <p class="depth__claim" data-claim>Layers drift at their own depth, driven by one value.</p>
-        <p class="depth__claim" data-claim>Scroll back up and every plane reverses with you.</p>
+        <p class="depth__claim" data-claim>The card barely moves.</p>
+        <p class="depth__claim" data-claim>The wash drifts slow behind it.</p>
+        <p class="depth__claim" data-claim>The chips race in front.</p>
       </div>
-      <p class="depth__why">One value, three planes, copy wired to scroll - no position math.</p>
+      <p class="depth__why">One scroll value, three planes - reverse it and they all come back.</p>
     </div>
   `
   mount.appendChild(section)
@@ -78,9 +82,11 @@ export function initDepth({ mount, scroll, fireCredit }: DepthDeps): void {
         fireCredit('@underlying/scroll - scrub, parallax depth layers')
       }
       const c = p - 0.5
-      washY.set(c * 70)
-      cardY.set(c * 16)
-      chipY.set(c * -64)
+      // dramatic separation: the card holds still, the wash drifts down behind it,
+      // the chips race up in front - all from the same value.
+      washY.set(c * 110)
+      cardY.set(c * 6)
+      chipY.set(c * -170)
       setActive(Math.max(0, Math.min(2, Math.floor(p * 3))))
     },
     { target: section, range: ['start start', 'end end'] },
