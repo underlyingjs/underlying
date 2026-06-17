@@ -8,7 +8,7 @@ import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections
 import { scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
-import { svgDraw, svgMorph, svgMotionPath } from './sections/svg'
+import { svgDraw, svgMorph, svgMorphSharp, svgMotionPath } from './sections/svg'
 import { textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { flip3d, menuOrigin } from './sections/transform3d'
 import { namedEases } from './sections/eases'
@@ -83,8 +83,8 @@ const pages: Page[] = [
     id: 'svg',
     group: 'Guides',
     title: 'SVG path',
-    blurb: '<code>@underlying/svg</code> animates SVG paths physics-first: <code>motionPath()</code> rides an element along a path, <code>draw()</code> draws a stroke on, and <code>morph()</code> turns one shape into another. The progress of each is a live value you can flick, interrupt or scrub - no baked path tweens.',
-    sections: [svgMotionPath, svgDraw, svgMorph],
+    blurb: '<code>@underlying/svg</code> animates SVG paths physics-first: <code>motionPath()</code> rides an element along a path, <code>draw()</code> draws a stroke on, <code>morph()</code> resamples one shape into another, and <code>morphCommands()</code> morphs while keeping corners sharp. The progress of each is a live value you can flick, interrupt or scrub - no baked path tweens.',
+    sections: [svgMotionPath, svgDraw, svgMorph, svgMorphSharp],
   },
   {
     id: 'text',

@@ -1,4 +1,4 @@
-import { draw, morph, motionPath } from '@underlying/svg'
+import { draw, morph, morphCommands, motionPath } from '@underlying/svg'
 import { button, h, slider, type Section } from '../showcase'
 
 // Slow and slightly springy - easy to actually watch.
@@ -11,6 +11,9 @@ const SIGN_D =
   'M 22 110 C 44 60 64 60 74 106 C 80 68 100 68 108 106 C 120 46 146 158 172 100 C 190 62 214 154 236 100 C 250 68 276 72 300 102'
 const CIRCLE_D = 'M 160 30 C 196 30 224 58 224 92 C 224 126 196 154 160 154 C 124 154 96 126 96 92 C 96 58 124 30 160 30 Z'
 const STAR_D = 'M 160 26 L 176 70 L 223 72 L 186 100 L 199 145 L 160 119 L 121 145 L 134 100 L 97 72 L 144 70 Z'
+// A play triangle and a stop square - sharp corners on both, for the command morph.
+const PLAY_D = 'M 130 48 L 130 132 L 208 90 Z'
+const STOP_D = 'M 120 50 L 200 50 L 200 130 L 120 130 Z'
 
 const canvas = (inner: string): HTMLDivElement => {
   const wrap = h('div', { class: 'svgdemo' })
@@ -122,6 +125,39 @@ m.spring(0)   // morph back - interruptible`,
     ctx.controls.append(
       button('to star', () => m.spring(1, GENTLE)),
       button('to circle', () => m.spring(0, GENTLE)),
+      scrub,
+    )
+  },
+}
+
+export const svgMorphSharp: Section = {
+  id: 'svg-morph-sharp',
+  group: 'SVG',
+  title: 'morphCommands()',
+  tagline: 'Command-preserving morph - every corner stays razor-sharp.',
+  description: `
+    <p>Where <code>morph()</code> resamples both outlines into points (any two shapes, but corners
+    soften), <code>morphCommands()</code> parses the path commands, subdivides the sparser shape so
+    anchors map to anchors, aligns the rings, and interpolates each curve - so a <strong>play
+    triangle becomes a stop square</strong> with every corner crisp the whole way across. Same live
+    fraction: spring it, or drag <strong>scrub</strong> to hold it halfway, interruptible.</p>`,
+  code: `import { morphCommands } from '@underlying/svg'
+
+const m = morphCommands(icon, stopSquareData)
+m.spring(1)   // play -> stop, corners stay sharp
+m.spring(0)   // back - interruptible`,
+  run(ctx) {
+    const wrap = canvas(`<path class="svgdemo__morph" d="${PLAY_D}" />`)
+    ctx.stage.append(wrap)
+    const shape = wrap.querySelector('.svgdemo__morph') as unknown as SVGPathElement
+
+    const m = morphCommands(shape, STOP_D)
+    ctx.onCleanup(() => m.revert())
+
+    const scrub = slider('scrub', { min: 0, max: 100, value: 0, onInput: (v) => m.set(v / 100) })
+    ctx.controls.append(
+      button('to stop', () => m.spring(1, GENTLE)),
+      button('to play', () => m.spring(0, GENTLE)),
       scrub,
     )
   },
