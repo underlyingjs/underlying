@@ -24,7 +24,7 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # Build first: the demo app's typecheck resolves @underlying/core to dist.
+      # Build first: the docs app's typecheck resolves @underlying/core to dist.
       - name: Build
         run: pnpm build
 

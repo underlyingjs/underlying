@@ -5,12 +5,12 @@ Two public sites come out of this one monorepo:
 | Site | Source | Domain |
 | --- | --- | --- |
 | Landing | `apps/landing` | `underlyi.ng` (+ `www`) |
-| Docs / demo | `apps/demo` | `docs.underlyi.ng` |
+| Docs | `apps/docs` | `docs.underlyi.ng` |
 
 ## Current state
 
 There is already ONE Cloudflare Pages project, production branch `main`, that
-builds the docs (`apps/demo`) and serves them at `underlyi.ng`.
+builds the docs (`apps/docs`) and serves them at `underlyi.ng`.
 
 The end state just moves the docs to a subdomain and gives the apex to the
 landing. The apex domain never moves between projects: we repoint the existing
@@ -28,14 +28,14 @@ When `feat/landing` is merged to `main`:
 1. Existing project (the one on `underlyi.ng`): Settings -> Builds & deployments
    -> change
    - Build command: `pnpm build:docs` -> `pnpm build:landing`
-   - Build output directory: `apps/demo/dist` -> `apps/landing/dist`
+   - Build output directory: `apps/docs/dist` -> `apps/landing/dist`
    then redeploy `main`. `underlyi.ng` now serves the landing.
 
 2. New project for the docs:
    - Connect the same repo, production branch `main`
    - Framework preset: None (so the build fields are editable)
    - Build command: `pnpm build:docs`
-   - Build output directory: `apps/demo/dist`
+   - Build output directory: `apps/docs/dist`
    - Custom domain: `docs.underlyi.ng` (the CNAME is created automatically, the
      zone is already on Cloudflare)
 
