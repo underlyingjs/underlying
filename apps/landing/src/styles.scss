@@ -753,108 +753,65 @@ body {
   text-align: center;
 }
 
-// ---- beat 05 : depth (pinned parallax planes) ----------------------------
-.beat--depth {
+// ---- beat 05 : by the numbers (stats that count up) ----------------------
+.beat--numbers {
   position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 12vmin 6vmin;
   background: var(--creme);
   border-top: 1px solid var(--ligne-soft);
-  // height set in JS = viewport + the pin span
 }
-// three clear bands: title / a bounded parallax viewport / one narrating line
-.depth-stage {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow: hidden;
+.nums {
+  width: 100%;
+  max-width: 920px;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(14px, 3vh, 28px);
-  padding: clamp(64px, 13vh, 120px) 6vmin clamp(36px, 7vh, 64px);
+  gap: clamp(30px, 6vh, 64px);
 }
-.depth__lede {
-  align-self: start;
+.nums__lede {
   text-align: center;
 }
-.depth__head {
-  margin: 0;
+.nums__head {
+  margin: 0 auto;
+  max-width: 22ch;
   font-family: var(--display);
   font-weight: 620;
-  font-size: clamp(24px, 4.4vw, 48px);
+  font-size: clamp(26px, 5vw, 56px);
   letter-spacing: -0.02em;
   color: var(--sapin);
 }
-.depth__sub {
-  margin: 8px 0 0;
+.nums__sub {
+  margin: 12px auto 0;
   font-family: var(--mono);
   font-size: clamp(12px, 1.4vw, 14px);
   color: var(--sous-bois);
 }
-// the bounded band: layers drift INSIDE this and are clipped here, never the title
-.depth__viewport {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border: 1px solid var(--ligne);
-  border-radius: 16px;
-  background: var(--creme);
+.nums__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: clamp(20px, 3vw, 40px);
 }
-// the FIXED reference: it never moves, so the layers visibly slide over it
-.depth__grid {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(var(--ligne) 1.2px, transparent 1.2px);
-  background-size: 26px 26px;
-  opacity: 0.55;
+.nums__cell {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+  will-change: transform, opacity;
 }
-.depth__words {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  padding: clamp(18px, 5%, 56px) 6vmin;
-}
-.depth__row {
-  display: flex;
-  align-items: baseline;
-  gap: clamp(10px, 1.5vw, 18px);
-  will-change: transform; // bindStyle writes translateY at this row's own rate
-}
-.depth__word {
+.nums__value {
   font-family: var(--display);
   font-weight: 620;
+  font-size: clamp(54px, 9vw, 116px);
+  line-height: 0.9;
   letter-spacing: -0.03em;
-  line-height: 0.85;
-}
-.depth__row--far .depth__word {
-  font-size: clamp(58px, 15vw, 188px);
-  color: rgba(28, 52, 38, 0.1); // a huge faint watermark, far back
-}
-.depth__row--mid .depth__word {
-  font-size: clamp(32px, 6vw, 72px);
-  color: var(--sous-bois);
-}
-.depth__row--near .depth__word {
-  font-size: clamp(52px, 12vw, 148px);
   color: var(--sapin);
+  font-variant-numeric: tabular-nums;
 }
-.depth__rate {
+.nums__label {
+  max-width: 18ch;
   font-family: var(--mono);
-  font-size: clamp(10px, 1.1vw, 12px);
-  letter-spacing: 0.12em;
-  color: var(--mousse);
-}
-.depth__foot {
-  align-self: end;
-  text-align: center;
-}
-.depth__claim {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: clamp(12px, 1.4vw, 14px);
+  font-size: clamp(11px, 1.2vw, 13px);
   letter-spacing: 0.04em;
   color: var(--sous-bois);
 }
