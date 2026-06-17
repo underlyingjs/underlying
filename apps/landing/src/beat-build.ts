@@ -42,7 +42,7 @@ export function initBuild({ mount, scroll, fireCredit }: BuildDeps): void {
       </div>
       <div class="score__transport">
         <button class="score__play" data-play type="button">play</button>
-        <div class="score__track" data-track>
+        <div class="score__track" data-track role="slider" tabindex="0" aria-label="Timeline position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <span class="score__fill" data-fill></span>
           <span class="score__mark" data-mark="metrics">metrics</span>
           <span class="score__mark" data-mark="confirm">confirm</span>
@@ -122,6 +122,7 @@ export function initBuild({ mount, scroll, fireCredit }: BuildDeps): void {
     fill.style.transform = `scaleX(${p})`
     playhead.style.left = `${p * 100}%`
     nowEl.textContent = String(Math.round(p * total))
+    track.setAttribute('aria-valuenow', String(Math.round(p * 100)))
   }
 
   let dragging = false
@@ -165,6 +166,39 @@ export function initBuild({ mount, scroll, fireCredit }: BuildDeps): void {
   }
   track.addEventListener('pointerup', endDrag)
   track.addEventListener('pointercancel', endDrag)
+
+  // Keyboard scrub: arrows step the playhead, Home/End jump to the ends. Like a
+  // grab, it takes the clock over from any running playback.
+  const seekBy = (delta: number): void => {
+    if (playing) {
+      tl.pause()
+      playing = false
+      playBtn.textContent = 'play'
+    }
+    const p = Math.max(0, Math.min(1, tl.progress() + delta))
+    tl.progress(p)
+    updateTransport(p)
+    if (!scrubCredited) {
+      scrubCredited = true
+      fireCredit('@underlying/timeline - scrub, frame-exact and reversible')
+    }
+  }
+  track.addEventListener('keydown', (event) => {
+    const step = event.shiftKey ? 0.1 : 0.05
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      seekBy(step)
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      seekBy(-step)
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      seekBy(-1)
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      seekBy(1)
+    }
+  })
 
   // Play on the timeline's own clock; read it back each frame to move the transport.
   const tick = (): void => {

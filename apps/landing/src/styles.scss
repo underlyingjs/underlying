@@ -33,6 +33,31 @@
   border-radius: 4px;
 }
 
+// Skip link: off-screen until focused, then it drops in at the top-left so a
+// keyboard user can jump straight to the content. The <main> takes the focus.
+.skip-link {
+  position: fixed;
+  left: 10px;
+  top: -56px;
+  z-index: 20;
+  padding: 9px 14px;
+  background: var(--sapin);
+  color: var(--creme);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+  border-radius: 7px;
+  transition: top 0.18s ease;
+
+  &:focus {
+    top: 10px;
+  }
+}
+
+.page:focus {
+  outline: none; // it is only a skip-link target; no visible ring on the whole page
+}
+
 html,
 body {
   margin: 0;
@@ -159,11 +184,15 @@ body {
   font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--sous-bois);
+  opacity: 0; // held back until the wordmark and thesis have finished
   transition: opacity 0.5s ease;
   pointer-events: none;
 
+  &.is-shown {
+    opacity: 1;
+  }
   &.is-gone {
-    opacity: 0;
+    opacity: 0; // after the first grab; ordered last so it wins over is-shown
   }
 }
 
@@ -724,11 +753,24 @@ body {
 }
 .sheet__grip {
   justify-self: center;
-  width: 38px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--mousse);
-  margin-top: 6px;
+  margin-top: 4px;
+  width: 56px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+
+  // the visible handle; the button around it is the real (larger) target
+  &::before {
+    content: '';
+    width: 38px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--mousse);
+  }
 }
 .sheet__head-row {
   display: flex;

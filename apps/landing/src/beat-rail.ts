@@ -25,6 +25,7 @@ export function initRail({ mount, scroll, fireCredit }: RailDeps): void {
   const section = document.createElement('section')
   section.className = 'beat beat--rail'
   section.setAttribute('data-beat', '02')
+  section.setAttribute('aria-label', 'The rail: vertical scroll drives a horizontal filmstrip you can also grab and throw')
   section.innerHTML = `
     <div class="rail-stage" data-stage>
       <div class="beat__rail">02 / the rail</div>

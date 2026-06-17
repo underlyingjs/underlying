@@ -17,18 +17,21 @@ const app = document.getElementById('app')
 if (app === null) throw new Error('underlyi.ng: no #app')
 
 app.innerHTML = `
-  <main class="hero">
-    <div class="hero__rail">00 / hero</div>
-    <div class="hero__field">
-      <h1 class="hero__word">underlyi.ng</h1>
-      <p class="hero__thesis" data-thesis aria-label="Most animation is a recording. This bends."></p>
-      <span class="hero__grab" data-grab>grab the dot, throw it</span>
-      <i class="hero__disc" data-disc aria-hidden="true"><i class="hero__disc-core"></i></i>
-    </div>
-    <div class="hero__cue" aria-hidden="true">scroll</div>
-    <div class="credit" data-credit>
-      <span class="credit__dot"></span><span data-credit-text>physics-first web animation</span>
-    </div>
+  <a class="skip-link" href="#content">Skip to the content</a>
+  <main class="page" id="content" tabindex="-1">
+    <section class="hero" aria-labelledby="hero-word">
+      <div class="hero__rail">00 / hero</div>
+      <div class="hero__field">
+        <h1 class="hero__word" id="hero-word">underlyi.ng</h1>
+        <p class="hero__thesis" data-thesis aria-label="Most animation is a recording. This bends."></p>
+        <span class="hero__grab" data-grab>grab the dot, throw it</span>
+        <i class="hero__disc" data-disc aria-hidden="true"><i class="hero__disc-core"></i></i>
+      </div>
+      <div class="hero__cue" aria-hidden="true">scroll</div>
+      <div class="credit" data-credit>
+        <span class="credit__dot"></span><span data-credit-text>physics-first web animation</span>
+      </div>
+    </section>
   </main>
 `
 
@@ -127,6 +130,7 @@ draggable(disc, {
     fireCredit('@underlying/gestures - draggable')
     if (!everGrabbed) {
       everGrabbed = true
+      grab.classList.remove('is-shown')
       grab.classList.add('is-gone')
     }
   },
@@ -134,10 +138,13 @@ draggable(disc, {
 })
 
 // The thesis types itself in, the full sentence its accessible name throughout.
+// Only once it has finished do we invite the grab - the opening reads title, then
+// thesis, then the call to play, never all at once.
 const startThesis = (): void => {
   fireCredit('@underlying/text - typewriter')
   void typewriter(thesis, 'Most animation is a recording. This bends.', { duration: 2200 }).finished.then(() => {
     thesis.classList.add('is-typed')
+    if (!everGrabbed) grab.classList.add('is-shown')
   })
 }
 
@@ -171,13 +178,25 @@ void document.fonts?.ready.then(() => {
 
 // Below the hero: one scroll controller drives the page. Beat 01 proves the
 // thesis (live vs baked); beat 02 exhibits it as horizontal-from-vertical scroll.
+// Every beat mounts inside the single <main> landmark, after the hero.
+const pageMain = pick<HTMLElement>('#content')
 const scroll = createScroll()
-initProof({ mount: app, scroll, fireCredit })
-initRail({ mount: app, scroll, fireCredit })
-initGallery({ mount: app, scroll, fireCredit })
-initSheet({ mount: app, scroll, fireCredit })
-initNumbers({ mount: app, scroll, fireCredit })
-initRoute({ mount: app, scroll, fireCredit })
-initBuild({ mount: app, scroll, fireCredit })
-initPanorama({ mount: app, scroll, fireCredit })
-initClose({ mount: app, scroll, fireCredit })
+initProof({ mount: pageMain, scroll, fireCredit })
+initRail({ mount: pageMain, scroll, fireCredit })
+initGallery({ mount: pageMain, scroll, fireCredit })
+initSheet({ mount: pageMain, scroll, fireCredit })
+initNumbers({ mount: pageMain, scroll, fireCredit })
+initRoute({ mount: pageMain, scroll, fireCredit })
+initBuild({ mount: pageMain, scroll, fireCredit })
+initPanorama({ mount: pageMain, scroll, fireCredit })
+initClose({ mount: pageMain, scroll, fireCredit })
+
+// Each beat becomes a named region, so a screen reader can jump between them by
+// landmark instead of scrolling blind through nine full-height sections.
+let regionN = 0
+for (const beat of pageMain.querySelectorAll('section.beat')) {
+  const heading = beat.querySelector('h2')
+  if (heading === null) continue
+  if (heading.id === '') heading.id = `region-${++regionN}`
+  beat.setAttribute('aria-labelledby', heading.id)
+}

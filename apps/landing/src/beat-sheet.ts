@@ -32,8 +32,8 @@ export function initSheet({ mount, fireCredit }: SheetDeps): void {
           <span class="sheet-phone__line sheet-phone__line--short"></span>
         </div>
         <div class="sheet-scrim" data-scrim></div>
-        <div class="sheet" data-sheet role="dialog" aria-label="Trip details">
-          <span class="sheet__grip"></span>
+        <div class="sheet" data-sheet role="group" aria-label="Trip details sheet">
+          <button class="sheet__grip" data-grip type="button" aria-label="Sheet position: press to open further, arrow keys to adjust"></button>
           <div class="sheet__head-row">
             <span class="sheet__title">Trip details</span>
             <span class="sheet__detent" data-detent>peek</span>
@@ -53,7 +53,9 @@ export function initSheet({ mount, fireCredit }: SheetDeps): void {
   const sheet = section.querySelector<HTMLElement>('[data-sheet]')
   const scrim = section.querySelector<HTMLElement>('[data-scrim]')
   const detentEl = section.querySelector<HTMLElement>('[data-detent]')
-  if (sheet === null || scrim === null || detentEl === null) throw new Error('underlyi.ng: beat 04 markup')
+  const grip = section.querySelector<HTMLButtonElement>('[data-grip]')
+  if (sheet === null || scrim === null || detentEl === null || grip === null)
+    throw new Error('underlyi.ng: beat 04 markup')
 
   // y is the sheet's downward offset from full-open (0). Larger y = pushed further
   // down. The detents and bounds are measured in those pixels; full=0, peek shows
@@ -102,6 +104,37 @@ export function initSheet({ mount, fireCredit }: SheetDeps): void {
   // Tap the exposed scrim (above the sheet) to dismiss back to peek.
   scrim.addEventListener('click', () => {
     drag.y.spring(peek, settleSpring)
+  })
+
+  // Keyboard parity for the grip: the three detents as openness levels (0 = peek,
+  // closed; 2 = full, open). Arrows step between adjacent stops; pressing the grip
+  // opens one stop further and wraps. Each lands on the same spring as a release,
+  // and it re-reads the nearest stop first so it stays sane after a drag.
+  const levelYs = (): number[] => [peek, half, full] // index 0 closed -> 2 open
+  const nearestLevel = (): number => {
+    const cur = drag.y.get()
+    const ys = levelYs()
+    let best = 0
+    for (let i = 1; i < ys.length; i++) {
+      if (Math.abs((ys[i] ?? 0) - cur) < Math.abs((ys[best] ?? 0) - cur)) best = i
+    }
+    return best
+  }
+  const goToLevel = (index: number): void => {
+    const ys = levelYs()
+    const clamped = Math.max(0, Math.min(ys.length - 1, index))
+    drag.y.spring(ys[clamped] ?? peek, settleSpring)
+    fireCredit('@underlying/gestures - keyboard to a detent')
+  }
+  grip.addEventListener('click', () => goToLevel((nearestLevel() + 1) % 3))
+  grip.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
+      event.preventDefault()
+      goToLevel(nearestLevel() + 1)
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
+      event.preventDefault()
+      goToLevel(nearestLevel() - 1)
+    }
   })
 
   const measure = (): void => {
