@@ -760,20 +760,20 @@ body {
   border-top: 1px solid var(--ligne-soft);
   // height set in JS = viewport + the pin span
 }
+// three clear bands: title / a bounded parallax viewport / one narrating line
 .depth-stage {
   position: sticky;
   top: 0;
   height: 100vh;
   overflow: hidden;
   display: grid;
-  place-items: center;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(14px, 3vh, 28px);
+  padding: clamp(64px, 13vh, 120px) 6vmin clamp(36px, 7vh, 64px);
 }
 .depth__lede {
-  position: absolute;
-  top: clamp(9vmin, 12vh, 15vh);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(90vw, 520px);
+  align-self: start;
   text-align: center;
 }
 .depth__head {
@@ -790,17 +790,26 @@ body {
   font-size: clamp(12px, 1.4vw, 14px);
   color: var(--sous-bois);
 }
+// the bounded band: layers drift INSIDE this and are clipped here, never the title
+.depth__viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
 .depth__wash {
   position: absolute;
-  width: clamp(280px, 46vw, 540px);
-  height: clamp(280px, 46vw, 540px);
+  width: clamp(240px, 40vw, 460px);
+  height: clamp(240px, 40vw, 460px);
   border-radius: 28px;
   background: var(--tint);
   will-change: transform;
 }
 .depth__card {
   position: relative;
-  width: clamp(220px, 34vw, 360px);
+  width: clamp(200px, 30vw, 300px);
   aspect-ratio: 4 / 5;
   border: 1px solid var(--ligne);
   border-radius: 18px;
@@ -819,7 +828,7 @@ body {
   padding: 5px 11px;
   border: 1px solid var(--ligne);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.78);
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -836,55 +845,37 @@ body {
   }
 }
 .depth__chip--a {
-  top: 8%;
-  left: -18%;
+  top: 7%;
+  left: -4%;
 }
 .depth__chip--b {
-  top: 46%;
-  right: -22%;
+  top: 45%;
+  right: -10%;
 }
 .depth__chip--c {
-  bottom: 6%;
-  left: -10%;
+  bottom: 8%;
+  left: 4%;
+}
+.depth__foot {
+  align-self: end;
+  display: grid;
+  gap: 8px;
+  text-align: center;
 }
 .depth__claim {
-  position: absolute;
-  left: 50%;
-  bottom: 12vmin;
-  transform: translateX(-50%);
   margin: 0;
-  max-width: 34ch;
   font-family: var(--display);
   font-weight: 620;
-  font-size: clamp(20px, 3.2vw, 36px);
+  font-size: clamp(20px, 3.2vw, 34px);
   letter-spacing: -0.02em;
-  text-align: center;
-  color: var(--lichen);
-  opacity: 0;
-  transition: opacity 0.4s ease, color 0.4s ease;
-
-  &.is-live {
-    opacity: 1;
-    color: var(--sapin);
-  }
+  color: var(--sapin);
 }
 .depth__why {
-  position: absolute;
-  left: 50%;
-  bottom: 5vmin;
-  transform: translateX(-50%);
   margin: 0;
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 0.08em;
   color: var(--sous-bois);
-  text-align: center;
-}
-@media (prefers-reduced-motion: reduce) {
-  .depth__claim,
-  .depth__chip {
-    transition: none;
-  }
 }
 
 // ---- beat 06 : the route (svg draw + ride + reshape) ---------------------
