@@ -7,45 +7,50 @@ Two public sites come out of this one monorepo:
 | Landing | `apps/landing` | `underlyi.ng` (+ `www`) |
 | Docs / demo | `apps/demo` | `docs.underlyi.ng` |
 
-They are two separate Cloudflare Pages projects, both connected to this same
-GitHub repo. Each builds only its own app (and that app's workspace
-dependencies) with a pnpm filter, so a push to the production branch rebuilds
-both independently.
+## Current state
 
-## Cloudflare Pages - project 1: landing (underlyi.ng)
+There is already ONE Cloudflare Pages project, production branch `main`, that
+builds the docs (`apps/demo`) and serves them at `underlyi.ng`.
 
-Workers and Pages -> Create -> Pages -> Connect to Git -> this repo.
+The end state just moves the docs to a subdomain and gives the apex to the
+landing. The apex domain never moves between projects: we repoint the existing
+project to build the landing, and add a second project for the docs.
 
-- Production branch: `main`
-- Framework preset: None
-- Build command: `pnpm build:landing`
-- Build output directory: `apps/landing/dist`
-- Root directory: leave at the repo root (the pnpm workspace and lockfile must resolve)
-- Environment variable: `NODE_VERSION` = `20`
+## Do this AT MERGE, not before
 
-After the first deploy: project -> Custom domains -> add `underlyi.ng` and
-`www.underlyi.ng`. The zone is on Cloudflare, so the DNS records are created
-automatically (apex via CNAME flattening).
+The landing must be on `main` first. Changing the existing project's build to
+the landing BEFORE the landing is on `main` would fail the build and take the
+live docs down. So until merge, review the landing locally with `pnpm landing`
+(http://localhost:4000); leave Cloudflare untouched.
 
-## Cloudflare Pages - project 2: docs (docs.underlyi.ng)
+When `feat/landing` is merged to `main`:
 
-Same repo, a second Pages project.
+1. Existing project (the one on `underlyi.ng`): Settings -> Builds & deployments
+   -> change
+   - Build command: `pnpm build:docs` -> `pnpm build:landing`
+   - Build output directory: `apps/demo/dist` -> `apps/landing/dist`
+   then redeploy `main`. `underlyi.ng` now serves the landing.
 
-- Production branch: `main`
-- Build command: `pnpm build:docs`
-- Build output directory: `apps/demo/dist`
-- Root directory: repo root
-- Environment variable: `NODE_VERSION` = `20`
-- Custom domain: add `docs.underlyi.ng` (the `docs` CNAME is created automatically)
+2. New project for the docs:
+   - Connect the same repo, production branch `main`
+   - Framework preset: None (so the build fields are editable)
+   - Build command: `pnpm build:docs`
+   - Build output directory: `apps/demo/dist`
+   - Custom domain: `docs.underlyi.ng` (the CNAME is created automatically, the
+     zone is already on Cloudflare)
+
+Common settings for both: root directory left empty (the pnpm workspace must
+resolve from the repo root), and `NODE_VERSION` = `20`. pnpm is auto-detected
+from `pnpm-lock.yaml` plus the `packageManager` field.
 
 ## Notes
 
-- pnpm is detected from `pnpm-lock.yaml` plus the `packageManager` field; no extra config.
 - Both apps build with Vite base `/` (the docs sit at the root of their own
-  subdomain, so there is no `/docs/` path rewrite). Nothing to change.
+  subdomain, no `/docs/` path rewrite). Nothing to change.
 - The shared `brand/` folder is each app's Vite `publicDir`, so the wordmark,
-  favicons and the Fraunces face are copied into every `dist`.
-- Both sites are single page (no client-side routing), so no `_redirects` /
-  SPA fallback is needed.
-- Until `feat/landing` is merged, either merge first or point the landing
-  project's production branch at the branch to preview it live.
+  favicons and the Fraunces face land in every `dist`.
+- Both sites are single page (no client-side routing), so no `_redirects` is needed.
+- Optional, before merge: for a shareable cloud preview of the landing, create a
+  throwaway extra Pages project (production `main`, `pnpm build:landing`) and use
+  the per-branch preview URL it builds for `feat/landing`. Not required - local is
+  enough.
