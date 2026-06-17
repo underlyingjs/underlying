@@ -85,11 +85,7 @@ body {
   letter-spacing: -0.025em;
   color: var(--sapin);
   user-select: none;
-  // hold the layout steady; the dot is rendered by the live disc instead
-}
-
-.hero__dot {
-  color: transparent; // the period's place is kept, the disc draws it
+  opacity: 0; // reveal() makes it visible and staggers the letters in on springs
 }
 
 .hero__disc {

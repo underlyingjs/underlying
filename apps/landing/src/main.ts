@@ -2,7 +2,7 @@ import './styles.scss'
 import { animatable, bindStyle, type Simulation } from '@underlying/core'
 import { draggable } from '@underlying/gestures'
 import { createScroll } from '@underlying/scroll'
-import { typewriter } from '@underlying/text'
+import { reveal, typewriter } from '@underlying/text'
 import { initProof } from './beat-proof'
 import { initRail } from './beat-rail'
 import { initGallery } from './beat-gallery'
@@ -20,7 +20,7 @@ app.innerHTML = `
   <main class="hero">
     <div class="hero__rail">00 / hero</div>
     <div class="hero__field">
-      <h1 class="hero__word">underlyi<span class="hero__dot">.</span>ng</h1>
+      <h1 class="hero__word">underlyi.ng</h1>
       <p class="hero__thesis" data-thesis aria-label="Most animation is a recording. This bends."></p>
       <span class="hero__grab" data-grab>grab the dot, throw it</span>
       <i class="hero__disc" data-disc aria-hidden="true"><i class="hero__disc-core"></i></i>
@@ -40,7 +40,6 @@ const pick = <T extends Element>(selector: string): T => {
 
 const field = pick<HTMLElement>('.hero__field')
 const word = pick<HTMLElement>('.hero__word')
-const dot = pick<HTMLElement>('.hero__dot')
 const disc = pick<HTMLElement>('[data-disc]')
 const core = pick<HTMLElement>('.hero__disc-core')
 const thesis = pick<HTMLElement>('[data-thesis]')
@@ -90,13 +89,18 @@ const periodMetrics = (): { ascent: number; descent: number; rise: number } => {
   return { ascent, descent, rise }
 }
 
+// The disc seats on the wordmark's period - a real character that reveal() splits
+// out; placeDisc measures that char's span. Until the reveal runs there is no
+// anchor (and the disc is hidden anyway), so it is a no-op.
+let periodAnchor: HTMLElement | null = null
 const placeDisc = (): void => {
+  if (periodAnchor === null) return
   const fontSize = parseFloat(getComputedStyle(word).fontSize)
   const size = Math.max(13, Math.round(fontSize * 0.12))
   disc.style.width = `${size}px`
   disc.style.height = `${size}px`
 
-  const d = dot.getBoundingClientRect()
+  const d = periodAnchor.getBoundingClientRect()
   const w = word.getBoundingClientRect()
   const f = field.getBoundingClientRect()
   const { ascent, descent, rise } = periodMetrics()
@@ -107,8 +111,6 @@ const placeDisc = (): void => {
   disc.style.left = `${cx - size / 2}px`
   disc.style.top = `${cy - size / 2}px`
 }
-placeDisc()
-void document.fonts?.ready.then(placeDisc)
 window.addEventListener('resize', placeDisc)
 
 // Grab the dot and throw it: the pointer velocity is handed into a spring back
@@ -145,12 +147,23 @@ const dropIn = (): void => {
   void drop.spring(0, { stiffness: 150, damping: 16 }).finished.then(startBreath)
 }
 
-// Sequence the opening once the display face is in: re-seat the period on the
-// real glyph metrics, type the thesis, then let the period fall.
+// Sequence the opening once the display face is in: the wordmark reveals letter by
+// letter on springs (split + reveal), with the period char held transparent so the
+// live disc can draw it. Once the letters land, the disc falls onto the baseline
+// and the thesis types in.
 void document.fonts?.ready.then(() => {
-  placeDisc()
-  window.setTimeout(startThesis, 200)
-  window.setTimeout(dropIn, 900)
+  const revealed = reveal(word, { by: 'chars', each: 46, from: { y: 22, opacity: 0 } })
+  word.style.opacity = '1'
+  fireCredit('@underlying/text - split, staggered reveal')
+  periodAnchor = revealed.split.chars.find((char) => char.textContent === '.') ?? null
+  periodAnchor?.style.setProperty('color', 'transparent')
+  // The letters are visually in by ~1s; drop the period onto its (settled) slot,
+  // then type the thesis - without waiting for every spring to fully rest.
+  window.setTimeout(() => {
+    placeDisc()
+    dropIn()
+  }, 1000)
+  window.setTimeout(startThesis, 1350)
 })
 
 // Below the hero: one scroll controller drives the page. Beat 01 proves the
