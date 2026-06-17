@@ -15,7 +15,7 @@
 
 > Beta. The API may still move before 1.0.
 
-Split text into chars, words and lines you can animate - without breaking the things SplitText historically broke. The screen reader still reads the whole text, copy/paste is intact, and emoji stay whole.
+Split text into chars, words and lines you can animate - without breaking the things naive text-splitting historically breaks. The screen reader still reads the whole text, copy/paste is intact, and emoji stay whole.
 
 ```sh
 npm install @underlying/text @underlying/core

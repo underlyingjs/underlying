@@ -19,7 +19,7 @@ describe('easing registry', () => {
     expect(seen[0]).toEqual(['inOut', [1, 0.3]])
   })
 
-  it('defaults the variant to out (GSAP convention) when none is given', () => {
+  it('defaults the variant to out (by convention) when none is given', () => {
     registerEasing('famVariant', (variant) => (variant === 'out' ? () => 1 : () => 0))
     expect(resolveEasing('famVariant')(0.5)).toBe(1) // .out
     expect(resolveEasing('famVariant.in')(0.5)).toBe(0)

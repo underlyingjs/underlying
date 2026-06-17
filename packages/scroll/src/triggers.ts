@@ -3,7 +3,7 @@ import type { ScrollControllerInternal } from './controller'
 import type { OffsetEntry, ScrollRange } from './range'
 import type { Disposable } from './types'
 
-/** A verb applied to the `toggle` handle when a crossing fires (ScrollTrigger toggleActions). */
+/** A verb applied to the `toggle` handle when a crossing fires (toggleActions-style). */
 export type TriggerAction = 'play' | 'pause' | 'resume' | 'reverse' | 'restart' | 'reset' | 'none'
 
 export interface TriggerOptions {
@@ -34,7 +34,7 @@ const DEFAULT_ACTIONS = ['play', 'none', 'none', 'none'] as const
 
 /**
  * Enter/leave triggers via IntersectionObserver (never rect-polling). The four
- * ScrollTrigger directions are read from the entry geometry: `fromBelow` is
+ * crossing directions are read from the entry geometry: `fromBelow` is
  * whether the element's leading edge sits at or past the viewport's leading
  * edge, which separates enter from enter-back and leave from leave-back.
  */

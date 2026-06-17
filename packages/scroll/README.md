@@ -97,7 +97,7 @@ scroll.trigger(card, {
   onLeaveBack: () => card.classList.remove('in'),
 })
 
-// Or drive a PlaybackHandle with ScrollTrigger-style toggleActions
+// Or drive a PlaybackHandle with toggleActions verbs
 // [onEnter, onLeave, onEnterBack, onLeaveBack].
 scroll.trigger(card, { toggle: clip, toggleActions: ['play', 'pause', 'resume', 'reverse'] })
 ```
@@ -125,7 +125,7 @@ scroll.dispose()             // tears down the loop, observers, and every bindin
 
 ## The offset grammar
 
-Ranges use the Motion / ScrollTrigger `[element edge] [viewport edge]` model. The
+Ranges use the `[element edge] [viewport edge]` offset model. The
 default is `['start end', 'end start']` - progress `0` when the element's start
 edge meets the viewport's end, `1` when its end edge meets the viewport's start.
 

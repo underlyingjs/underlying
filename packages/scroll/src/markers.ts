@@ -53,7 +53,7 @@ interface Mark {
 }
 
 /**
- * ScrollTrigger-style dev markers. Draws, into a fixed body overlay, the
+ * Dev markers. Draws, into a fixed body overlay, the
  * element's enter/leave edges (solid lines that travel with the content) and
  * the scroller positions they fire against (dashed, fixed in the viewport).
  * When a solid line meets a dashed one of the same colour, that edge fires.

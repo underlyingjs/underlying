@@ -1,7 +1,7 @@
 import { warnOnce } from '../value/warn'
 import { easeInOutCubic, type Easing } from './easings'
 
-/** A passed easing: a function, or a GSAP-style name ('power2.out', 'elastic.out(1, 0.3)'). */
+/** A passed easing: a function, or a named ease by string ('power2.out', 'elastic.out(1, 0.3)'). */
 export type EasingInput = Easing | string
 
 export type EasingVariant = 'in' | 'out' | 'inOut'

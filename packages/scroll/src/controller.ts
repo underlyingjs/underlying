@@ -44,7 +44,7 @@ export interface ScrollController {
    * with `finished` and `cancel()`.
    */
   scrollTo(target: number | HTMLElement, options?: ScrollToOptions): ScrollToHandle
-  /** ScrollTrigger-style dev markers for a range. Dev-only; returns a disposer. */
+  /** Dev markers for a range. Dev-only; returns a disposer. */
   markers(options?: MarkerOptions): Disposable
   /** Whole-scroller progress 0..1 (cheap; maxScroll-based). */
   progress(): number

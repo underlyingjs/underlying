@@ -69,7 +69,7 @@ export const svgDraw: Section = {
     <p>No object moves here: the <strong>line itself appears</strong>, drawn on as a single fraction
     (0 hidden, 1 drawn) driven by a slow spring. Press <strong>sign</strong> to watch the stroke trace
     out, then <strong>erase</strong> while it is still drawing - it bends back from wherever it reached,
-    no restart. Same mechanism as GSAP's DrawSVG (<code>stroke-dasharray</code>/<code>offset</code>),
+    no restart. The stroke-dasharray/offset draw technique (<code>stroke-dasharray</code>/<code>offset</code>),
     but the fraction is live.</p>`,
   code: `import { draw } from '@underlying/svg'
 
