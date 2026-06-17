@@ -1,5 +1,5 @@
 import './styles.scss'
-import { animatable, bindStyle, type Simulation } from '@underlying/core'
+import { animatable, bindStyle, prefersReducedMotion, type Simulation } from '@underlying/core'
 import { draggable } from '@underlying/gestures'
 import { createScroll } from '@underlying/scroll'
 import { reveal, typewriter } from '@underlying/text'
@@ -68,6 +68,9 @@ bindStyle(core, { y: drop, scale: breath, opacity: fade })
 
 const oscillator: Simulation = { acceleration: (position) => -6 * (position - 1), rest: () => null }
 const startBreath = (): void => {
+  // The breath never rests by design; under reduced motion we leave the disc still
+  // (a perpetual animation is exactly what that setting asks us not to run).
+  if (prefersReducedMotion()) return
   breath.simulate(oscillator, { velocity: 0.18 })
 }
 

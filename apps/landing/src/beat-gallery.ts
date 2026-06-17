@@ -26,10 +26,15 @@ const FRAMES = [
 ]
 
 export function initGallery({ mount, fireCredit }: GalleryDeps): void {
+  // A real <button> inside each <li>: the list keeps its listitem semantics and the
+  // control gets native button keyboard handling (Enter/Space) and focus, instead of
+  // an <li role="button"> that announces neither well.
   const tiles = FRAMES.map(
     (f) =>
-      `<li class="frame frame--${f.id}" data-frame data-id="${f.id}" role="button" tabindex="0" aria-label="Open ${f.cap}">
-        <i class="frame__plate"></i><span class="frame__cap">${f.cap}</span>
+      `<li class="frame frame--${f.id}" data-frame data-id="${f.id}">
+        <button class="frame__hit" type="button" data-hit aria-label="Open ${f.cap}">
+          <i class="frame__plate"></i><span class="frame__cap">${f.cap}</span>
+        </button>
       </li>`,
   ).join('')
 
@@ -97,12 +102,8 @@ export function initGallery({ mount, fireCredit }: GalleryDeps): void {
   for (const frame of frames) {
     const id = frame.dataset.id
     if (id === undefined) continue
-    frame.addEventListener('click', () => toggle(id))
-    frame.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        toggle(id)
-      }
-    })
+    // The button is the control; native Enter/Space already dispatch click.
+    const hit = frame.querySelector<HTMLButtonElement>('[data-hit]')
+    hit?.addEventListener('click', () => toggle(id))
   }
 }

@@ -21,10 +21,13 @@ const STATS = [
 ]
 
 export function initNumbers({ mount, scroll, fireCredit }: NumbersDeps): void {
+  // Render the REAL figure statically: if JS or the scroll trigger never runs, the
+  // band reads the truth (not a screenful of zeros). The count-up overwrites from 0
+  // on enter, then lands back on this same value.
   const cells = STATS.map(
     (stat) =>
       `<div class="nums__cell" data-cell>
-        <span class="nums__value" data-value>0${stat.suffix}</span>
+        <span class="nums__value" data-value>${stat.to}${stat.suffix}</span>
         <span class="nums__label">${stat.label}</span>
       </div>`,
   ).join('')

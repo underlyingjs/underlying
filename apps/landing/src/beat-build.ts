@@ -139,7 +139,13 @@ export function initBuild({ mount, scroll, fireCredit }: BuildDeps): void {
   track.style.touchAction = 'none'
   track.addEventListener('pointerdown', (event) => {
     dragging = true
-    playing = false
+    // grabbing the playhead takes over the clock: stop the timeline's own playback
+    // (not just the rAF read-out) so it does not keep advancing under your finger.
+    if (playing) {
+      tl.pause()
+      playing = false
+      playBtn.textContent = 'play'
+    }
     try {
       track.setPointerCapture(event.pointerId)
     } catch {
