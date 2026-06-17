@@ -1,6 +1,6 @@
 {
   "name": "@underlying/text",
-  "version": "0.1.0-beta.4",
+  "version": "0.1.0-beta.5",
   "description": "Accessible text splitting and physics-first reveal for @underlying/core: split into chars, words, lines without breaking screen readers, then reveal, scramble or type it in.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",

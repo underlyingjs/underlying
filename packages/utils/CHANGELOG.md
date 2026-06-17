@@ -1,5 +1,12 @@
 # @underlying/utils
 
+## 0.1.0-beta.2
+
+### Patch Changes
+
+- Updated dependencies [c4dd1e9]
+  - @underlying/core@0.1.0-beta.6
+
 ## 0.1.0-beta.1
 
 ### Minor Changes
