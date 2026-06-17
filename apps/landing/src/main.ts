@@ -6,6 +6,7 @@ import { typewriter } from '@underlying/text'
 import { initProof } from './beat-proof'
 import { initRail } from './beat-rail'
 import { initGallery } from './beat-gallery'
+import { initSheet } from './beat-sheet'
 import { initPanorama } from './beat-panorama'
 import { initClose } from './beat-close'
 
@@ -155,5 +156,6 @@ const scroll = createScroll()
 initProof({ mount: app, scroll, fireCredit })
 initRail({ mount: app, scroll, fireCredit })
 initGallery({ mount: app, scroll, fireCredit })
+initSheet({ mount: app, scroll, fireCredit })
 initPanorama({ mount: app, scroll, fireCredit })
 initClose({ mount: app, scroll, fireCredit })
