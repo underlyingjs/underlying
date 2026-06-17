@@ -18,7 +18,7 @@ export function initClose({ mount, scroll, fireCredit }: CloseDeps): void {
   section.className = 'beat beat--close'
   section.setAttribute('data-beat', '03')
   section.innerHTML = `
-    <div class="beat__rail">03 / the honest part</div>
+    <div class="beat__rail">09 / the honest part</div>
     <div class="close">
       <h2 class="close__head">Scrub it when you need <em>time</em>.<br />Grab it when you need to <em>bend</em>.</h2>
       <p class="close__body">A timeline is addressable and exact, and it cannot be interrupted. A live value bends to your hand and never replays the same, and you cannot scrub it to a frame. underlying ships both - and the chip in the corner named which one was firing the whole way down.</p>

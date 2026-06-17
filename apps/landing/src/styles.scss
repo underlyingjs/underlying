@@ -602,6 +602,78 @@ body {
   }
 }
 
+// ---- beat 08 : the panorama (what is in the box) -------------------------
+.beat--panorama {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 12vmin 6vmin;
+  background: var(--creme);
+  border-top: 1px solid var(--ligne-soft);
+}
+.panorama {
+  width: 100%;
+  max-width: 920px;
+  display: grid;
+  gap: clamp(24px, 4vh, 48px);
+}
+.panorama__lede {
+  text-align: center;
+}
+.panorama__head {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 620;
+  font-size: clamp(26px, 5vw, 56px);
+  letter-spacing: -0.02em;
+  color: var(--sapin);
+}
+.panorama__sub {
+  margin: 10px auto 0;
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.4vw, 14px);
+  color: var(--sous-bois);
+}
+.panorama__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(12px, 1.6vw, 18px);
+}
+.pkg {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--ligne);
+  border-radius: 12px;
+  background: var(--tint);
+  will-change: transform, opacity;
+}
+.pkg__name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sapin);
+}
+.pkg__role {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sous-bois);
+}
+.pkg__ver {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mousse);
+  font-variant-numeric: tabular-nums;
+}
+
 // ---- the close : the honest part + footer --------------------------------
 .beat--close {
   position: relative;

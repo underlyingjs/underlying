@@ -7,6 +7,14 @@ import { defineConfig } from 'vite'
 const corePackage = readFileSync(new URL('../../packages/core/package.json', import.meta.url), 'utf8')
 const coreVersion = (JSON.parse(corePackage) as { version: string }).version
 
+// The panorama shows every package's real version - read them at build, never hand-typed.
+const PACKAGES = ['core', 'scroll', 'gestures', 'flip', 'svg', 'text', 'timeline']
+const packageVersions: Record<string, string> = {}
+for (const name of PACKAGES) {
+  const raw = readFileSync(new URL(`../../packages/${name}/package.json`, import.meta.url), 'utf8')
+  packageVersions[name] = (JSON.parse(raw) as { version: string }).version
+}
+
 export default defineConfig({
   // A dedicated, fixed port so the landing never collides with the docs site
   // (which holds Vite's default 5173 via `pnpm docs`). strictPort keeps the URL
@@ -15,5 +23,6 @@ export default defineConfig({
   publicDir: fileURLToPath(new URL('../../brand', import.meta.url)),
   define: {
     __CORE_VERSION__: JSON.stringify(coreVersion),
+    __PKG_VERSIONS__: JSON.stringify(packageVersions),
   },
 })
