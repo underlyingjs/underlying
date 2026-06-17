@@ -10,7 +10,8 @@
     "@underlying/text": "0.1.0-beta.0",
     "@underlying/svg": "0.1.0-beta.0",
     "@underlying/utils": "0.1.0-beta.0",
-    "@underlying/flip": "0.1.0-beta.0"
+    "@underlying/flip": "0.1.0-beta.0",
+    "underlying-landing": "0.0.0"
   },
   "changesets": [
     "core-initial-beta",
@@ -19,6 +20,7 @@
     "core-transform-channels",
     "core-warning-wording",
     "flip-initial-beta",
+    "gestures-drop-flip",
     "gestures-initial-beta",
     "gestures-republish",
     "gestures-snap-observer",

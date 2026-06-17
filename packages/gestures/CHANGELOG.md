@@ -1,5 +1,11 @@
 # @underlying/gestures
 
+## 0.1.0-beta.7
+
+### Minor Changes
+
+- 52c5675: Remove the translate-only `flip()` from `@underlying/gestures`. Layout and shared-element transitions belong to `@underlying/flip`, which inverts position **and** size and springs to identity, interruptibly. Import `flip` from `@underlying/flip` instead - the gestures package now focuses on `draggable()` and `observe()`.
+
 ## 0.1.0-beta.6
 
 ### Minor Changes
