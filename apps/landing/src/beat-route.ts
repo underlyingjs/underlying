@@ -62,7 +62,7 @@ export function initRoute({ mount, scroll, fireCredit }: RouteDeps): void {
   // surfaces, never a scripted sequence.
   const progress = animatable(0)
   const stroke = draw(line, { from: 0 })
-  const rider = motionPath(courier, line, { autoRotate: 90 })
+  const rider = motionPath(courier, line, { autoRotate: true }) // the arrow already points +x; face the tangent exactly
   const reshape = morphCommands(badge, BADGE_DIAMOND, { from: 0 })
 
   const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v)
