@@ -1,9 +1,14 @@
 # @underlying/timeline
 
+## 1.1.0-beta.0
+
+### Patch Changes
+
+- @underlying/core@1.1.0-beta.0
+
 ## 1.0.0
 
 - First stable release. Seekable timelines with labels and relative positions; the master is a scrubbable handle that @underlying/scroll can drive. Leaving beta: the API is frozen and the @underlying suite now versions together.
-
 
 ## 0.1.0-beta.6
 

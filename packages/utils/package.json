@@ -1,6 +1,6 @@
 {
   "name": "@underlying/utils",
-  "version": "1.0.0",
+  "version": "1.1.0-beta.0",
   "description": "Named eases (power, sine, expo, back, elastic, bounce, steps), cubicBezier, and animation helpers (clamp, mapRange, interpolate, snap, wrap, random) for @underlying/core. Tree-shakeable.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",

@@ -1,9 +1,18 @@
 # @underlying/scroll
 
+## 1.1.0-beta.0
+
+### Minor Changes
+
+- 083d845: `scroll.velocity()` - scroll speed as one live value. It exposes how fast the scroller is moving (px/s, signed) as a `bindStyle`-ready `Animatable`, smoothed through a spring so it ramps and eases back to rest the moment you stop. Map it to a few degrees of `skewY`, a scale, or a blur, and the content leans with your scroll speed and snaps upright when you stop - the velocity-reactive lean. Physics-first: a fresh flick mid-relax re-aims the spring with velocity conserved, never a restart; held at rest under reduced motion.
+
+### Patch Changes
+
+- @underlying/core@1.1.0-beta.0
+
 ## 1.0.0
 
 - First stable release. Scroll as a source: `scrub()`, `parallax()`, `pin()`, `trigger()`, `snap()`, and a spring-driven `scrollTo()`, all on one rAF loop. Leaving beta: the API is frozen and the @underlying suite now versions together.
-
 
 ## 0.1.0-beta.8
 
