@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Scroll-driven animation, physics-first.</strong> Scroll is a source, not an engine -
-  <br />locked or momentum scrub, parallax, pin, snap, and triggers, on the one rAF loop.
+  <br />locked or momentum scrub, parallax, scroll-velocity, pin, snap, and triggers, on the one rAF loop.
 </p>
 
 <p align="center">
@@ -73,6 +73,18 @@ bindStyle(bg, { y: bgY })
 const lead = scroll.parallax({ target: section, output: [60, -60], smooth: 0.15 })
 bindStyle(foreground, { y: lead })
 ```
+
+## Velocity - lean with scroll speed
+
+`velocity()` exposes how fast the scroller is moving as one `bindStyle`-ready value (px/s, signed), smoothed through a spring so it ramps and eases back to rest the moment you stop. Map it to a few degrees of skew, a scale, or a blur for the speed-reactive lean.
+
+```ts
+// raw signed px/s -> a few degrees, clamped; relaxes to 0 when scrolling stops
+const skew = scroll.velocity({ map: (v) => Math.max(-8, Math.min(8, v * 0.02)) })
+bindStyle(content, { skewY: skew })
+```
+
+Physics-first: a spring owns the relax, so a fresh flick mid-relax re-aims it with velocity conserved, never a restart. `smooth` (seconds) tunes the ramp/relax; `spring` overrides the follow config. Disabled under reduced motion (held at `map(0)`).
 
 ## Pin
 

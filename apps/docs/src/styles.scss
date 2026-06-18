@@ -658,6 +658,33 @@ pre {
   }
 }
 
+// ---- velocity() demo : des rangées qui se penchent selon la vitesse de scroll
+.velrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--ligne);
+  border-radius: 8px;
+  background: var(--tint);
+  transform-origin: left center; // le skew lit comme une inclinaison depuis le bord
+  will-change: transform;
+
+  &__n {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--sous-bois);
+  }
+  &__bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--sapin);
+    opacity: 0.5;
+  }
+}
+
 // ---- objets de démo : encre sapin sur stage crème. Le mouvement est l'accent.
 .obj {
   flex-shrink: 0;

@@ -126,6 +126,54 @@ scroll.parallax(options: ParallaxOptions): ParallaxValue`,
   },
 }
 
+export const scrollVelocity: Section = {
+  id: 'scroll-velocity',
+  group: 'Scroll',
+  title: 'velocity()',
+  tagline: 'Scroll speed as one live value - lean with how fast you scroll.',
+  description: `
+    <p><code>velocity()</code> exposes how fast the scroller is moving as a single
+    <code>bindStyle</code>-ready value (px/s, signed), smoothed through a spring so
+    it ramps and - the part that matters - eases back to rest the moment you stop.
+    Map it to a few degrees of <code>skewY</code>, a scale, or a blur, and the
+    content leans with your scroll speed and snaps upright when you stop.
+    Physics-first: a fresh flick mid-relax re-aims the spring with velocity
+    conserved, never a restart. Scroll fast, then stop, and watch it settle.</p>`,
+  code: `const scroll = createScroll({ scroller })
+
+// lean a few degrees, clamped, relaxing to 0 when you stop
+const skew = scroll.velocity({ map: v => Math.max(-12, Math.min(12, v * 0.03)) })
+rows.forEach(row => bindStyle(row, { skewY: skew }))`,
+  api: `interface VelocityOptions { smooth?: number; spring?: SpringOptions;
+  map?: (velocity: number) => number }  // raw signed px/s -> your output; default identity
+type VelocityValue = Animatable & Disposable
+scroll.velocity(options?: VelocityOptions): VelocityValue`,
+  run(ctx) {
+    const { box, rail } = scroller('scroller__rail scroller__rail--list')
+    const rows: HTMLElement[] = []
+    for (let i = 1; i <= 9; i++) {
+      const row = h(
+        'div',
+        { class: 'velrow' },
+        h('span', { class: 'velrow__n' }, String(i).padStart(2, '0')),
+        h('span', { class: 'velrow__bar' }),
+      )
+      rows.push(row)
+    }
+    rail.append(...rows)
+    ctx.stage.append(box)
+
+    const scroll = createScroll({ scroller: box })
+    const skew = scroll.velocity({ map: (v) => Math.max(-12, Math.min(12, v * 0.03)) })
+    const unbind = rows.map((row) => bindStyle(row, { skewY: skew }))
+    ctx.onCleanup(() => {
+      for (const off of unbind) off()
+      skew.dispose()
+      scroll.dispose()
+    })
+  },
+}
+
 export const scrollTrigger: Section = {
   id: 'scroll-trigger',
   group: 'Scroll',
