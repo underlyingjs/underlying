@@ -1,5 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
-import { draggable, observe } from '@underlying/gestures'
+import { draggable, observe, tilt } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -112,6 +112,40 @@ animatable(initial).decay({ velocity, min, max })`,
         { value: 'spring', label: 'spring back to center' },
       ], (value) => (mode = value)),
     )
+  },
+}
+
+export const pointerTilt: Section = {
+  id: 'gestures-tilt',
+  group: 'Gestures',
+  title: 'tilt()',
+  tagline: 'A card that tilts in 3D toward the cursor, springing flat on leave.',
+  description: `
+    <p><code>tilt()</code> maps the pointer's position over an element to two
+    rotations a spring chases, so the card follows your cursor live and eases back
+    to flat when you leave - interruptible, never a restart. The rotations are live
+    values you can read or bind elsewhere, like draggable's x/y. Off on touch and
+    under reduced motion. Hover the card.</p>`,
+  code: `import { tilt } from '@underlying/gestures'
+
+const t = tilt(card, { max: 14, scale: 1.04 })   // 14deg, a small hover lift
+// t.rotateX / t.rotateY are live values you can read or compose
+t.dispose()`,
+  api: `interface TiltOptions { max?: number; perspective?: number; scale?: number;
+  reverse?: boolean; spring?: SpringOptions }
+interface Tilt { rotateX: Animatable; rotateY: Animatable; dispose(): void }
+tilt(element: HTMLElement, options?: TiltOptions): Tilt`,
+  run(ctx) {
+    const card = h(
+      'div',
+      { class: 'tiltcard' },
+      h('span', { class: 'tiltcard__tag' }, 'hover me'),
+      h('span', { class: 'tiltcard__title' }, 'tilt()'),
+    )
+    const wrap = h('div', { style: 'position:absolute;inset:0;display:grid;place-items:center' }, card)
+    ctx.stage.append(wrap)
+    const t = tilt(card, { max: 14, scale: 1.04 })
+    ctx.onCleanup(() => t.dispose())
   },
 }
 
