@@ -1,9 +1,14 @@
 # @underlying/text
 
+## 1.1.0-beta.0
+
+### Patch Changes
+
+- @underlying/core@1.1.0-beta.0
+
 ## 1.0.0
 
 - First stable release. Accessible `split()` plus `reveal()`, `scramble()` and `typewriter()` - the screen reader reads the text whole. Leaving beta: the API is frozen and the @underlying suite now versions together.
-
 
 ## 0.1.0-beta.5
 

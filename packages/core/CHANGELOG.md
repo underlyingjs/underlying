@@ -1,9 +1,10 @@
 # @underlying/core
 
+## 1.1.0-beta.0
+
 ## 1.0.0
 
 - First stable release. Physics-first values - spring, decay, tween and bring-your-own `simulate()` - with full transform channels, the string-ease registry, opt-in playback, and reduced-motion built in. Leaving beta: the API is frozen and the @underlying suite now versions together.
-
 
 ## 0.1.0-beta.6
 
