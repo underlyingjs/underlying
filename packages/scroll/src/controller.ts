@@ -10,6 +10,7 @@ import { createDomScrollSource } from './source-dom'
 import type { ScrollSource } from './source'
 import { createTrack, type Track, type TrackInternal, type TrackOptions } from './track'
 import { createTrigger, type TriggerOptions } from './triggers'
+import { createVelocity, type VelocityOptions, type VelocityValue } from './velocity'
 import type { Disposable } from './types'
 
 export interface ScrollControllerOptions {
@@ -31,6 +32,12 @@ export interface ScrollController {
   scrub(target: ScrubTarget, options?: ScrubOptions): Disposable
   /** Parallax: maps a range's progress to px on a bindStyle-ready Animatable. */
   parallax(options: ParallaxOptions): ParallaxValue
+  /**
+   * Scroll velocity as one live, bindStyle-ready value: how fast the scroller is
+   * moving (px/s, signed), smoothed and relaxing to rest when it stops. Map it to
+   * skew, scale or blur for a speed-reactive lean.
+   */
+  velocity(options?: VelocityOptions): VelocityValue
   /** Pin an element across a range. Exposes its own child Track for nested scrubs. */
   pin(element: HTMLElement, options?: PinOptions): Pin
   /** Velocity-aware momentum snap (opt-in; mutually exclusive with CSS scroll-snap). */
@@ -139,6 +146,9 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
     },
     parallax(parallaxOptions) {
       return createParallax(controller, parallaxOptions)
+    },
+    velocity(velocityOptions) {
+      return createVelocity(controller, velocityOptions)
     },
     pin(element, pinOptions) {
       return createPin(controller, element, pinOptions)

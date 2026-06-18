@@ -5,7 +5,7 @@ import { colors, composite, keyframes, lengthsUnits } from './sections/value-mod
 import { carousel, gestures, setRelease, unifiedInput } from './sections/gestures'
 import { composition } from './sections/composition'
 import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
-import { scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger } from './sections/scroll'
+import { scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger, scrollVelocity } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
 import { svgDraw, svgMorph, svgMorphSharp, svgMotionPath } from './sections/svg'
@@ -62,8 +62,8 @@ const pages: Page[] = [
     id: 'scroll',
     group: 'Guides',
     title: 'Scroll',
-    blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams, all on the one rAF loop. The demos below each drive their own scroll container: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>trigger()</code>, a spring-driven <code>scrollTo()</code>, momentum <code>snap()</code>, and a raw <code>track()</code>. The package also ships <code>pin()</code> and dev <code>markers()</code>.',
-    sections: [scrollScrub, scrollParallax, scrollTrigger, scrollTo, scrollSnap, scrollTrack],
+    blurb: 'Scroll as a source, not an engine. <code>@underlying/scroll</code> owns the IntersectionObserver, the passive listener, and getBoundingClientRect, turns scroll into a normalized 0..1, and fans it onto the core seams, all on the one rAF loop. The demos below each drive their own scroll container: <code>scrub()</code> (locked or momentum), <code>parallax()</code>, <code>velocity()</code> (lean with scroll speed), <code>trigger()</code>, a spring-driven <code>scrollTo()</code>, momentum <code>snap()</code>, and a raw <code>track()</code>. The package also ships <code>pin()</code> and dev <code>markers()</code>.',
+    sections: [scrollScrub, scrollParallax, scrollVelocity, scrollTrigger, scrollTo, scrollSnap, scrollTrack],
   },
   {
     id: 'timeline',
