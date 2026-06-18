@@ -88,6 +88,20 @@ interface ObserverState {
 
 The full callback set: `onPress`, `onRelease`, `onDrag`, `onWheel`, `onChange` (any engaged movement, from any input), the directional `onUp` / `onDown` / `onLeft` / `onRight`, and `onStop` (movement settled, debounced after the last event).
 
+## `tilt()`
+
+Tilt an element in 3D toward the cursor and spring it flat on leave. The pointer position over the element maps to two rotations a spring chases, so the card follows your cursor live and, when you leave, eases back to flat - interruptible, never a restart.
+
+```ts
+import { tilt } from '@underlying/gestures'
+
+const t = tilt(card, { max: 14, scale: 1.04 }) // 14deg at the edges, a small lift
+// t.rotateX / t.rotateY are live values - read them, bind them elsewhere, compose them
+t.dispose()
+```
+
+Options: `max` (edge degrees, default 12), `perspective` (the `perspective()` depth in px, default 600), `scale` (a hover lift, default 1 = none), `reverse` (tilt away from the cursor), `spring`. It owns the element's transform (`perspective` + `rotateX` / `rotateY` + `scale`), and like `draggable`'s `x` / `y`, the rotations are live `Animatable`s you can read or reuse. Off on touch and held flat under reduced motion.
+
 ## `VelocityTracker`
 
 The low-level helper both `draggable()` and `observe()` use to read pointer velocity. A first-order EMA over a ~50 ms window, made frame-rate independent; `read()` returns 0 when the last sample is older than 80 ms, so a finger that paused before lifting releases with no fling. Feed it the same clock (`event.timeStamp`) for `start` / `sample` / `read`. Exported for building your own gestures that hand off to core's springs.
