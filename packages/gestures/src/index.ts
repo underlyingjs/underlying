@@ -1,5 +1,7 @@
 export { draggable } from './draggable'
 export type { Draggable, DraggableOptions, DragAxis, DragBounds, DragRelease, SnapTo } from './draggable'
+export { cursor } from './cursor'
+export type { Cursor, CursorOptions } from './cursor'
 export { magnetic } from './magnetic'
 export type { Magnetic, MagneticOptions } from './magnetic'
 export { observe } from './observer'

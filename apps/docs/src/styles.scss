@@ -728,6 +728,81 @@ pre {
   will-change: transform; // bindStyle writes the live x / y pull
 }
 
+// ---- cursor() demo : un panneau qui masque le curseur natif et laisse
+// l'anneau personnalisé le remplacer, gonflant sur les liens.
+.cursorstage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 22px;
+  cursor: none;
+
+  &__tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--lichen);
+  }
+  &__links {
+    display: flex;
+    gap: 14px;
+  }
+}
+
+.cursorchip {
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--ligne);
+  background: var(--creme);
+  color: var(--sapin);
+  font-family: var(--mono);
+  font-size: 14px;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+
+  &:hover {
+    border-color: var(--mousse);
+    background: var(--tint);
+  }
+}
+
+// The cursor primitive owns this element's transform (translate); the visible
+// ring lives on ::before so its active swell (scale) never fights that transform.
+.uc {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  will-change: transform;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    border: 1.5px solid var(--sous-bois);
+    border-radius: 50%;
+    transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+  }
+
+  &--active::before {
+    transform: scale(1.9);
+    border-color: var(--sapin);
+    background: rgba(28, 52, 38, 0.12);
+  }
+}
+
 // ---- objets de démo : encre sapin sur stage crème. Le mouvement est l'accent.
 .obj {
   flex-shrink: 0;
