@@ -102,6 +102,20 @@ t.dispose()
 
 Options: `max` (edge degrees, default 12), `perspective` (the `perspective()` depth in px, default 600), `scale` (a hover lift, default 1 = none), `reverse` (tilt away from the cursor), `spring`. It owns the element's transform (`perspective` + `rotateX` / `rotateY` + `scale`), and like `draggable`'s `x` / `y`, the rotations are live `Animatable`s you can read or reuse. Off on touch and held flat under reduced motion.
 
+## `magnetic()`
+
+Pull an element toward the cursor when it comes within range, and spring it home when the cursor leaves. The element follows a fraction of the cursor's offset from its centre, chased by a spring, so a button leans into the pointer and settles back - interruptible, never a restart.
+
+```ts
+import { magnetic } from '@underlying/gestures'
+
+const m = magnetic(button, { strength: 0.4, radius: 140 }) // follow 40% of the offset, engage within 140px
+// m.x / m.y are live Animatables - read them, bind them elsewhere, compose them
+m.dispose()
+```
+
+Options: `radius` (engage distance from the centre in px, default half the element + 60), `strength` (fraction of the offset followed, default 0.3), `spring`. It tracks the pointer through one shared window listener (so many magnetic elements stay cheap), and like `draggable`'s `x` / `y`, the offset is exposed as live `Animatable`s. Off on touch and held home under reduced motion.
+
 ## `VelocityTracker`
 
 The low-level helper both `draggable()` and `observe()` use to read pointer velocity. A first-order EMA over a ~50 ms window, made frame-rate independent; `read()` returns 0 when the last sample is older than 80 ms, so a finger that paused before lifting releases with no fling. Feed it the same clock (`event.timeStamp`) for `start` / `sample` / `read`. Exported for building your own gestures that hand off to core's springs.

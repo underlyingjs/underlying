@@ -1,5 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
-import { draggable, observe, tilt } from '@underlying/gestures'
+import { draggable, magnetic, observe, tilt } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -146,6 +146,35 @@ tilt(element: HTMLElement, options?: TiltOptions): Tilt`,
     ctx.stage.append(wrap)
     const t = tilt(card, { max: 14, scale: 1.04 })
     ctx.onCleanup(() => t.dispose())
+  },
+}
+
+export const pointerMagnetic: Section = {
+  id: 'gestures-magnetic',
+  group: 'Gestures',
+  title: 'magnetic()',
+  tagline: 'A button that leans into the cursor and springs home on exit.',
+  description: `
+    <p><code>magnetic()</code> pulls an element toward the cursor once it comes
+    within range - the element follows a fraction of the cursor's offset, chased by
+    a spring, so it leans in as you approach and springs home when you leave,
+    interruptible. The offset is exposed as live values (<code>x</code> /
+    <code>y</code>), like draggable's. Off on touch and under reduced motion. Move
+    near the button.</p>`,
+  code: `import { magnetic } from '@underlying/gestures'
+
+const m = magnetic(button, { strength: 0.4, radius: 140 })
+// m.x / m.y are live values you can read or compose
+m.dispose()`,
+  api: `interface MagneticOptions { radius?: number; strength?: number; spring?: SpringOptions }
+interface Magnetic { x: Animatable; y: Animatable; dispose(): void }
+magnetic(element: HTMLElement, options?: MagneticOptions): Magnetic`,
+  run(ctx) {
+    const button = h('button', { class: 'magbtn' }, 'Get in touch')
+    const wrap = h('div', { style: 'position:absolute;inset:0;display:grid;place-items:center' }, button)
+    ctx.stage.append(wrap)
+    const m = magnetic(button, { strength: 0.4, radius: 150 })
+    ctx.onCleanup(() => m.dispose())
   },
 }
 
