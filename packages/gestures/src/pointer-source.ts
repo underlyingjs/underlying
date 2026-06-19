@@ -8,10 +8,16 @@ type Listener = (x: number, y: number) => void
 
 const listeners = new Set<Listener>()
 let attached = false
+let lastX = 0
+let lastY = 0
+let known = false
 
 const onMove = (event: PointerEvent): void => {
   if (event.pointerType === 'touch') return
-  for (const listener of [...listeners]) listener(event.clientX, event.clientY)
+  lastX = event.clientX
+  lastY = event.clientY
+  known = true
+  for (const listener of [...listeners]) listener(lastX, lastY)
 }
 
 const attach = (): void => {
@@ -34,4 +40,9 @@ export function onPointerMove(listener: Listener): () => void {
     listeners.delete(listener)
     if (listeners.size === 0) detach()
   }
+}
+
+/** The last seen pointer position; `known` is false until the first move. Lets a new follower start where the cursor already is, not at the origin. */
+export function currentPointer(): { x: number; y: number; known: boolean } {
+  return { x: lastX, y: lastY, known }
 }

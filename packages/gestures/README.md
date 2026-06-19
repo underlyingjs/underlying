@@ -116,6 +116,20 @@ m.dispose()
 
 Options: `radius` (engage distance from the centre in px, default half the element + 60), `strength` (fraction of the offset followed, default 0.3), `spring`. It tracks the pointer through one shared window listener (so many magnetic elements stay cheap), and like `draggable`'s `x` / `y`, the offset is exposed as live `Animatable`s. Off on touch and held home under reduced motion.
 
+## `cursor()`
+
+A custom cursor that trails the real pointer with spring lag and flips to an active state over interactive targets. The library only positions the element - you give it its look through CSS - so it stays a primitive, not a theme.
+
+```ts
+import { cursor } from '@underlying/gestures'
+
+const c = cursor({ targets: 'a, button' }) // creates <div class="cursor"> on <body>
+c.element // style .cursor and .cursor--active in your CSS; the library only moves it
+c.dispose()
+```
+
+Options: `element` (drive your own instead of a created `<div>`), `className` (default `cursor`; the active state adds `cursor--active`), `targets` (selector that flips the active state), `spring` (the trailing lag). It rides the same shared pointer listener as `magnetic()`, and starts where the cursor already is rather than swooping in from the origin. Since it owns the element's transform, give the active swell to a child or `::before` (a `scale` of your own) so it never fights the position. Hidden on touch and under reduced motion - the native cursor stays.
+
 ## `VelocityTracker`
 
 The low-level helper both `draggable()` and `observe()` use to read pointer velocity. A first-order EMA over a ~50 ms window, made frame-rate independent; `read()` returns 0 when the last sample is older than 80 ms, so a finger that paused before lifting releases with no fling. Feed it the same clock (`event.timeStamp`) for `start` / `sample` / `read`. Exported for building your own gestures that hand off to core's springs.

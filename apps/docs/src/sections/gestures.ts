@@ -1,5 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
-import { draggable, magnetic, observe, tilt } from '@underlying/gestures'
+import { cursor, draggable, magnetic, observe, tilt } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -175,6 +175,62 @@ magnetic(element: HTMLElement, options?: MagneticOptions): Magnetic`,
     ctx.stage.append(wrap)
     const m = magnetic(button, { strength: 0.4, radius: 150 })
     ctx.onCleanup(() => m.dispose())
+  },
+}
+
+export const pointerCursor: Section = {
+  id: 'gestures-cursor',
+  group: 'Gestures',
+  title: 'cursor()',
+  tagline: 'A custom cursor that trails the pointer and swells over links.',
+  description: `
+    <p><code>cursor()</code> drops in a custom cursor that trails the real pointer
+    with spring lag and flips to an active state over interactive targets. The
+    library only positions it - you give it its look with <code>.cursor</code> and
+    <code>.cursor--active</code> CSS. It rides the shared pointer source, so it stays
+    one listener alongside magnetic, and is hidden on touch and under reduced motion.
+    Move over the panel - the ring swells over the links.</p>`,
+  code: `import { cursor } from '@underlying/gestures'
+
+const c = cursor({ targets: 'a, button' })   // a <div class="cursor"> on <body>
+// style .cursor and .cursor--active in your CSS; the library only moves it
+c.dispose()`,
+  api: `interface CursorOptions { element?: HTMLElement; className?: string;
+  targets?: string; spring?: SpringOptions }
+interface Cursor { readonly element: HTMLElement; dispose(): void }
+cursor(options?: CursorOptions): Cursor`,
+  run(ctx) {
+    const panel = h(
+      'div',
+      { class: 'cursorstage' },
+      h('span', { class: 'cursorstage__tag' }, 'move over me'),
+      h(
+        'div',
+        { class: 'cursorstage__links' },
+        h('a', { class: 'cursorchip', href: '#gestures-cursor' }, 'Work'),
+        h('a', { class: 'cursorchip', href: '#gestures-cursor' }, 'Studio'),
+        h('a', { class: 'cursorchip', href: '#gestures-cursor' }, 'Contact'),
+      ),
+    )
+    ctx.stage.append(panel)
+
+    // The real primitive, page-wide; we just gate its visibility to the panel so
+    // the demo stays contained and does not fight the native cursor elsewhere.
+    const c = cursor({ className: 'uc', targets: '.cursorchip' })
+    const ring = c.element
+    const show = (): void => {
+      ring.style.opacity = '1'
+    }
+    const hide = (): void => {
+      ring.style.opacity = '0'
+    }
+    panel.addEventListener('pointerenter', show)
+    panel.addEventListener('pointerleave', hide)
+    ctx.onCleanup(() => {
+      panel.removeEventListener('pointerenter', show)
+      panel.removeEventListener('pointerleave', hide)
+      c.dispose()
+    })
   },
 }
 
