@@ -14,6 +14,12 @@
     "@underlying/utils": "1.0.0"
   },
   "changesets": [
+    "gestures-cursor",
+    "gestures-depth",
+    "gestures-magnetic",
+    "gestures-quickto",
+    "gestures-tilt",
+    "scroll-smooth",
     "scroll-velocity-channel"
   ]
 }
