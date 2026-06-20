@@ -1,5 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
-import { cursor, depth, draggable, magnetic, observe, quickTo, tilt } from '@underlying/gestures'
+import { cursor, depth, draggable, interactive, magnetic, observe, quickTo, tilt } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -337,6 +337,37 @@ quickTo(el, channels: [QuickChannel, QuickChannel], options?): QuickToPair  // (
       stage.removeEventListener('pointermove', onMove)
       move.dispose()
     })
+  },
+}
+
+export const pointerInteractive: Section = {
+  id: 'gestures-interactive',
+  group: 'Gestures',
+  title: 'interactive()',
+  tagline: 'Hover and press states that spring - keyboard included.',
+  description: `
+    <p><code>interactive()</code> is the declarative side of the pointer set: name a
+    <code>hover</code> and a <code>press</code> target and the element springs to it
+    on pointer-over or keyboard focus, and while pressed or Enter/Space is held -
+    springing back on release, interruptible. Press wins over hover per channel, so a
+    press that only nudges <code>y</code> keeps the hover <code>scale</code>. Keyboard
+    parity and emulated-touch-hover filtering are built in. Hover, click, or tab to it
+    and press Enter.</p>`,
+  code: `import { interactive } from '@underlying/gestures'
+
+interactive(button, {
+  hover: { scale: 1.05, y: -2 },  // pointer-over OR keyboard focus
+  press: { scale: 0.97, y: 0 },   // pressed OR Enter/Space held
+})`,
+  api: `interface InteractiveOptions { hover?: InteractiveState; press?: InteractiveState; spring?: SpringOptions }
+type InteractiveState = Partial<Record<Channel, number>> // scale, x, y, rotate, opacity, ...
+interactive(element: HTMLElement, options?: InteractiveOptions): Interactive`,
+  run(ctx) {
+    const button = h('button', { class: 'interbtn' }, 'Start a project')
+    const wrap = h('div', { style: 'position:absolute;inset:0;display:grid;place-items:center' }, button)
+    ctx.stage.append(wrap)
+    const i = interactive(button, { hover: { scale: 1.05, y: -2 }, press: { scale: 0.97, y: 0 } })
+    ctx.onCleanup(() => i.dispose())
   },
 }
 
