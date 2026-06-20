@@ -1119,6 +1119,41 @@ pre {
 }
 
 // ---- démos scroll : conteneur scrollable autonome (le scroll est la source) ----
+// ---- marquee() demo : a seamless agency ticker, clones managed by the library
+.marquee {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden; // the container clips; the track is what scrolls
+}
+.marquee__track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 56px;
+  padding-left: 56px; // so the seam gap matches the inter-word gap
+  white-space: nowrap;
+}
+.marquee__word {
+  display: flex;
+  align-items: center;
+  gap: 56px;
+  font-family: var(--display);
+  font-weight: 640;
+  font-size: 52px;
+  line-height: 1;
+  color: var(--sapin);
+
+  &::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--mousse);
+  }
+}
+
 .scroller {
   position: relative;
   width: 100%;

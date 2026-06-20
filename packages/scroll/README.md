@@ -100,6 +100,23 @@ bindStyle(content, { skewY: skew })
 
 Physics-first: a spring owns the relax, so a fresh flick mid-relax re-aims it with velocity conserved, never a restart. `smooth` (seconds) tunes the ramp/relax; `spring` overrides the follow config. Disabled under reduced motion (held at `map(0)`).
 
+## Marquee - a seamless looping ticker
+
+`marquee()` is a standalone helper (no controller needed). It clones a track's children just enough to fill the container, drifts the strip at a constant speed, and wraps at exactly one content period so there's no seam. Hand it `scroll.velocity()` and it speeds up and reverses with the scroll - the agency ticker.
+
+```ts
+import { createScroll, marquee } from '@underlying/scroll'
+
+const scroll = createScroll()
+marquee(track, {
+  speed: 60,                   // base drift, px/s
+  velocity: scroll.velocity(), // + the live scroll speed -> reacts to scrolling
+  pauseOnHover: true,
+})
+```
+
+The container needs `overflow: hidden`; the `track` (its child holding the items) is what scrolls. Options: `speed`, `direction` (1 / -1), `axis` (`'x'` / `'y'`), `velocity` (a signed-px/s `Animatable` to add), `velocityFactor`, `pauseOnHover` (eases the drift to a stop via a spring), `spring`. The loop sleeps while the container is off-screen (IntersectionObserver) and sits still under reduced motion. Clones are `aria-hidden` + `inert`; `dispose()` removes them and restores the element.
+
 ## Pin
 
 ```ts
