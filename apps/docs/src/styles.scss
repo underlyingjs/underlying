@@ -728,6 +728,26 @@ pre {
   will-change: transform; // bindStyle writes the live x / y pull
 }
 
+// ---- interactive() demo : a CTA with springy hover / press states
+.interbtn {
+  padding: 16px 32px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sapin);
+  color: var(--creme);
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(28, 52, 38, 0.2);
+  will-change: transform; // interactive writes scale + y
+
+  &:focus-visible {
+    outline: 2px solid var(--sous-bois);
+    outline-offset: 3px;
+  }
+}
+
 // ---- cursor() demo : un panneau qui masque le curseur natif et laisse
 // l'anneau personnalisé le remplacer, gonflant sur les liens.
 .cursorstage {

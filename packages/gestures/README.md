@@ -147,6 +147,21 @@ near.dispose()
 
 Options: `shift` (travel in px at the frame edge, the depth magnitude; sign sets direction, default 24), `axis` (`'both'` / `'x'` / `'y'`; a single axis spends one spring instead of two), `invert` (`false` default = move against the pointer, the natural recession; `true` = with it), `frame` (`'viewport'` or an element, re-read each move so a scrolled hero stays correct), `clamp` (default true; cap travel at `+/-shift`), `spring`. The offset is exposed as live `Animatable`s like `draggable`'s `x` / `y`. Depth is faked through differential translate, so it owns the element's `x` / `y` transform: don't also run `tilt()` on the same element - each writes the whole transform string and they would clobber each other. Put them on nested elements, or read both sets of live values into a single `bindStyle` of your own. Off on touch and held flat under reduced motion.
 
+## `interactive()`
+
+Declarative hover / press state animations - the declarative side of the pointer set. Name a `hover` and/or `press` target and the element springs to it on pointer-over or keyboard focus (hover) and while pressed or Enter/Space is held (press), springing back on release - interruptible, never a restart.
+
+```ts
+import { interactive } from '@underlying/gestures'
+
+interactive(button, {
+  hover: { scale: 1.05, y: -2 }, // pointer-over OR keyboard focus
+  press: { scale: 0.97, y: 0 },  // pressed OR Enter/Space held
+})
+```
+
+A state is any `bindStyle` channel (`scale`, `x`, `y`, `rotate`, `opacity`, ...) mapped to its target. Press wins over hover **per channel**, so a press that only nudges `y` keeps the hover `scale`. Keyboard parity (focus = hover, Enter/Space = press) and emulated-touch-hover filtering (a tap is a press, not a hover) are built in. `state()` reports `'rest'` / `'hover'` / `'press'`. Snaps instead of springing under reduced motion. For keyboard parity the element must be focusable (a native control, or `tabindex`).
+
 ## `quickTo()`
 
 An imperative fast setter. Bind one (or two) of an element's transform channels to a spring once, then drive it every frame with a plain call. Each call re-aims the spring in place without rebuilding it, so it stays cheap in a hot handler. Where `cursor()` and `magnetic()` wire their own input, `quickTo()` is the escape hatch - you bring the handler and the mapping, it brings the physics.
