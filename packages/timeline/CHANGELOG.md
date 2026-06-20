@@ -1,5 +1,11 @@
 # @underlying/timeline
 
+## 1.1.0-beta.3
+
+### Patch Changes
+
+- @underlying/core@1.1.0-beta.3
+
 ## 1.1.0-beta.2
 
 ### Patch Changes

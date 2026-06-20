@@ -16,6 +16,7 @@
   "changesets": [
     "gestures-cursor",
     "gestures-depth",
+    "gestures-interactive",
     "gestures-magnetic",
     "gestures-quickto",
     "gestures-tilt",
