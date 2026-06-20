@@ -1,5 +1,15 @@
 # @underlying/scroll
 
+## 1.1.0-beta.1
+
+### Minor Changes
+
+- 2285b24: Smooth scroll - a document-level inertia engine. Pass `{ smooth: true }` to `createScroll` (or call `controller.smooth()`) and a spring takes over the scroll: wheel, touch (opt-in) and keyboard re-aim it and it glides to rest instead of stopping dead. It drives **native** scroll - no transform, no content wrapper - so the scrollbar, in-page anchors, `position: sticky` and find-in-page keep working, and every existing effect (`scrub`, `parallax`, `velocity`, `pin`, `snap`, `scrollTo`) reads the smoothed position with no change. Physics-first: one `follow()` spring owns the smoothed position (the same `stiffnessFor` mapping as scrub/parallax), interruptible by a real flick. `scrollTo` and `snap` route through that one spring when smooth is active, so there's never more than one writer of native scroll. A user scroll the engine did not drive (scrollbar, anchor, keyboard) is adopted rather than fought. Options: `smooth` (catch-up seconds), `spring`, `wheelMultiplier`, `touchMultiplier`, `keyboard` (default on, never steals a form field), `touch` (default off - intercepting touchmove kills iOS native momentum). Off under reduced motion - native scroll runs raw. The `ScrollSource` contract gains `driveTo(pos)` for the synchronous engine write.
+
+### Patch Changes
+
+- @underlying/core@1.1.0-beta.1
+
 ## 1.1.0-beta.0
 
 ### Minor Changes

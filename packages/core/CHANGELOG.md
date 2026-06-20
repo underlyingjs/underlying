@@ -1,5 +1,7 @@
 # @underlying/core
 
+## 1.1.0-beta.1
+
 ## 1.1.0-beta.0
 
 ## 1.0.0
