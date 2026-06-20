@@ -1,6 +1,6 @@
 import { animatable, bindStyle, linear } from '@underlying/core'
 import { playable } from '@underlying/core/playback'
-import { createScroll } from '@underlying/scroll'
+import { createScroll, marquee } from '@underlying/scroll'
 import { h, type Section } from '../showcase'
 
 // A self-contained scroll container that lives inside one demo card: its own
@@ -220,6 +220,50 @@ controller.smooth(options?): SmoothScroll`,
     ctx.onCleanup(() => {
       for (const off of unbind) off()
       skew.dispose()
+      scroll.dispose()
+    })
+  },
+}
+
+export const scrollMarquee: Section = {
+  id: 'scroll-marquee',
+  group: 'Scroll',
+  title: 'marquee()',
+  tagline: 'A seamless looping ticker that speeds up as you scroll.',
+  description: `
+    <p><code>marquee()</code> clones a track's children just enough to fill the row,
+    then drifts the strip at a constant speed and wraps at exactly one content period
+    so there's no seam. Hand it <code>scroll.velocity()</code> and it speeds up and
+    reverses with the scroll - the agency ticker. The loop sleeps while it's off-screen
+    and sits still under reduced motion. Scroll the page and watch it react; hover to
+    pause.</p>`,
+  code: `import { createScroll, marquee } from '@underlying/scroll'
+
+const scroll = createScroll()
+marquee(track, {
+  speed: 60,                       // base drift, px/s
+  velocity: scroll.velocity(),     // + the live scroll speed -> reacts to scrolling
+  pauseOnHover: true,
+})`,
+  api: `interface MarqueeOptions { speed?: number; direction?: 1 | -1; axis?: 'x' | 'y';
+  velocity?: Animatable; velocityFactor?: number; pauseOnHover?: boolean; spring?: SpringOptions }
+marquee(track: HTMLElement, options?: MarqueeOptions): Marquee`,
+  run(ctx) {
+    const words = ['Design', 'Motion', 'Brand', 'Studio', 'Web']
+    const track = h(
+      'div',
+      { class: 'marquee__track' },
+      ...words.map((w) => h('span', { class: 'marquee__word' }, w)),
+    )
+    const strip = h('div', { class: 'marquee' }, track)
+    ctx.stage.append(strip)
+
+    const scroll = createScroll() // the viewport, to read its scroll speed
+    const vel = scroll.velocity()
+    const m = marquee(track, { speed: 50, velocity: vel, velocityFactor: 0.6, pauseOnHover: true })
+    ctx.onCleanup(() => {
+      m.dispose()
+      vel.dispose()
       scroll.dispose()
     })
   },
