@@ -174,6 +174,57 @@ scroll.velocity(options?: VelocityOptions): VelocityValue`,
   },
 }
 
+export const smoothScroll: Section = {
+  id: 'scroll-smooth',
+  group: 'Scroll',
+  title: 'smooth scroll',
+  tagline: 'Inertia takes over the scroll - and every effect reads the smoothed position.',
+  description: `
+    <p>Pass <code>{ smooth: true }</code> to <code>createScroll</code> and a spring
+    takes over: wheel and keys re-aim it and it glides to rest instead of stopping
+    dead. It drives <em>native</em> scroll, so the scrollbar, anchors and
+    <code>position: sticky</code> keep working - and every effect here (parallax,
+    velocity, pin, scrollTo) reads the smoothed position for free, no extra wiring.
+    Off under reduced motion. Scroll inside the panel: it glides, and the rows lean
+    with the smoothed speed.</p>`,
+  code: `const scroll = createScroll({ scroller, smooth: { smooth: 0.12 } })
+
+// every effect now reads the smoothed position - nothing else changes
+const skew = scroll.velocity({ map: v => Math.max(-10, Math.min(10, v * 0.03)) })
+rows.forEach(row => bindStyle(row, { skewY: skew }))
+scroll.scrollTo(section) // springs via the engine's one shared spring`,
+  api: `interface SmoothScrollOptions { smooth?: number; spring?: SpringOptions;
+  wheelMultiplier?: number; touchMultiplier?: number; keyboard?: boolean; touch?: boolean }
+createScroll({ smooth: true | SmoothScrollOptions })
+controller.smooth(options?): SmoothScroll`,
+  run(ctx) {
+    const { box, rail } = scroller('scroller__rail scroller__rail--list')
+    const rows: HTMLElement[] = []
+    for (let i = 1; i <= 9; i++) {
+      rows.push(
+        h(
+          'div',
+          { class: 'velrow' },
+          h('span', { class: 'velrow__n' }, String(i).padStart(2, '0')),
+          h('span', { class: 'velrow__bar' }),
+        ),
+      )
+    }
+    rail.append(...rows)
+    ctx.stage.append(box)
+
+    // keyboard off so the contained demo never steals the docs page's keys
+    const scroll = createScroll({ scroller: box, smooth: { smooth: 0.12, keyboard: false } })
+    const skew = scroll.velocity({ map: (v) => Math.max(-10, Math.min(10, v * 0.03)) })
+    const unbind = rows.map((row) => bindStyle(row, { skewY: skew }))
+    ctx.onCleanup(() => {
+      for (const off of unbind) off()
+      skew.dispose()
+      scroll.dispose()
+    })
+  },
+}
+
 export const scrollTrigger: Section = {
   id: 'scroll-trigger',
   group: 'Scroll',

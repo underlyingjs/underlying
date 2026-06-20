@@ -12,7 +12,9 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-const FULL_BUDGET_BYTES = 6 * 1024
+// 7.5 kB since 1.1: the document-level smooth-scroll engine (#66 - virtual spring,
+// native-scroll bridge, wheel/touch/keyboard input) is part of createScroll's graph.
+const FULL_BUDGET_BYTES = 7.5 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)
 const distDir = dirname(fileURLToPath(bundleUrl))

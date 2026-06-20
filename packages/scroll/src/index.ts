@@ -1,5 +1,7 @@
 export { createScroll } from './controller'
 export type { ScrollController, ScrollControllerOptions } from './controller'
+export { createSmoothScroll } from './smooth-scroll'
+export type { SmoothScroll, SmoothScrollOptions } from './smooth-scroll'
 export { createManualScrollSource } from './source-manual'
 export type { ManualScrollInit, ManualScrollSource } from './source-manual'
 export type { ScrollSource } from './source'
