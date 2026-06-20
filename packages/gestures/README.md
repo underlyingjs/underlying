@@ -147,6 +147,28 @@ near.dispose()
 
 Options: `shift` (travel in px at the frame edge, the depth magnitude; sign sets direction, default 24), `axis` (`'both'` / `'x'` / `'y'`; a single axis spends one spring instead of two), `invert` (`false` default = move against the pointer, the natural recession; `true` = with it), `frame` (`'viewport'` or an element, re-read each move so a scrolled hero stays correct), `clamp` (default true; cap travel at `+/-shift`), `spring`. The offset is exposed as live `Animatable`s like `draggable`'s `x` / `y`. Depth is faked through differential translate, so it owns the element's `x` / `y` transform: don't also run `tilt()` on the same element - each writes the whole transform string and they would clobber each other. Put them on nested elements, or read both sets of live values into a single `bindStyle` of your own. Off on touch and held flat under reduced motion.
 
+## `quickTo()`
+
+An imperative fast setter. Bind one (or two) of an element's transform channels to a spring once, then drive it every frame with a plain call. Each call re-aims the spring in place without rebuilding it, so it stays cheap in a hot handler. Where `cursor()` and `magnetic()` wire their own input, `quickTo()` is the escape hatch - you bring the handler and the mapping, it brings the physics.
+
+```ts
+import { quickTo } from '@underlying/gestures'
+
+// Two channels through ONE bindStyle - calling quickTo twice on one element would
+// clobber the transform, so pass them together.
+const move = quickTo(glow, ['x', 'y'], { spring: { stiffness: 90 } })
+
+panel.addEventListener('pointermove', (e) => {
+  const r = panel.getBoundingClientRect()
+  move(e.clientX - r.left, e.clientY - r.top) // cheap retarget; the spring is the lag
+})
+
+const fade = quickTo(card, 'opacity', { from: 1 }) // single channel -> fade.value, fade(0.4)
+move.dispose()
+```
+
+Channels are any `bindStyle` key (`x`, `y`, `scale`, `rotate`, `opacity`, ...). Options: `from` (start value, per channel for a pair; default 0 - pass a non-zero start where 0 hides the element, `1` for `scale` or `opacity`), `spring`. The single-channel form exposes the live `value`; the pair form exposes `values` in channel order - read them, bind them elsewhere, compose them. Under reduced motion the value snaps to its target instead of springing, so motion is removed but tracking stays.
+
 ## `VelocityTracker`
 
 The low-level helper both `draggable()` and `observe()` use to read pointer velocity. A first-order EMA over a ~50 ms window, made frame-rate independent; `read()` returns 0 when the last sample is older than 80 ms, so a finger that paused before lifting releases with no fling. Feed it the same clock (`event.timeStamp`) for `start` / `sample` / `read`. Exported for building your own gestures that hand off to core's springs.
