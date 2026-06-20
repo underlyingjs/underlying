@@ -883,6 +883,54 @@ pre {
   }
 }
 
+// ---- quickTo() demo : a spotlight glow the spring trails behind the pointer,
+// driven by the section's own pointermove handler.
+.quickstage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--sapin);
+
+  &__label {
+    position: relative; // above the glow
+    display: grid;
+    gap: 6px;
+    justify-items: center;
+    text-align: center;
+    pointer-events: none;
+  }
+  &__t {
+    font-family: var(--display);
+    font-weight: 640;
+    font-size: 30px;
+    color: var(--creme);
+  }
+  &__s {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--lichen);
+  }
+}
+
+// The spring owns this element's translate; it sits at the panel origin and the
+// negative margin centres the glow on the pointer.
+.qglow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 300px;
+  height: 300px;
+  margin: -150px 0 0 -150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250, 249, 246, 0.5), rgba(250, 249, 246, 0) 62%);
+  pointer-events: none;
+  will-change: transform;
+}
+
 // ---- objets de démo : encre sapin sur stage crème. Le mouvement est l'accent.
 .obj {
   flex-shrink: 0;

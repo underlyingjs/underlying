@@ -1,5 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
-import { cursor, depth, draggable, magnetic, observe, tilt } from '@underlying/gestures'
+import { cursor, depth, draggable, magnetic, observe, quickTo, tilt } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -285,6 +285,58 @@ depth(element: HTMLElement, options?: DepthOptions): DepthLayer`,
       depth(pick('.dl--badge'), { frame: tile, shift: 56 }),
     ]
     ctx.onCleanup(() => layers.forEach((l) => l.dispose()))
+  },
+}
+
+export const pointerQuick: Section = {
+  id: 'gestures-quickto',
+  group: 'Gestures',
+  title: 'quickTo()',
+  tagline: 'A spotlight you drive from your own handler with one spring setter.',
+  description: `
+    <p><code>quickTo()</code> binds one or two of an element's transform channels to
+    a spring once, then hands you a plain function to call every frame. Where
+    <code>cursor()</code> and <code>magnetic()</code> wire their own input,
+    <code>quickTo()</code> is the imperative escape hatch - you bring the handler and
+    the mapping, it brings the physics. Each call re-aims the spring in place without a
+    rebuild, so it stays cheap. Snaps under reduced motion. Move over the panel.</p>`,
+  code: `import { quickTo } from '@underlying/gestures'
+
+// Both channels through one bindStyle - never call quickTo twice on one element.
+const move = quickTo(glow, ['x', 'y'], { spring: { stiffness: 90 } })
+
+panel.addEventListener('pointermove', (e) => {
+  const r = panel.getBoundingClientRect()
+  move(e.clientX - r.left, e.clientY - r.top) // cheap retarget, springs the lag
+})`,
+  api: `interface QuickToOptions { from?: number | [number, number]; spring?: SpringOptions }
+quickTo(el, channel: QuickChannel, options?): QuickTo          // (value) => void; .value
+quickTo(el, channels: [QuickChannel, QuickChannel], options?): QuickToPair  // (a, b) => void; .values`,
+  run(ctx) {
+    const glow = h('div', { class: 'qglow' })
+    const stage = h(
+      'div',
+      { class: 'quickstage' },
+      glow,
+      h(
+        'div',
+        { class: 'quickstage__label' },
+        h('span', { class: 'quickstage__t' }, 'Spotlight'),
+        h('span', { class: 'quickstage__s' }, 'driven by your own handler'),
+      ),
+    )
+    ctx.stage.append(stage)
+
+    const move = quickTo(glow, ['x', 'y'], { spring: { stiffness: 90 } })
+    const onMove = (event: PointerEvent): void => {
+      const r = stage.getBoundingClientRect()
+      move(event.clientX - r.left, event.clientY - r.top)
+    }
+    stage.addEventListener('pointermove', onMove)
+    ctx.onCleanup(() => {
+      stage.removeEventListener('pointermove', onMove)
+      move.dispose()
+    })
   },
 }
 
