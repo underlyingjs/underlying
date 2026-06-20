@@ -803,6 +803,86 @@ pre {
   }
 }
 
+// ---- depth() demo : a featured-work tile whose layers parallax for depth.
+// Each layer is a full-bleed wrapper that centres its content via grid, so
+// depth() owns the wrapper's translate without fighting any centring transform.
+.depthtile {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 28%, var(--tint), var(--creme));
+
+  .dl {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .dl--num {
+    z-index: 0;
+  }
+  .dl--panel {
+    z-index: 1;
+  }
+  .dl--label {
+    z-index: 2;
+  }
+  .dl--badge {
+    z-index: 3;
+  }
+
+  &__num {
+    font-family: var(--display);
+    font-weight: 680;
+    font-size: 190px;
+    line-height: 1;
+    color: var(--ligne);
+  }
+  &__panel {
+    width: 248px;
+    height: 156px;
+    border-radius: 18px;
+    background: linear-gradient(150deg, var(--sapin), var(--sous-bois));
+    box-shadow: 0 26px 60px rgba(28, 52, 38, 0.22);
+  }
+  &__label {
+    display: grid;
+    gap: 5px;
+    justify-items: start;
+    margin: 92px 96px 0 0; // nudge onto the panel's lower-left
+  }
+  &__t {
+    font-family: var(--display);
+    font-weight: 640;
+    font-size: 28px;
+    color: var(--creme);
+  }
+  &__s {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mousse);
+  }
+  &__badge {
+    display: grid;
+    place-items: center;
+    width: 66px;
+    height: 66px;
+    margin: 0 0 132px 232px; // float to the panel's top-right
+    border-radius: 999px;
+    background: var(--creme);
+    border: 1px solid var(--ligne);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--sapin);
+    box-shadow: 0 14px 30px rgba(28, 52, 38, 0.18);
+  }
+}
+
 // ---- objets de démo : encre sapin sur stage crème. Le mouvement est l'accent.
 .obj {
   flex-shrink: 0;
