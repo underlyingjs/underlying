@@ -19,6 +19,7 @@
     "gestures-magnetic",
     "gestures-quickto",
     "gestures-tilt",
+    "scroll-marquee",
     "scroll-smooth",
     "scroll-velocity-channel"
   ]

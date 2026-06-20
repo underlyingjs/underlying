@@ -1,5 +1,11 @@
 # @underlying/svg
 
+## 1.1.0-beta.2
+
+### Patch Changes
+
+- @underlying/core@1.1.0-beta.2
+
 ## 1.1.0-beta.1
 
 ### Patch Changes
