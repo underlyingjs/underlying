@@ -17,6 +17,14 @@ export interface ScrollSource {
   measure(el: HTMLElement): Box
   /** Imperatively move the scroller on the active axis (snap, programmatic). Fires onScroll. */
   scrollTo(pos: number): void
+  /**
+   * The smooth-scroll engine's per-frame write: set the cached position, fire
+   * onScroll listeners THIS tick (so a Track samples the smoothed value now, not on
+   * the async native event), AND move the native scroller. The native 'scroll' echo
+   * is recognised as self-induced and not re-fanned. Defaults to scrollTo in the
+   * manual/test source.
+   */
+  driveTo(pos: number): void
   /** Subscribe to scroll movement. */
   onScroll(listener: () => void): () => void
   /** Subscribe to layout change (triggers a re-measure). */

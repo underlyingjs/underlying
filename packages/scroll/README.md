@@ -49,6 +49,20 @@ const clip = playable(x).to(600, { paused: true, easing: linear })
 scroll.scrub(clip, { target: panel })            // smooth: false (default)
 ```
 
+## Smooth scroll - inertia takes over the page
+
+Pass `{ smooth: true }` and a spring takes over the scroll: wheel, touch (opt-in) and keys re-aim it and it glides to rest instead of stopping dead. It drives **native** scroll - no transform, no wrapper - so the scrollbar, in-page anchors, `position: sticky` and find-in-page keep working, and every other effect here (scrub, parallax, velocity, pin, snap, `scrollTo`) reads the smoothed position with no extra wiring.
+
+```ts
+const scroll = createScroll({ smooth: { smooth: 0.12 } }) // catch-up time constant, seconds
+
+const lean = scroll.velocity({ map: v => Math.max(-10, Math.min(10, v * 0.03)) })
+bindStyle(card, { skewY: lean })   // leans with the smoothed speed, for free
+scroll.scrollTo(section)           // springs through the engine's one shared spring
+```
+
+Options (`createScroll({ smooth })` or `controller.smooth()`): `smooth` (catch-up seconds, default 0.1, the same `stiffnessFor` mapping scrub/parallax use), `spring`, `wheelMultiplier` (1), `touchMultiplier` (2), `keyboard` (default on - Space/PageUp-Down/Home/End/Arrows, never stealing a form field), `touch` (default **off** - intercepting touchmove kills iOS native momentum and pull-to-refresh, so native touch is the honest default). The engine is lazy and one-per-controller; `controller.smooth()` returns a handle (`enabled()`, `target()`, `velocity()`, `setTarget()`). A user scroll the engine did not drive (scrollbar, anchor, keyboard) is adopted, not fought. **Off under reduced motion** - native scroll runs raw.
+
 ## Scrub - locked or momentum
 
 ```ts

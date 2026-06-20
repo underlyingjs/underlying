@@ -37,6 +37,10 @@ export function createManualScrollSource(initial: ManualScrollInit = {}): Manual
       pos = next
       for (const listener of [...scrollListeners]) listener()
     },
+    driveTo(next) {
+      pos = next
+      for (const listener of [...scrollListeners]) listener()
+    },
     onScroll(listener) {
       scrollListeners.add(listener)
       return () => {

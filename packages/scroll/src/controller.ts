@@ -6,6 +6,7 @@ import { createPin, type Pin, type PinOptions } from './pin'
 import { createScrollDriver, type ScrollToDriver, type ScrollToHandle, type ScrollToOptions } from './scroll-to'
 import { createScrub, type ScrubOptions, type ScrubTarget } from './scrub'
 import { createSnap, type SnapOptions } from './snap'
+import { createSmoothScroll, type SmoothScroll, type SmoothScrollOptions } from './smooth-scroll'
 import { createDomScrollSource } from './source-dom'
 import type { ScrollSource } from './source'
 import { createTrack, type Track, type TrackInternal, type TrackOptions } from './track'
@@ -23,6 +24,8 @@ export interface ScrollControllerOptions {
   source?: ScrollSource
   /** Reduced-motion policy. Default = core's a11y state. Tests inject a manual one. */
   policy?: MotionPolicy
+  /** Take over the page with inertia smooth scroll. `true` for defaults, or tune it. Off under reduced motion. */
+  smooth?: boolean | SmoothScrollOptions
 }
 
 export interface ScrollController {
@@ -51,6 +54,12 @@ export interface ScrollController {
    * with `finished` and `cancel()`.
    */
   scrollTo(target: number | HTMLElement, options?: ScrollToOptions): ScrollToHandle
+  /**
+   * Take over the page with inertia smooth scroll: a spring owns a smoothed scroll
+   * position driven into native scroll, so every effect here reads it for free. Lazy,
+   * one per controller (the first call's options win). Off under reduced motion.
+   */
+  smooth(options?: SmoothScrollOptions): SmoothScroll
   /** Dev markers for a range. Dev-only; returns a disposer. */
   markers(options?: MarkerOptions): Disposable
   /** Whole-scroller progress 0..1 (cheap; maxScroll-based). */
@@ -69,6 +78,8 @@ export interface ScrollControllerInternal extends ScrollController {
   readonly axis: 'x' | 'y'
   /** The IntersectionObserver/scroll root: a custom scroller, or null for the viewport. */
   readonly root: HTMLElement | null
+  /** The smooth-scroll engine once built (null until smooth() / { smooth }); scroll-to and snap share its spring. */
+  readonly smoothEngine: SmoothScroll | null
   /** Register a Track so the single loop samples it; returns the same track. */
   register(track: TrackInternal): TrackInternal
 }
@@ -84,6 +95,7 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
 
   const tracks = new Set<TrackInternal>()
   let scrollDriver: ScrollToDriver | null = null
+  let smoothEngine: SmoothScroll | null = null
   let dirty = false
   let unsubscribeLoop: (() => void) | null = null
   let unsubscribeScroll: (() => void) | null = null
@@ -119,7 +131,16 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
     unsubscribeScroll ??= s.onScroll(wake)
     unsubscribeResize ??= s.onResize(() => {
       for (const track of [...tracks]) track.refresh()
+      smoothEngine?.refresh() // re-clamp the smooth aim to the new maxScroll
     })
+  }
+
+  const ensureSmooth = (smoothOptions?: SmoothScrollOptions): SmoothScroll => {
+    if (smoothEngine === null) {
+      ensureListeners() // so the loop samples the driven position and resize re-clamps the aim
+      smoothEngine = createSmoothScroll(controller, smoothOptions)
+    }
+    return smoothEngine
   }
 
   const register = (track: TrackInternal): TrackInternal => {
@@ -137,6 +158,9 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
     policy,
     axis,
     root,
+    get smoothEngine() {
+      return smoothEngine
+    },
     register,
     track(trackOptions = {}) {
       return register(createTrack(ensureSource(), trackOptions))
@@ -163,6 +187,9 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
       scrollDriver ??= createScrollDriver(controller) // one shared spring: re-aim, never overlap
       return scrollDriver.to(target, scrollToOptions)
     },
+    smooth(smoothOptions) {
+      return ensureSmooth(smoothOptions)
+    },
     markers(markerOptions) {
       return createMarkers(controller, markerOptions)
     },
@@ -176,6 +203,8 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
       for (const track of [...tracks]) track.refresh()
     },
     dispose() {
+      smoothEngine?.dispose()
+      smoothEngine = null
       scrollDriver?.dispose()
       scrollDriver = null
       unsubscribeLoop?.()
@@ -186,6 +215,12 @@ export function createScroll(options: ScrollControllerOptions = {}): ScrollContr
       tracks.clear()
       createdSource?.dispose() // dispose only a source we created, never an injected one
     },
+  }
+
+  // Eager only in the browser: building the engine touches window, and the package
+  // is import/SSR-safe. On the server this no-ops; call controller.smooth() client-side.
+  if (options.smooth && typeof window !== 'undefined') {
+    ensureSmooth(typeof options.smooth === 'object' ? options.smooth : undefined)
   }
   return controller
 }

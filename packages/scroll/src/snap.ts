@@ -90,6 +90,11 @@ export function createSnap(controller: ScrollControllerInternal, options: SnapOp
     snapping = true
     snapFrames = 0
     lastChangeFrame = 0
+    const engine = controller.smoothEngine
+    if (engine && engine.enabled()) {
+      engine.setTarget(targetPx) // share the engine's single spring rather than add a writer
+      return
+    }
     const follower = follow(source.scrollPos(), { scheduler, ...options.spring })
     offValue = follower.value.on('change', (v) => {
       source.scrollTo(v)
@@ -106,8 +111,17 @@ export function createSnap(controller: ScrollControllerInternal, options: SnapOp
       // target still completes), or a hard frame cap. Those last two guarantee
       // `snapping` can never get stuck true and block every future snap.
       snapFrames += 1
+      const engine = controller.smoothEngine
+      // smooth() enabled mid-snap while we own a follow: hand off so they never co-drive.
+      if (engine && engine.enabled() && f !== null) {
+        teardownFollow()
+        engine.setTarget(targetPx)
+      }
       const reached = Math.abs(source.scrollPos() - targetPx) < 0.5
-      const rested = snapFrames > 4 && snapFrames - lastChangeFrame >= 3
+      const rested =
+        engine && engine.enabled()
+          ? snapFrames > 4 && Math.abs(engine.velocity()) < 1
+          : snapFrames > 4 && snapFrames - lastChangeFrame >= 3
       if (reached || rested || snapFrames > 150) finishSnap()
       return
     }

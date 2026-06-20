@@ -31,11 +31,20 @@ export function createDomScrollSource(options: DomScrollSourceOptions = {}): Scr
         : win.scrollX
 
   let pos = readPos()
+  let lastDriven: number | null = null
   const scrollListeners = new Set<() => void>()
   const resizeListeners = new Set<() => void>()
 
   const onScrollEvent = (): void => {
-    pos = readPos()
+    const next = readPos()
+    pos = next
+    // The async native echo of a driveTo() we already fanned out synchronously:
+    // swallow it so a Track is not re-sampled and the engine does not mis-adopt.
+    if (lastDriven !== null && Math.abs(next - lastDriven) < 0.5) {
+      lastDriven = null
+      return
+    }
+    lastDriven = null
     for (const listener of [...scrollListeners]) listener()
   }
   const onResizeEvent = (): void => {
@@ -77,6 +86,14 @@ export function createDomScrollSource(options: DomScrollSourceOptions = {}): Scr
       return vertical ? { start: r.top + win.scrollY, size: r.height } : { start: r.left + win.scrollX, size: r.width }
     },
     scrollTo(next) {
+      const opts: ScrollToOptions = vertical ? { top: next } : { left: next }
+      if (scroller) scroller.scrollTo(opts)
+      else win.scrollTo(opts)
+    },
+    driveTo(next) {
+      pos = next // cache synchronously so a same-tick sample reads the smoothed value
+      lastDriven = next
+      for (const listener of [...scrollListeners]) listener()
       const opts: ScrollToOptions = vertical ? { top: next } : { left: next }
       if (scroller) scroller.scrollTo(opts)
       else win.scrollTo(opts)

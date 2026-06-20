@@ -96,9 +96,21 @@ export function createScrollDriver(controller: ScrollControllerInternal): Scroll
       stopLoop()
       return
     }
+    const engine = controller.smoothEngine
+    // smooth() was enabled mid-flight while we own a follow: hand the target to the
+    // engine's single spring so the two never co-drive native scroll and stall.
+    if (engine && engine.enabled() && follower !== null) {
+      releaseFollow()
+      engine.setTarget(scroll.targetPx, { conserveVelocity: true })
+    }
     scroll.frames += 1
     const reached = Math.abs(controller.source.scrollPos() - scroll.targetPx) < 0.5
-    const rested = scroll.frames > 4 && scroll.frames - scroll.lastDriveFrame >= 3
+    // In engine mode we don't own the spring's change events, so rest is read from
+    // the engine's velocity rather than the lastDriveFrame heuristic.
+    const rested =
+      engine && engine.enabled()
+        ? scroll.frames > 4 && Math.abs(engine.velocity()) < 1
+        : scroll.frames > 4 && scroll.frames - scroll.lastDriveFrame >= 3
     if (reached || rested || scroll.frames > 600) resolve(scroll, false)
   }
 
@@ -145,7 +157,6 @@ export function createScrollDriver(controller: ScrollControllerInternal): Scroll
     } else {
       releaseFollow() // drop any idle/rested spring; start clean from the current position
     }
-    const followInstance = ensureFollow(source.scrollPos(), options.spring)
 
     const scroll: ActiveScroll = {
       targetPx,
@@ -157,6 +168,24 @@ export function createScrollDriver(controller: ScrollControllerInternal): Scroll
     }
     active = scroll
     if (unsubscribeLoop === null) unsubscribeLoop = controller.scheduler.subscribe(onLoopFrame)
+
+    // When the smooth engine is active, route through its single spring instead of
+    // building a second native-scroll writer; keep the same arrival loop + handle.
+    const engine = controller.smoothEngine
+    if (engine && engine.enabled()) {
+      releaseFollow() // never co-drive with the engine
+      engine.setTarget(targetPx) // springs from the live position+velocity (re-aim conserves momentum)
+      return {
+        finished,
+        cancel: () => {
+          if (scroll.settled) return
+          engine.setTarget(source.scrollPos(), { conserveVelocity: false }) // freeze here, kill momentum
+          resolve(scroll, false)
+        },
+      }
+    }
+
+    const followInstance = ensureFollow(source.scrollPos(), options.spring)
     followInstance.target(targetPx) // re-aims from the live position+velocity when reAim
 
     return {
