@@ -1,5 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
-import { cursor, draggable, magnetic, observe, tilt } from '@underlying/gestures'
+import { cursor, depth, draggable, magnetic, observe, tilt } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -231,6 +231,60 @@ cursor(options?: CursorOptions): Cursor`,
       panel.removeEventListener('pointerleave', hide)
       c.dispose()
     })
+  },
+}
+
+export const pointerDepth: Section = {
+  id: 'gestures-depth',
+  group: 'Gestures',
+  title: 'depth()',
+  tagline: 'A featured-work tile whose layers drift at different rates for depth.',
+  description: `
+    <p><code>depth()</code> drifts a layer by a fraction of the pointer's offset
+    from a frame centre, chased by a spring. Stack several layers with ascending
+    <code>shift</code> and they read as depth - a 2.5D parallax through plain
+    transforms, no 3D engine. Each call exposes its live <code>x</code> /
+    <code>y</code> (like draggable's), and they share one pointer listener. Off on
+    touch and held flat under reduced motion. Move over the tile.</p>`,
+  code: `import { depth } from '@underlying/gestures'
+
+// One call per layer, rising shift = far -> near. They share one listener.
+depth(sky,   { frame: tile, shift: 8, invert: true }) // far: barely, with the pointer
+depth(panel, { frame: tile, shift: 22 })              // mid: against the pointer
+depth(title, { frame: tile, shift: 38 })              // near: leans more
+depth(badge, { frame: tile, shift: 56 }).dispose()    // foreground: most travel`,
+  api: `interface DepthOptions { shift?: number; axis?: 'both' | 'x' | 'y'; invert?: boolean;
+  frame?: 'viewport' | HTMLElement; clamp?: boolean; spring?: SpringOptions }
+interface DepthLayer { x: Animatable; y: Animatable; dispose(): void }
+depth(element: HTMLElement, options?: DepthOptions): DepthLayer`,
+  run(ctx) {
+    const wrap = (cls: string, child: HTMLElement) => h('div', { class: `dl ${cls}` }, child)
+    const tile = h(
+      'div',
+      { class: 'depthtile' },
+      wrap('dl--num', h('span', { class: 'depthtile__num' }, '07')),
+      wrap('dl--panel', h('div', { class: 'depthtile__panel' })),
+      wrap(
+        'dl--label',
+        h(
+          'div',
+          { class: 'depthtile__label' },
+          h('span', { class: 'depthtile__t' }, 'Northwind'),
+          h('span', { class: 'depthtile__s' }, 'Brand + Site'),
+        ),
+      ),
+      wrap('dl--badge', h('div', { class: 'depthtile__badge' }, 'View')),
+    )
+    ctx.stage.append(tile)
+
+    const pick = (sel: string) => tile.querySelector(sel) as HTMLElement
+    const layers = [
+      depth(pick('.dl--num'), { frame: tile, shift: 8, invert: true }),
+      depth(pick('.dl--panel'), { frame: tile, shift: 22 }),
+      depth(pick('.dl--label'), { frame: tile, shift: 38 }),
+      depth(pick('.dl--badge'), { frame: tile, shift: 56 }),
+    ]
+    ctx.onCleanup(() => layers.forEach((l) => l.dispose()))
   },
 }
 

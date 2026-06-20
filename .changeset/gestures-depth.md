@@ -1,0 +1,5 @@
+---
+"@underlying/gestures": minor
+---
+
+`depth()` - pointer-driven depth parallax. `depth(element, options?)` drifts a layer by a fraction of the pointer's offset from a frame centre, chased by a spring; stack several layers with ascending `shift` and they read as depth - a 2.5D effect through plain transforms, no 3D engine. Each layer is interruptible and eases home when the pointer leaves the window. Options: `shift` (travel in px at the frame edge; sign sets direction), `axis` (lock to one axis to spend one spring instead of two), `invert` (move with or against the pointer), `frame` (`'viewport'` or an element, re-read each move so a scrolled hero stays correct), `clamp`, `spring`. Like `draggable`'s `x` / `y`, the offset is exposed as live `Animatable`s. Layers share the same pointer listener as `magnetic()` and `cursor()`. Off on touch and held flat under reduced motion. The fourth of the pointer-reactive primitives - build a whole hero by calling it once per layer with rising `shift`.

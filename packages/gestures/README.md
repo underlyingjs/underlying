@@ -130,6 +130,23 @@ c.dispose()
 
 Options: `element` (drive your own instead of a created `<div>`), `className` (default `cursor`; the active state adds `cursor--active`), `targets` (selector that flips the active state), `spring` (the trailing lag). It rides the same shared pointer listener as `magnetic()`, and starts where the cursor already is rather than swooping in from the origin. Since it owns the element's transform, give the active swell to a child or `::before` (a `scale` of your own) so it never fights the position. Hidden on touch and under reduced motion - the native cursor stays.
 
+## `depth()`
+
+Pointer-driven depth parallax. A layer drifts by a fraction of the pointer's offset from a frame centre, chased by a spring; stack several layers with ascending `shift` and they read as depth - a 2.5D effect through plain transforms, no 3D engine.
+
+```ts
+import { depth } from '@underlying/gestures'
+
+// One call per layer, rising shift = far -> near. They share one pointer listener.
+depth(sky, { frame: hero, shift: 8, invert: true }) // far: barely, with the pointer
+depth(panel, { frame: hero, shift: 22 }) // mid: against the pointer
+const near = depth(title, { frame: hero, shift: 40 }) // near: leans more
+// near.x / near.y are live Animatables - read them, bind them elsewhere, compose them
+near.dispose()
+```
+
+Options: `shift` (travel in px at the frame edge, the depth magnitude; sign sets direction, default 24), `axis` (`'both'` / `'x'` / `'y'`; a single axis spends one spring instead of two), `invert` (`false` default = move against the pointer, the natural recession; `true` = with it), `frame` (`'viewport'` or an element, re-read each move so a scrolled hero stays correct), `clamp` (default true; cap travel at `+/-shift`), `spring`. The offset is exposed as live `Animatable`s like `draggable`'s `x` / `y`. Depth is faked through differential translate, so it owns the element's `x` / `y` transform: don't also run `tilt()` on the same element - each writes the whole transform string and they would clobber each other. Put them on nested elements, or read both sets of live values into a single `bindStyle` of your own. Off on touch and held flat under reduced motion.
+
 ## `VelocityTracker`
 
 The low-level helper both `draggable()` and `observe()` use to read pointer velocity. A first-order EMA over a ~50 ms window, made frame-rate independent; `read()` returns 0 when the last sample is older than 80 ms, so a finger that paused before lifting releases with no fling. Feed it the same clock (`event.timeStamp`) for `start` / `sample` / `read`. Exported for building your own gestures that hand off to core's springs.
