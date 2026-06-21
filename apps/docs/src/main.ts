@@ -4,7 +4,7 @@ import { customPhysics, gettingStarted, interruption, springs } from './sections
 import { colors, composite, keyframes, lengthsUnits } from './sections/value-model'
 import { carousel, gestures, pointerCursor, pointerDepth, pointerInteractive, pointerMagnetic, pointerQuick, pointerTilt, setRelease, unifiedInput } from './sections/gestures'
 import { composition } from './sections/composition'
-import { bakedClip, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
+import { bakedClip, lifecycle, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
 import { scrollMarquee, scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger, scrollVelocity, smoothScroll } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
@@ -56,7 +56,7 @@ const pages: Page[] = [
     group: 'Guides',
     title: 'Playback',
     blurb: 'Springs are live, tweens are seekable. The opt-in <code>@underlying/core/playback</code> entry adds pause, timeScale, reverse, and seek, a <code>bake()</code> bridge that turns a spring into a scrubbable clip, and <code>follow()</code> for momentum scrub.',
-    sections: [pauseResume, slowMo, scrub, bakedClip, momentumScrub],
+    sections: [pauseResume, lifecycle, slowMo, scrub, bakedClip, momentumScrub],
   },
   {
     id: 'scroll',

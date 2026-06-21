@@ -728,6 +728,63 @@ pre {
   will-change: transform; // bindStyle writes the live x / y pull
 }
 
+// ---- lifecycle callbacks demo : a card animating beside its event log
+.lifegrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  align-items: center;
+  gap: 24px;
+  padding: 0 28px;
+}
+.lifewrap {
+  position: relative;
+  height: 100%;
+  display: grid;
+  align-items: center;
+}
+.lifecard {
+  width: 92px;
+  height: 92px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(150deg, var(--sapin), var(--sous-bois));
+  color: var(--creme);
+  font-family: var(--mono);
+  font-size: 12px;
+  will-change: transform;
+}
+.lifelog {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+.lifeline {
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: var(--tint);
+  color: var(--sous-bois);
+
+  &--start {
+    color: var(--sapin);
+  }
+  &--complete {
+    background: rgba(28, 52, 38, 0.1);
+    color: var(--sapin);
+  }
+  &--interrupt {
+    background: rgba(140, 90, 70, 0.12);
+    color: #8c5a46;
+  }
+}
+
 // ---- interactive() demo : a CTA with springy hover / press states
 .interbtn {
   padding: 16px 32px;

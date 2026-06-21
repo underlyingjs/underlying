@@ -34,12 +34,31 @@ export interface ChannelGroupOptions {
   scheduler?: Scheduler
 }
 
-const aggregate = (handles: AnimationHandle[]): AnimationHandle => ({
-  finished: Promise.all(handles.map((handle) => handle.finished)).then(() => undefined),
-  stop: () => {
-    for (const handle of handles) handle.stop()
-  },
-})
+// The aggregate forwards its channels' interrupt up as ONE interrupt: a registry
+// property's channels are plain Animatables, so superseding the group (a later
+// animate() retargets a channel) interrupts them - and a lifecycle owner above
+// (animate()'s withLifecycle) hooks THIS handle to tell a supersede from a settle.
+const aggregate = (handles: AnimationHandle[]): AnimationHandle => {
+  let onInterrupt: ((h: AnimationHandle) => void) | null = null
+  let fired = false
+  const fireInterrupt = (): void => {
+    if (fired) return
+    fired = true
+    onInterrupt?.(handle)
+  }
+  for (const child of handles) child.eventCallback?.('interrupt', fireInterrupt)
+  const handle: AnimationHandle = {
+    finished: Promise.all(handles.map((child) => child.finished)).then(() => undefined),
+    stop: () => {
+      for (const child of handles) child.stop()
+    },
+    eventCallback(event, fn) {
+      if (event === 'interrupt') onInterrupt = fn ?? null
+      return handle
+    },
+  }
+  return handle
+}
 
 export function channelGroup(
   type: ValueType,

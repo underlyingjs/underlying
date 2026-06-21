@@ -55,7 +55,36 @@ export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
   scheduler?: Scheduler
   /** Element-level reduced-motion strategy - 'fade' keeps opacity AND colors animated. */
   reducedMotion?: ReducedMotionBehavior
+  /** Fired once when the animation begins. */
+  onStart?(this: object, handle: AnimationHandle): void
+  /**
+   * Per frame with the live numeric channel values (`{ x, y, scale, ... }`). Requesting it
+   * runs the JS path (a per-frame tick), so it skips the WAAPI compositor fast path. Unlike a
+   * single value's `onUpdate`, this is NOT change-guarded - it ticks every frame of the run
+   * (a multi-channel object has no single "changed"); guard in the callback if you need to.
+   */
+  onUpdate?(this: object, values: Record<string, number>, handle: AnimationHandle): void
+  /** Fired once when every channel settles (no channel was interrupted). */
+  onComplete?(this: object, handle: AnimationHandle): void
+  /** Fired once when a channel is superseded by a later animate(), or the handle is stopped. */
+  onInterrupt?(this: object, handle: AnimationHandle): void
+  /** The `this` receiver for the callbacks. Defaults to the handle. */
+  scope?: object
 }
+
+/**
+ * True if any lifecycle callback was requested - then the numeric path stays on the JS loop.
+ * Even onStart/onComplete/scope opt out of WAAPI: the compositor reclaim path resolves
+ * `finished` on a supersede the same as on a settle, so it cannot tell onComplete (settle)
+ * from onInterrupt (supersede). The JS path can - each child handle reports its own interrupt -
+ * so honoring the onComplete contract (never fires on a supersede) means owning every frame.
+ */
+const hasLifecycle = (o: AnimateOptions): boolean =>
+  o.onStart !== undefined ||
+  o.onUpdate !== undefined ||
+  o.onComplete !== undefined ||
+  o.onInterrupt !== undefined ||
+  o.scope !== undefined
 
 // First touch of a channel starts from its CSS-neutral value; afterwards the
 // cached animatable carries the real state across calls - that is what makes
@@ -300,6 +329,70 @@ const aggregate = (handles: AnimationHandle[]): AnimationHandle => {
       for (const handle of handles) handle.stop()
     },
   }
+}
+
+/**
+ * Wrap the aggregate with lifecycle callbacks. onStart fires synchronously; onUpdate
+ * ticks the live numeric values each frame (not change-guarded - see AnimateOptions);
+ * the FIRST child interrupted fires onInterrupt, else onComplete fires at settle. Every
+ * child reports its own interrupt: a numeric channel IS an animatable, and the keyframe
+ * chain and registry-property group each forward their interrupt through eventCallback,
+ * so a superseded color or keyframe channel reads as onInterrupt, never a false onComplete.
+ * post-hoc eventCallback handles start/complete/interrupt; onUpdate must be passed at the
+ * call (it decides the JS path up front), and repeat/reverseComplete are playback-only.
+ */
+const withLifecycle = (
+  base: AnimationHandle,
+  children: AnimationHandle[],
+  options: AnimateOptions,
+  readValues: () => Record<string, number>,
+  scheduler: Scheduler,
+): AnimationHandle => {
+  const scope = options.scope
+  let onStart = options.onStart
+  let onUpdate = options.onUpdate
+  let onComplete = options.onComplete
+  let onInterrupt = options.onInterrupt
+  let ended = false
+  let unsubUpdate: (() => void) | null = null
+  let handle: AnimationHandle
+  const finishUpdate = (): void => {
+    unsubUpdate?.()
+    unsubUpdate = null
+  }
+  const end = (cb: ((this: object, handle: AnimationHandle) => void) | undefined): void => {
+    if (ended) return
+    ended = true
+    finishUpdate()
+    cb?.call(scope ?? handle, handle)
+  }
+
+  for (const child of children) child.eventCallback?.('interrupt', () => end(onInterrupt))
+  void base.finished.then(() => end(onComplete))
+
+  handle = {
+    finished: base.finished,
+    stop: () => base.stop(), // interrupts the children -> their interrupt fires onInterrupt above
+    eventCallback(event, fn) {
+      const cb = fn ?? undefined
+      if (event === 'start') onStart = cb as AnimateOptions['onStart']
+      else if (event === 'complete') onComplete = cb as AnimateOptions['onComplete']
+      else if (event === 'interrupt') onInterrupt = cb as AnimateOptions['onInterrupt']
+      return handle
+    },
+  }
+
+  if (onUpdate !== undefined) {
+    unsubUpdate = scheduler.subscribe(() => {
+      if (ended) {
+        finishUpdate()
+        return
+      }
+      onUpdate?.call(scope ?? handle, readValues(), handle)
+    })
+  }
+  onStart?.call(scope ?? handle, handle)
+  return handle
 }
 
 const springOptionsFrom = (options: AnimateOptions): SpringOptions => {
@@ -606,8 +699,12 @@ const handleNumeric = (
   options: AnimateOptions,
   behavior: ReducedMotionBehavior,
   reduced: boolean,
-): AnimationHandle => {
-  if (!reduced && options.duration !== undefined && supportsWaapi(element)) {
+): AnimationHandle[] => {
+  // Any lifecycle callback opts out of WAAPI delegation onto the per-channel JS handles:
+  // onUpdate ticks them each frame, onInterrupt reads a child's interrupt, and even
+  // onStart/onComplete need it - the compositor reclaim cannot tell a settle from a
+  // supersede, so onComplete would fire on both (see hasLifecycle).
+  if (!reduced && options.duration !== undefined && supportsWaapi(element) && !hasLifecycle(options)) {
     const midPhysics = Object.values(entry.values).some((value) => value !== undefined && value.isAnimating())
     if (!midPhysics) {
       // Frame counts WITHOUT side effects: scalar = 2, keyframe = 1 + waypoints.
@@ -621,7 +718,7 @@ const handleNumeric = (
         lengths.add(1 + norm.waypoints.length)
       }
       if (lengths.size === 1 && scalars.length + norms.length > 0) {
-        return delegateMultiKeyframe(entry, element, scalars, norms, options.duration, resolveEasing(options.easing ?? easeInOutCubic))
+        return [delegateMultiKeyframe(entry, element, scalars, norms, options.duration, resolveEasing(options.easing ?? easeInOutCubic))]
       }
     }
   }
@@ -642,7 +739,7 @@ const animateNumericJs = (
   options: AnimateOptions,
   behavior: ReducedMotionBehavior,
   reduced: boolean,
-): AnimationHandle => {
+): AnimationHandle[] => {
   let newChannel = false
   const prepared: Array<{ value: Animatable; channel: Channel; frames: NumericKeyframes }> = []
   const handles: AnimationHandle[] = []
@@ -678,7 +775,7 @@ const animateNumericJs = (
     })
     handles.push(startChain(entry, channel, chain))
   }
-  return aggregate(handles)
+  return handles
 }
 
 /**
@@ -724,7 +821,7 @@ export function animate(
 
   const handles: AnimationHandle[] = []
   if (numericScalars.length > 0 || numericKeyframes.length > 0) {
-    handles.push(handleNumeric(entry, element, numericScalars, numericKeyframes, options, behavior, reduced))
+    handles.push(...handleNumeric(entry, element, numericScalars, numericKeyframes, options, behavior, reduced))
   }
   if (scalarProperties.length > 0 || keyframeProperties.length > 0) {
     const read = readStyle(element)
@@ -735,7 +832,14 @@ export function animate(
       handles.push(animatePropertyKeyframes(entry, element, property, frames, read, options, reduced))
     }
   }
-  return aggregate(handles)
+  const base = aggregate(handles)
+  if (!hasLifecycle(options)) return base
+  const readValues = (): Record<string, number> => {
+    const out: Record<string, number> = {}
+    for (const [key, value] of Object.entries(entry.values)) if (value !== undefined) out[key] = value.get()
+    return out
+  }
+  return withLifecycle(base, handles, options, readValues, entry.scheduler)
 }
 
 export interface SetStyleOptions {

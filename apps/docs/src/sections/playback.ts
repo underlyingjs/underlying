@@ -1,4 +1,4 @@
-import { animatable, bindStyle } from '@underlying/core'
+import { animatable, animate, bindStyle } from '@underlying/core'
 import { animatePlayback, follow, playable } from '@underlying/core/playback'
 import type { PlaybackHandle } from '@underlying/core/playback'
 import { button, h, slider, type Section } from '../showcase'
@@ -48,6 +48,62 @@ play.reverse()   // run the curve backward`,
       button('resume', () => handle?.play()),
       button('reverse', () => handle?.reverse()),
     )
+  },
+}
+
+export const lifecycle: Section = {
+  id: 'playback-lifecycle',
+  group: 'Playback',
+  title: 'Lifecycle callbacks',
+  tagline: 'Hook start, update, complete and interrupt to coordinate side effects.',
+  description: `
+    <p><code>onStart</code> / <code>onUpdate</code> / <code>onComplete</code> /
+    <code>onInterrupt</code> fire at the lifecycle moments, so you can drive sound,
+    analytics, DOM text or chained logic off them - on a value, a playback handle, or
+    <code>animate()</code>. Press Play; press again mid-flight to get
+    <code>onInterrupt</code> instead of <code>onComplete</code>.</p>`,
+  code: `animate(card, { x: 150, rotate: 8 }, {
+  duration: 700,
+  onStart:     () => log('start'),
+  onUpdate:    (v) => log('x = ' + Math.round(v.x)),
+  onComplete:  () => log('complete'),
+  onInterrupt: () => log('interrupted'),
+})`,
+  api: `interface AnimateOptions { /* ... */ onStart?(handle); onUpdate?(values, handle);
+  onComplete?(handle); onInterrupt?(handle); scope?: object }
+handle.eventCallback(event, fn | null)  // attach a callback after the fact`,
+  run(ctx) {
+    const card = h('div', { class: 'lifecard' }, h('span', { class: 'lifecard__t' }, 'card'))
+    const logEl = h('ul', { class: 'lifelog' })
+    ctx.stage.append(h('div', { class: 'lifegrid' }, h('div', { class: 'lifewrap' }, card), logEl))
+
+    const log = (text: string, kind: string): void => {
+      logEl.prepend(h('li', { class: `lifeline lifeline--${kind}` }, text))
+      while (logEl.children.length > 7) logEl.lastChild?.remove()
+    }
+    let updates = 0
+    const play = (): void => {
+      updates = 0
+      animate(
+        card,
+        { x: 150, rotate: 8, scale: 1.05 },
+        {
+          duration: 700,
+          onStart: () => log('start', 'start'),
+          onUpdate: (v) => {
+            updates += 1
+            if (updates % 5 === 0) log(`x = ${Math.round(v.x ?? 0)}`, 'update')
+          },
+          onComplete: () => {
+            log('complete', 'complete')
+            animate(card, { x: 0, rotate: 0, scale: 1 }, { duration: 450 })
+          },
+          onInterrupt: () => log('interrupted', 'interrupt'),
+        },
+      )
+    }
+    ctx.onCleanup(() => animate(card, { x: 0, rotate: 0, scale: 1 }, { duration: 0 }))
+    ctx.controls.append(button('Play', play))
   },
 }
 
