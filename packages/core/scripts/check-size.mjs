@@ -12,7 +12,8 @@ import { build } from 'esbuild'
 
 const BUDGET_BYTES = 12 * 1024
 const PRIMITIVES_BUDGET_BYTES = 3.5 * 1024
-const ANIMATE_BUDGET_BYTES = 9.5 * 1024
+// 10 kB since 1.1: animate() gained lifecycle callbacks (#67 - onStart/onUpdate/onComplete/onInterrupt + scope).
+const ANIMATE_BUDGET_BYTES = 10 * 1024
 // The opt-in playback layer: pause/timeScale/reverse/seek, bake(), follow(),
 // timeScope, and sequence() (the live composition twin of @underlying/timeline).
 const PLAYBACK_BUDGET_BYTES = 6 * 1024
