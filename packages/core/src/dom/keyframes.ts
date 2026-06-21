@@ -70,6 +70,7 @@ export function runKeyframeChain<T>(
   const { waypoints } = normalized
   let cancelled = false
   let current: AnimationHandle | null = null
+  let onInterrupt: ((h: AnimationHandle) => void) | null = null
   let resolveFinished = (): void => {}
   const finished = new Promise<void>((resolve) => {
     resolveFinished = resolve
@@ -105,20 +106,31 @@ export function runKeyframeChain<T>(
     resolveFinished()
   })()
 
-  return {
-    handle: {
-      finished,
-      stop: () => {
-        if (cancelled) return
-        cancelled = true
-        current?.stop()
-        resolveFinished()
-      },
+  // stop() and interrupt() both end the chain mid-flight (a freeze vs. a handoff),
+  // so both fire 'interrupt' - the lifecycle owner above hooks it to report
+  // onInterrupt instead of onComplete. Natural completion never sets `cancelled`,
+  // so it never fires interrupt.
+  const handle: AnimationHandle = {
+    finished,
+    stop: () => {
+      if (cancelled) return
+      cancelled = true
+      current?.stop()
+      resolveFinished()
+      onInterrupt?.(handle)
     },
+    eventCallback(event, fn) {
+      if (event === 'interrupt') onInterrupt = fn ?? null
+      return handle
+    },
+  }
+  return {
+    handle,
     interrupt: () => {
       if (cancelled) return
       cancelled = true
       resolveFinished()
+      onInterrupt?.(handle)
     },
   }
 }
