@@ -1,4 +1,5 @@
 import type { AnimationHandle } from '../value/animatable'
+import type { LifecycleCallbacks } from '../value/lifecycle'
 
 /** 'physics' = a live spring/decay (target-chase); 'timeline' = a tween or baked table (seekable). */
 export type MotionKind = 'physics' | 'timeline'
@@ -54,7 +55,7 @@ export interface PlaybackHandle extends AnimationHandle {
   setTarget(value: number, options?: { velocity?: number }): this
 }
 
-export interface PlaybackOptions {
+export interface PlaybackOptions extends LifecycleCallbacks<PlaybackHandle> {
   /** ms before the clip starts, on the frame clock (background-tab-safe), scaled by timeScale. */
   delay?: number
   /** Iterations beyond the first. Infinity = forever (finished never resolves; stop() resolves it). */
