@@ -9,9 +9,14 @@ import { tweenMotion, type ToOptions } from '../physics/tween'
 import type { Scheduler } from '../scheduler/scheduler'
 import { getSharedScheduler } from '../scheduler/shared'
 import type { Animatable } from '../value/animatable'
+import { lifecycleRegistry, type LifecycleEvent, type LifecycleRegistry } from '../value/lifecycle'
 import { warnOnce } from '../value/warn'
 import type { MotionKind, PlaybackHandle, PlaybackOptions } from './handle'
 import { timeScope } from './time-scope'
+
+/** Emit a lifecycle event for the run (the handle is resolved lazily, after buildHandle). */
+type Fire = (event: LifecycleEvent, value?: number) => void
+const NO_FIRE: Fire = () => {}
 
 export interface PlayableOptions {
   /** The scheduler the value runs on; pass the same one the value was created with. Defaults to the shared loop. */
@@ -118,6 +123,8 @@ interface StartConfig {
   repeatDelay?: number
   /** Ping-pong the iterations. */
   yoyo?: boolean
+  /** Emit lifecycle events (start/update/repeat/complete/interrupt/reverseComplete). */
+  fire?: Fire
 }
 
 function startRun(config: StartConfig): RunControls {
@@ -158,14 +165,28 @@ function startRun(config: StartConfig): RunControls {
   })
 
   let unsubscribe: (() => void) | null = null
+  const fire = config.fire ?? NO_FIRE
+  let started = false
+  let reversing = false // a live spring sent back to its launch by reverse()
+  let seekReversed = false // a user reverse() on a seekable run - distinct from a yoyo backward leg
+  let lastUpdateValue = value.get() // the launch value, so the first no-op frame is not a spurious update
+  // Fire 'update' only on an actual value change, matching value.drive()/on('change').
+  const fireUpdate = (): void => {
+    const v = value.get()
+    if (v !== lastUpdateValue) {
+      lastUpdateValue = v
+      fire('update', v)
+    }
+  }
 
-  const finish = () => {
+  const finish = (reason: 'complete' | 'interrupt' | 'reverseComplete') => {
     if (settled) return
     settled = true
     unsubscribe?.()
     unsubscribe = null
     scope.dispose()
     resolveFinished()
+    fire(reason)
   }
 
   // End of one iteration. Either finish, or roll into the next one after an
@@ -173,11 +194,15 @@ function startRun(config: StartConfig): RunControls {
   // discontinuous loop); tweens replay the curve (mirrored for yoyo).
   const onIterationEnd = (boundaryPos: number) => {
     value.drive({ position: boundaryPos, velocity: 0 })
+    fireUpdate() // report the exact boundary/settle value before the terminal event
     if (iterationsLeft <= 0) {
-      finish()
+      // reverseComplete only when the USER reversed - never on a natural yoyo backward leg.
+      const reversed = seekMotion !== null ? seekReversed : reversing
+      finish(reversed ? 'reverseComplete' : 'complete')
       return
     }
     iterationsLeft -= 1
+    fire('repeat', boundaryPos)
     holdS = repeatDelayS
     if (seekMotion !== null) {
       if (yoyo) {
@@ -221,6 +246,7 @@ function startRun(config: StartConfig): RunControls {
       position: prev.position + (curr.position - prev.position) * alpha,
       velocity: prev.velocity + (curr.velocity - prev.velocity) * alpha,
     })
+    fireUpdate()
   }
 
   const driveSeek = (deltaS: number) => {
@@ -238,6 +264,7 @@ function startRun(config: StartConfig): RunControls {
     }
     const s = seekMotion.seek(elapsedS)
     value.drive(direction < 0 ? { position: s.position, velocity: -s.velocity } : s)
+    fireUpdate()
   }
 
   // A live handle may switch to seekable on bake(), so the branch is chosen per
@@ -248,6 +275,10 @@ function startRun(config: StartConfig): RunControls {
     if (holdS > 0) {
       holdS -= deltaS
       return
+    }
+    if (!started) {
+      started = true
+      fire('start', value.get())
     }
     if (seekMotion !== null) driveSeek(deltaS)
     else driveLive(deltaS)
@@ -264,6 +295,22 @@ function startRun(config: StartConfig): RunControls {
     return clamp(Math.abs(value.get() - launchPos) / span, 0, 1)
   }
 
+  // Re-aim a live spring. isReverse marks a reverse() so the eventual settle reports
+  // onReverseComplete; a forward setTarget() clears it.
+  const retargetLiveTo = (target: number, velocity: number | undefined, isReverse: boolean): void => {
+    if (seekMotion !== null) return
+    reversing = isReverse
+    currentTarget = target
+    config.retargetLive?.(target)
+    liveMotion = config.makeLive ? config.makeLive() : liveMotion
+    const seed: SimulationState = { position: value.get(), velocity: velocity ?? value.velocity() }
+    prev = seed
+    curr = seed
+    accumulatorS = 0
+    value.drive(seed)
+    ensureSubscribed()
+  }
+
   return {
     kind,
     isSeekable: () => seekMotion !== null,
@@ -273,15 +320,16 @@ function startRun(config: StartConfig): RunControls {
     isPaused: () => scope.isPaused(),
     setTimeScale: (rate) => scope.setTimeScale(rate),
     getTimeScale: () => scope.getTimeScale(),
-    stop: finish,
+    stop: () => finish('interrupt'),
     reverse() {
       if (seekMotion !== null) {
         direction = direction === 1 ? -1 : 1
+        seekReversed = direction < 0 // a deliberate reverse; terminating now is onReverseComplete
         ensureSubscribed()
         return
       }
       // Live spring: retarget to the launch position, conserving current velocity.
-      this.setTarget(launchPos, value.velocity())
+      retargetLiveTo(launchPos, value.velocity(), true)
     },
     seekMs(ms) {
       if (seekMotion === null) return
@@ -298,16 +346,7 @@ function startRun(config: StartConfig): RunControls {
     totalMs: () => totalElapsedS * 1000,
     durationMs: () => (seekMotion !== null ? durationS * 1000 : undefined),
     setTarget(target, velocity) {
-      if (seekMotion !== null) return
-      currentTarget = target
-      config.retargetLive?.(target)
-      liveMotion = config.makeLive ? config.makeLive() : liveMotion
-      const seed: SimulationState = { position: value.get(), velocity: velocity ?? value.velocity() }
-      prev = seed
-      curr = seed
-      accumulatorS = 0
-      value.drive(seed)
-      ensureSubscribed()
+      retargetLiveTo(target, velocity, false)
     },
     bake(maxDurationMs) {
       if (seekMotion !== null) return true // a tween or already-baked handle: idempotent
@@ -359,9 +398,13 @@ function inertControls(value: Animatable, kind: MotionKind, settleTo: number): R
 }
 
 /** Wrap RunControls in the public PlaybackHandle, applying the kind-invalid warn-and-no-op policy. */
-function buildHandle(controls: RunControls): PlaybackHandle {
+function buildHandle(controls: RunControls, registry: LifecycleRegistry<PlaybackHandle>): PlaybackHandle {
   const handle: PlaybackHandle = {
     kind: controls.kind,
+    eventCallback(event, fn) {
+      registry.set(event, fn)
+      return handle
+    },
     get seekable() {
       return controls.isSeekable()
     },
@@ -428,17 +471,25 @@ export function playable(value: Animatable, options: PlayableOptions = {}): Play
 
   return {
     spring(target, springOptions = {}) {
+      const registry = lifecycleRegistry<PlaybackHandle>()
+      registry.seed(springOptions)
+      let handle: PlaybackHandle
+      const fire: Fire = (event, value) => registry.fire(event, handle, value)
       const state: SimulationState = {
         position: value.get(),
         velocity: springOptions.velocity ?? value.velocity(),
       }
       if (shouldSkip(springOptions.reducedMotion)) {
-        return buildHandle(
+        handle = buildHandle(
           inertControls(value, 'physics', reducedFinal(state.position, target, springOptions)),
+          registry,
         )
+        fire('start', value.get())
+        fire('complete', value.get())
+        return handle
       }
       let aim = target
-      return buildHandle(
+      handle = buildHandle(
         startRun({
           value,
           scheduler,
@@ -453,20 +504,30 @@ export function playable(value: Animatable, options: PlayableOptions = {}): Play
           launchPos: state.position,
           initialTarget: target,
           stateful: false,
+          fire,
           ...repeatConfig(springOptions),
         }),
+        registry,
       )
+      return handle
     },
     decay(decayOptions = {}) {
+      const registry = lifecycleRegistry<PlaybackHandle>()
+      registry.seed(decayOptions)
+      let handle: PlaybackHandle
+      const fire: Fire = (event, value) => registry.fire(event, handle, value)
       const state: SimulationState = {
         position: value.get(),
         velocity: decayOptions.velocity ?? value.velocity(),
       }
       if (shouldSkip(decayOptions.reducedMotion)) {
         const final = settleInstantly(simulationMotion(decaySimulation(decayOptions)), state)
-        return buildHandle(inertControls(value, 'physics', final.position))
+        handle = buildHandle(inertControls(value, 'physics', final.position), registry)
+        fire('start', value.get())
+        fire('complete', value.get())
+        return handle
       }
-      return buildHandle(
+      handle = buildHandle(
         startRun({
           value,
           scheduler,
@@ -477,16 +538,26 @@ export function playable(value: Animatable, options: PlayableOptions = {}): Play
           makeLive: () => simulationMotion(decaySimulation(decayOptions)),
           launchPos: state.position,
           stateful: true,
+          fire,
         }),
+        registry,
       )
+      return handle
     },
     to(target, toOptions = {}) {
+      const registry = lifecycleRegistry<PlaybackHandle>()
+      registry.seed(toOptions)
+      let handle: PlaybackHandle
+      const fire: Fire = (event, value) => registry.fire(event, handle, value)
       const from = value.get()
       const motion = tweenMotion(from, target, toOptions)
       if (shouldSkip(toOptions.reducedMotion)) {
-        return buildHandle(inertControls(value, 'timeline', reducedFinal(from, target, toOptions)))
+        handle = buildHandle(inertControls(value, 'timeline', reducedFinal(from, target, toOptions)), registry)
+        fire('start', value.get())
+        fire('complete', value.get())
+        return handle
       }
-      return buildHandle(
+      handle = buildHandle(
         startRun({
           value,
           scheduler,
@@ -495,9 +566,12 @@ export function playable(value: Animatable, options: PlayableOptions = {}): Play
           paused: toOptions.paused ?? false,
           timeScale: toOptions.timeScale ?? 1,
           seekMotion: motion,
+          fire,
           ...repeatConfig(toOptions),
         }),
+        registry,
       )
+      return handle
     },
   }
 }
