@@ -10,10 +10,13 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-const BUDGET_BYTES = 12 * 1024
+// 13.25 kB since 1.1: #52 authoring ergonomics added staggerDelay()/responsive()/region()
+// to the full surface (was 12 kB before #52).
+const BUDGET_BYTES = 13.25 * 1024
 const PRIMITIVES_BUDGET_BYTES = 3.5 * 1024
-// 10 kB since 1.1: animate() gained lifecycle callbacks (#67 - onStart/onUpdate/onComplete/onInterrupt + scope).
-const ANIMATE_BUDGET_BYTES = 10 * 1024
+// 11.25 kB since 1.1: animate() gained lifecycle callbacks (#67) and then #52 multi-target
+// + relative/function value resolution (resolveTargets/resolveValue land in the animate graph).
+const ANIMATE_BUDGET_BYTES = 11.25 * 1024
 // The opt-in playback layer: pause/timeScale/reverse/seek, bake(), follow(),
 // timeScope, and sequence() (the live composition twin of @underlying/timeline).
 const PLAYBACK_BUDGET_BYTES = 6 * 1024

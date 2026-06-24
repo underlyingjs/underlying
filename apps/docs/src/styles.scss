@@ -2031,3 +2031,122 @@ pre {
     transform: none;
   }
 }
+
+// ---- #52 authoring ergonomics demos ---------------------------------------
+
+// staggerDelay() : a grid that reveals as a wave
+.authgrid {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: max-content;
+  height: max-content;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.gridcell {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: linear-gradient(150deg, var(--sapin), var(--sous-bois));
+  will-change: transform, opacity;
+}
+
+// multi-target : a nav hover wave
+.navrow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.navlink {
+  padding: 11px 18px;
+  border-radius: 9px;
+  background: var(--tint);
+  color: var(--sapin);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  will-change: transform;
+
+  &:hover {
+    background: var(--sapin);
+    color: var(--creme);
+  }
+}
+
+// relative + function values : a card deck fan-out
+.fandeck {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.fancard {
+  position: absolute;
+  width: 64px;
+  height: 92px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--creme);
+  border: 1px solid var(--ligne);
+  box-shadow: 0 8px 22px rgba(28, 52, 38, 0.12);
+  color: var(--sous-bois);
+  font-family: var(--mono);
+  font-size: 13px;
+  will-change: transform;
+}
+
+// region() : panels + a teardown log
+.authwrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 188px;
+  align-items: center;
+  gap: 24px;
+  padding: 0 28px;
+}
+.panelrow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.panel {
+  width: 52px;
+  height: 84px;
+  border-radius: 10px;
+  background: linear-gradient(150deg, var(--sapin), var(--sous-bois));
+  will-change: transform, opacity;
+}
+.authlog {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.authline {
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: var(--tint);
+  color: var(--sous-bois);
+
+  &--mount {
+    color: var(--sapin);
+  }
+  &--resp {
+    background: rgba(28, 52, 38, 0.08);
+  }
+  &--revert {
+    background: rgba(140, 90, 70, 0.12);
+    color: #8c5a46;
+  }
+}

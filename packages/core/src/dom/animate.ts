@@ -11,10 +11,22 @@ import { resolveValueType } from '../value/registry'
 import type { ParsedValue, ValueType } from '../value/value-type'
 import { warnOnce } from '../value/warn'
 import { animatable, type Animatable, type AnimationHandle } from '../value/animatable'
+import { waitFrames } from '../compose/wait'
+import type { DelayFn } from '../compose/stagger-delay'
 import { bindProperty, type PropertyBinding } from './bind-property'
 import { bindStyle } from './bind-style'
 import { normalizeKeyframes, runKeyframeChain, type ChainOps, type KeyframeChain } from './keyframes'
 import { readStyle, toKebab, type StyleReader } from './read-style'
+import { isHTMLElement, resolveTargets, type AnimationTarget } from './resolve-target'
+import {
+  needsResolve,
+  resolveValue,
+  type Magnitude,
+  type RelativeValue,
+  type ResolvableValue,
+  type ResolveContext,
+  type ValueFn,
+} from './resolve-value'
 import {
   formatOrigin,
   formatTransform,
@@ -44,8 +56,29 @@ export type NumericKeyframes = ReadonlyArray<number | null>
  */
 export type AnimateProperty = Exclude<Extract<keyof CSSStyleDeclaration, string>, Channel> | `--${string}`
 
-/** The five channels stay numeric; everything else routes through the value-type registry. */
-export type AnimateTargets = Partial<Record<Channel, number | NumericKeyframes>> &
+export type { AnimationTarget } from './resolve-target'
+export type { RelativeValue, ValueFn } from './resolve-value'
+
+/** A numeric-channel target: absolute, keyframes, a relative string, or a per-target function. */
+type ResolvableNumeric = number | NumericKeyframes | RelativeValue | ValueFn<number | NumericKeyframes | RelativeValue>
+/** A registry-property target: absolute, keyframes, a relative string, or a per-target function. */
+type ResolvableProperty =
+  | AnimateValue
+  | AnimateKeyframes
+  | RelativeValue
+  | ValueFn<AnimateValue | AnimateKeyframes | RelativeValue>
+
+/**
+ * The five channels stay numeric; everything else routes through the value-type
+ * registry. Each value may also be a relative string (`'+=100'`) resolved against
+ * the current value, or a per-target function `(index, element, count) => value`.
+ * The keys are unchanged, so a typo like `{ opactiy: 1 }` still does not compile.
+ */
+export type AnimateTargets = Partial<Record<Channel, ResolvableNumeric>> &
+  Partial<Record<AnimateProperty, ResolvableProperty>>
+
+/** The absolute targets animateOne() consumes after the per-element pre-pass (no functions/relatives). */
+type ResolvedTargets = Partial<Record<Channel, number | NumericKeyframes>> &
   Partial<Record<AnimateProperty, AnimateValue | AnimateKeyframes>>
 
 export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
@@ -53,6 +86,12 @@ export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
   duration?: number
   easing?: EasingInput
   scheduler?: Scheduler
+  /**
+   * Per-target start delay. A number staggers each target by index*delay; a
+   * `DelayFn` from `staggerDelay()` is an expressive wave (origin, grid, axis,
+   * easing). On a single element it is just a flat lead-in.
+   */
+  delay?: number | DelayFn
   /** Element-level reduced-motion strategy - 'fade' keeps opacity AND colors animated. */
   reducedMotion?: ReducedMotionBehavior
   /** Fired once when the animation begins. */
@@ -150,7 +189,12 @@ interface ElementEntry {
   groups: Map<string, GroupEntry>
   /** Per-key running keyframe chains, so a new animate() on that key can interrupt them. */
   chains: Map<string, () => void>
+  /** Bumped on every animation intent on this element, so a pending staggered start can tell it was superseded. */
+  generation: number
 }
+
+/** Mark a new animation intent on the element and return the fresh generation token. */
+const markIntent = (entry: ElementEntry): number => (entry.generation += 1)
 
 const registry = new WeakMap<HTMLElement, ElementEntry>()
 
@@ -320,15 +364,32 @@ const delegateMultiKeyframe = (
 
 const RESOLVED: AnimationHandle = { finished: Promise.resolve(), stop: () => {} }
 
+// Forwards its children's interrupt up as ONE interrupt, so an outer lifecycle
+// owner (multi-target withLifecycle, where each child IS an aggregate) can tell a
+// supersede from a settle. The single-channel case returns the bare handle, which
+// already carries eventCallback.
 const aggregate = (handles: AnimationHandle[]): AnimationHandle => {
   if (handles.length === 0) return RESOLVED
   if (handles.length === 1) return handles[0]!
-  return {
-    finished: Promise.all(handles.map((handle) => handle.finished)).then(() => undefined),
+  let onInterrupt: ((h: AnimationHandle) => void) | null = null
+  let fired = false
+  const fireInterrupt = (): void => {
+    if (fired) return
+    fired = true
+    onInterrupt?.(handle)
+  }
+  for (const child of handles) child.eventCallback?.('interrupt', fireInterrupt)
+  const handle: AnimationHandle = {
+    finished: Promise.all(handles.map((child) => child.finished)).then(() => undefined),
     stop: () => {
-      for (const handle of handles) handle.stop()
+      for (const child of handles) child.stop()
+    },
+    eventCallback(event, fn) {
+      if (event === 'interrupt') onInterrupt = fn ?? null
+      return handle
     },
   }
+  return handle
 }
 
 /**
@@ -679,6 +740,7 @@ const ensureEntry = (element: HTMLElement, scheduler: Scheduler | undefined): El
       delegated: null,
       groups: new Map(),
       chains: new Map(),
+      generation: 0,
     }
     registry.set(element, entry)
   }
@@ -779,19 +841,15 @@ const animateNumericJs = (
 }
 
 /**
- * Imperative escape hatch: spring (default) or tween the style channels of an
- * element. The five numeric channels (x/y/scale/rotate/opacity) keep their
- * compositor-eligible fast path; any other CSS property (and custom properties)
- * routes through the value-type registry - parsed once into scalar channels,
- * each an interruptible spring with conserved velocity. Repeated calls retarget
- * the same underlying values - never a jump.
+ * Spring (default) or tween the style channels of ONE element with ALREADY
+ * RESOLVED targets (no functions/relatives - the public animate() does the
+ * per-element pre-pass). The five numeric channels keep their compositor fast
+ * path; any other CSS property routes through the value-type registry. Repeated
+ * calls retarget the same underlying values - never a jump.
  */
-export function animate(
-  element: HTMLElement,
-  targets: AnimateTargets,
-  options: AnimateOptions = {},
-): AnimationHandle {
+function animateOne(element: HTMLElement, targets: AnimateTargets, options: AnimateOptions): AnimationHandle {
   const entry = ensureEntry(element, options.scheduler)
+  markIntent(entry) // a fresh intent supersedes any still-waiting staggered start on this element
   // Any new call on the element interrupts a delegated tween first.
   reclaim(entry)
 
@@ -840,6 +898,203 @@ export function animate(
     return out
   }
   return withLifecycle(base, handles, options, readValues, entry.scheduler)
+}
+
+// A registry property's current value as ONE magnitude plus a re-emitter that
+// preserves its unit/template - only for single-channel value types (length,
+// number). Multi-channel (color, shadow) returns undefined; a relative there
+// degrades to the operand (resolveValue warns).
+const readMagnitude = (element: HTMLElement, entry: ElementEntry | undefined, key: string): Magnitude | undefined => {
+  const warm = entry?.groups.get(key)
+  if (warm !== undefined) {
+    if (warm.group.channels.length !== 1) return undefined
+    const channel = warm.group.channels[0]!
+    const { type, shape } = warm.group
+    return { value: channel.get(), reformat: (next) => type.format([next], shape) }
+  }
+  const type = resolveValueType(key)
+  const parsed = type.parse(readStyle(element).get(key))
+  if (parsed === null || parsed.channels.length !== 1) return undefined
+  return { value: parsed.channels[0]!, reformat: (next) => type.format([next], parsed.shape) }
+}
+
+/** The per-element resolution context: live channel reads plus the single-magnitude registry reader. */
+const resolveContextFor = (element: HTMLElement, index: number, total: number): ResolveContext => {
+  const entry = registry.get(element)
+  return {
+    index,
+    element,
+    total,
+    readNumeric: (key) => {
+      if (!NUMERIC_CHANNELS.has(key)) return undefined
+      const value = entry?.values[key as Channel]
+      return value !== undefined ? value.get() : INITIAL[key as Channel]
+    },
+    readMagnitude: (key) => readMagnitude(element, entry, key),
+  }
+}
+
+/** Resolve every target value for one element (functions, relatives, keyframe chaining) to absolutes. */
+const resolveTargetsFor = (
+  element: HTMLElement,
+  targets: AnimateTargets,
+  index: number,
+  total: number,
+): ResolvedTargets => {
+  const ctx = resolveContextFor(element, index, total)
+  const out: Record<string, AnimateValue | AnimateKeyframes> = {}
+  for (const key of Object.keys(targets)) {
+    const raw = (targets as Record<string, ResolvableValue | undefined>)[key]
+    if (raw === undefined) continue
+    out[key] = resolveValue(key, raw, ctx)
+  }
+  return out as ResolvedTargets
+}
+
+/** True if any target value needs per-element resolution (a function, or a relative string incl. inside keyframes). */
+const hasResolvable = (targets: AnimateTargets): boolean => {
+  for (const key of Object.keys(targets)) {
+    if (needsResolve((targets as Record<string, unknown>)[key])) return true
+  }
+  return false
+}
+
+// Reclaim any delegated WAAPI tween FIRST (so a relative/function reads the true
+// mid-flight position, not a stale pre-tween value), then resolve this element's
+// targets and start them. Resolution happens at the element's START time.
+const startResolved = (
+  element: HTMLElement,
+  targets: AnimateTargets,
+  index: number,
+  total: number,
+  options: AnimateOptions,
+): AnimationHandle => {
+  const existing = registry.get(element)
+  if (existing != null && existing.delegated !== null) reclaim(existing)
+  const resolved = resolveTargetsFor(element, targets, index, total)
+  return animateOne(element, resolved, options)
+}
+
+// Start one element's motion after a frame-clock delay, as ONE handle: finished
+// resolves when the post-delay inner settles or the wait is cancelled; stop cancels
+// a pending wait then freezes a started run; interrupt is forwarded so a superseded
+// or stopped deferred element reads as onInterrupt. The targets are resolved at
+// START time (after the wait), off the live value. A later animate() on this element
+// (a supersede during the wait) bumps the generation, so the stale start is dropped.
+const deferredStart = (
+  element: HTMLElement,
+  targets: AnimateTargets,
+  options: AnimateOptions,
+  index: number,
+  total: number,
+  delayMs: number,
+  scheduler: Scheduler,
+): AnimationHandle => {
+  const entry = ensureEntry(element, options.scheduler)
+  const scheduledGen = markIntent(entry) // claim the element; a later intent bumps past this token
+  let inner: AnimationHandle | null = null
+  let cancelled = false
+  let onInterrupt: ((h: AnimationHandle) => void) | null = null
+  let resolveFinished = (): void => {}
+  const finished = new Promise<void>((resolve) => {
+    resolveFinished = resolve
+  })
+  const cancelWait = waitFrames(delayMs, scheduler, () => {
+    if (cancelled) return
+    // Superseded during the wait: do NOT clobber the newer animation - report the
+    // interrupt and settle, so the set reads onInterrupt instead of a false complete.
+    if (entry.generation !== scheduledGen) {
+      cancelled = true
+      onInterrupt?.(handle)
+      resolveFinished()
+      return
+    }
+    inner = startResolved(element, targets, index, total, options)
+    inner.eventCallback?.('interrupt', () => onInterrupt?.(handle))
+    void inner.finished.then(resolveFinished)
+  })
+  const handle: AnimationHandle = {
+    finished,
+    stop: () => {
+      if (cancelled) return
+      cancelled = true
+      cancelWait()
+      if (inner !== null) inner.stop()
+      else onInterrupt?.(handle)
+      resolveFinished()
+    },
+    eventCallback(event, fn) {
+      if (event === 'interrupt') onInterrupt = fn ?? null
+      return handle
+    },
+  }
+  return handle
+}
+
+/** Strip the set-level options (delay, lifecycle) so each animateOne() sees only its own element's motion options. */
+const perElementOptions = (options: AnimateOptions): AnimateOptions => {
+  const out: AnimateOptions = { ...options }
+  delete out.delay
+  delete out.onStart
+  delete out.onUpdate
+  delete out.onComplete
+  delete out.onInterrupt
+  delete out.scope
+  return out
+}
+
+/**
+ * Imperative escape hatch: spring (default) or tween style channels. The target
+ * is one element, an array, a NodeList, or a CSS selector - one handle drives the
+ * whole set. Each value may be a relative string (`'+=100'`, resolved against the
+ * live value) or a per-target function `(index, element, count)`. `delay` staggers
+ * the starts (a number, or a `staggerDelay()` wave). The five numeric channels
+ * keep their compositor fast path; everything else routes through the value
+ * registry. Repeated calls retarget the same underlying values - never a jump.
+ *
+ * Multi-target lifecycle is set-level: `onComplete` fires when the WHOLE set has
+ * settled, `onInterrupt` when the first element is interrupted, `onUpdate` reports
+ * the first element's channels.
+ */
+export function animate(target: HTMLElement, targets: AnimateTargets, options?: AnimateOptions): AnimationHandle
+export function animate(target: AnimationTarget, targets: AnimateTargets, options?: AnimateOptions): AnimationHandle
+export function animate(target: AnimationTarget, targets: AnimateTargets, options: AnimateOptions = {}): AnimationHandle {
+  // Fast path: one element, no delay, no function/relative - today's exact behavior
+  // (lifecycle included), with no per-element pre-pass allocation. isHTMLElement is
+  // SSR-safe (a bare `instanceof HTMLElement` throws server-side).
+  if (isHTMLElement(target) && options.delay === undefined && !hasResolvable(targets)) {
+    return animateOne(target, targets, options)
+  }
+
+  const elements = resolveTargets(target)
+  if (elements.length === 0) return RESOLVED
+  const total = elements.length
+  const scheduler = options.scheduler ?? getSharedScheduler()
+  const delayOf: DelayFn | null =
+    options.delay === undefined
+      ? null
+      : typeof options.delay === 'function'
+        ? options.delay
+        : (index) => (options.delay as number) * index
+  const optionsForOne = perElementOptions(options)
+
+  const children = elements.map((element, index) => {
+    const d = delayOf !== null ? delayOf(index, total) : 0
+    if (d <= 0) return startResolved(element, targets, index, total, optionsForOne)
+    return deferredStart(element, targets, optionsForOne, index, total, d, scheduler)
+  })
+
+  const base = aggregate(children)
+  if (!hasLifecycle(options)) return base
+  const first = registry.get(elements[0]!)
+  const readValues = (): Record<string, number> => {
+    const out: Record<string, number> = {}
+    if (first !== undefined) {
+      for (const [key, value] of Object.entries(first.values)) if (value !== undefined) out[key] = value.get()
+    }
+    return out
+  }
+  return withLifecycle(base, children, options, readValues, scheduler)
 }
 
 export interface SetStyleOptions {
