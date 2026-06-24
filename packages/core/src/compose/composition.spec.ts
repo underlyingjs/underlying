@@ -3,6 +3,7 @@ import { createManualDriver } from '../scheduler/manual-driver'
 import { createScheduler } from '../scheduler/scheduler'
 import { animatable } from '../value/animatable'
 import { chain, stagger } from './composition'
+import { staggerDelay } from './stagger-delay'
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
@@ -126,5 +127,21 @@ describe('chain', () => {
 
   it('an empty chain resolves immediately', async () => {
     await chain([]).finished
+  })
+})
+
+describe('stagger with a DelayFn (expressive wave)', () => {
+  it('accepts a staggerDelay() schedule as its third argument', () => {
+    const driver = createManualDriver()
+    const scheduler = createScheduler(driver)
+    const values = Array.from({ length: 3 }, () => animatable(0, { scheduler }))
+    // from 'end': the LAST item starts first, the first item last.
+    stagger(values, (value) => value.spring(100), staggerDelay({ each: 50, from: 'end' }), { scheduler })
+
+    expect(values[2]!.isAnimating()).toBe(true) // rank 0 -> starts now
+    expect(values[0]!.isAnimating()).toBe(false) // rank max -> waits longest
+
+    for (let t = 0; t <= 112; t += 16) driver.frame(t)
+    expect(values[0]!.isAnimating()).toBe(true) // 100ms wave elapsed
   })
 })

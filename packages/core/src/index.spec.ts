@@ -16,12 +16,17 @@ import {
   onReducedMotionChange,
   prefersReducedMotion,
   chain,
+  region,
   registerValueType,
   releaseStyle,
+  resolveTargets,
+  responsive,
   setReducedMotionBehavior,
   setReducedMotionOverride,
   setStyle,
   stagger,
+  staggerDelay,
+  staggerDelays,
 } from './index'
 
 describe('@underlying/core public surface', () => {
@@ -41,10 +46,15 @@ describe('@underlying/core public surface', () => {
       chain,
       registerValueType,
       releaseStyle,
+      region,
+      resolveTargets,
+      responsive,
       setReducedMotionBehavior,
       setReducedMotionOverride,
       setStyle,
       stagger,
+      staggerDelay,
+      staggerDelays,
     ]
     for (const exported of surface) expect(typeof exported).toBe('function')
   })

@@ -242,4 +242,13 @@ describe('animate - WAAPI multi-keyframe delegation', () => {
     animate(element, { x: 100 }, { duration: 300, scheduler })
     expect(animations.length).toBe(1) // a property group mid-physics does not block delegation
   })
+
+  it('a relative resolves against the LIVE position of a delegated tween (reclaim before resolve)', () => {
+    const { driver, scheduler, element, animations } = setupWaapi()
+    animate(element, { x: 200 }, { duration: 1000, easing: linear, scheduler }) // delegates to WAAPI
+    animations[0]!.currentTime = 500 // halfway on a linear 0->200 tween: live x == 100
+    animate(element, { x: '+=50' }, { scheduler }) // relative -> reclaim the live 100, then +50
+    for (let t = 0; t <= 4000; t += 16) driver.frame(t)
+    expect(translateX(element)).toBeCloseTo(150, 0) // 100 (live) + 50, not 0 (stale) + 50
+  })
 })

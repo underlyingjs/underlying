@@ -23,9 +23,13 @@ export type {
   AnimateProperty,
   AnimateTargets,
   AnimateValue,
+  AnimationTarget,
   NumericKeyframes,
+  RelativeValue,
   SetStyleOptions,
+  ValueFn,
 } from './dom/animate'
+export { resolveTargets } from './dom/resolve-target'
 export { registerValueType } from './value/registry'
 export { numberValueType } from './value/types/number'
 export { lengthValueType } from './value/types/length'
@@ -34,6 +38,12 @@ export { complexValueType } from './value/types/complex'
 export type { ChannelMeta, MeasureUnit, ParsedValue, ValueType } from './value/value-type'
 export { chain, stagger } from './compose/composition'
 export type { AnimationStep, StaggerOptions } from './compose/composition'
+export { staggerDelay, staggerDelays } from './compose/stagger-delay'
+export type { DelayFn, StaggerAxis, StaggerGrid, StaggerOrigin, StaggerDelayOptions } from './compose/stagger-delay'
+export { responsive } from './compose/responsive'
+export type { ResponsiveSetup } from './compose/responsive'
+export { region } from './compose/region'
+export type { Region } from './compose/region'
 export { onReducedMotionChange, prefersReducedMotion, setReducedMotionOverride } from './a11y/reduced-motion'
 export { getReducedMotionBehavior, setReducedMotionBehavior } from './a11y/config'
 export type { ReducedMotionBehavior, ReducedMotionOverride } from './a11y/config'

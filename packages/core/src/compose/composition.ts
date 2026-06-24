@@ -1,6 +1,10 @@
 import type { Scheduler } from '../scheduler/scheduler'
 import { getSharedScheduler } from '../scheduler/shared'
 import type { AnimationHandle } from '../value/animatable'
+// Type-only: erased at build, so it does NOT pull the stagger-delay math (which
+// imports resolveEasing) into the primitives size graph that probes `stagger`.
+import type { DelayFn } from './stagger-delay'
+import { waitFrames } from './wait'
 
 /** A deferred animation: called when its turn comes. */
 export type AnimationStep = () => AnimationHandle
@@ -9,29 +13,18 @@ export interface StaggerOptions {
   scheduler?: Scheduler
 }
 
-// Delays run on the frame clock (clamped, batched into the single loop),
-// never on setTimeout: a background tab pauses delays like everything else.
-const wait = (ms: number, scheduler: Scheduler, onDone: () => void): (() => void) => {
-  let elapsedMs = 0
-  const unsubscribe = scheduler.subscribe(({ deltaMs }) => {
-    elapsedMs += deltaMs
-    if (elapsedMs >= ms) {
-      unsubscribe()
-      onDone()
-    }
-  })
-  return unsubscribe
-}
-
 /**
- * Starts `animation` on each item, item i delayed by i * delayMs.
- * The returned handle aggregates them: `finished` resolves when every item
- * has rested; `stop` cancels pending starts and freezes running items.
+ * Starts `animation` on each item, item i delayed by its schedule.
+ * The third argument is either a flat per-index spacing (item i delayed by
+ * i * delayMs, the original linear behavior) or a `DelayFn` from `staggerDelay()`
+ * for an expressive wave (origin, 2D grid, axis, easing). The returned handle
+ * aggregates them: `finished` resolves when every item has rested; `stop` cancels
+ * pending starts and freezes running items.
  */
 export function stagger<T>(
   items: readonly T[],
   animation: (item: T, index: number) => AnimationHandle,
-  delayMs = 0,
+  delay: number | DelayFn = 0,
   options: StaggerOptions = {},
 ): AnimationHandle {
   const scheduler = options.scheduler ?? getSharedScheduler()
@@ -58,10 +51,11 @@ export function stagger<T>(
     void handle.finished.then(complete)
   }
 
+  const delayFn: DelayFn = typeof delay === 'function' ? delay : (index) => delay * index
   items.forEach((item, index) => {
-    const delay = delayMs * index
-    if (delay <= 0) start(item, index)
-    else cancelWaits.push(wait(delay, scheduler, () => start(item, index)))
+    const d = delayFn(index, items.length)
+    if (d <= 0) start(item, index)
+    else cancelWaits.push(waitFrames(d, scheduler, () => start(item, index)))
   })
 
   return {
