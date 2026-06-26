@@ -1,5 +1,15 @@
 # @underlying/timeline
 
+## 1.1.0-beta.4
+
+### Patch Changes
+
+- Updated dependencies [7733826]
+- Updated dependencies [786aca7]
+- Updated dependencies [cf994f5]
+- Updated dependencies [3f85820]
+  - @underlying/core@1.1.0-beta.4
+
 ## 1.1.0-beta.3
 
 ### Patch Changes

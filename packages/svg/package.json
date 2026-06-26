@@ -1,6 +1,6 @@
 {
   "name": "@underlying/svg",
-  "version": "1.1.0-beta.3",
+  "version": "1.1.0-beta.4",
   "description": "SVG path animation for @underlying/core: ride a path, draw a stroke on, or morph one shape into another, physics-first - flick, interrupt, retarget, or scrub.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
