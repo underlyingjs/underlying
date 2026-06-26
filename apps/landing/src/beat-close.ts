@@ -1,3 +1,4 @@
+import { interactive } from '@underlying/gestures'
 import type { ScrollController } from '@underlying/scroll'
 
 // The close - the honest part. The whole page argued that motion should be live
@@ -47,6 +48,20 @@ export function initClose({ mount, scroll, fireCredit }: CloseDeps): void {
   const install = pick<HTMLButtonElement>('[data-install]')
   const copied = pick<HTMLElement>('[data-copied]')
   const top = pick<HTMLButtonElement>('[data-top]')
+  const docsLink = pick<HTMLElement>('.close__link')
+  const ghLink = pick<HTMLElement>('.close__gh')
+
+  // Declarative springy hover/press on the CTA cluster: interactive() owns each
+  // control's transform and snaps under reduced motion. The chip lights on first hover.
+  let interactiveCredited = false
+  for (const el of [install, docsLink, ghLink]) {
+    interactive(el, { hover: { y: -5, scale: 1.06 }, press: { y: -1, scale: 0.95 } })
+    el.addEventListener('pointerenter', () => {
+      if (interactiveCredited) return
+      interactiveCredited = true
+      fireCredit('@underlying/gestures - interactive, springy hover/press')
+    })
+  }
 
   // Click the install line to copy it; a brief "copied" confirms.
   let copiedTimer: ReturnType<typeof setTimeout> | undefined

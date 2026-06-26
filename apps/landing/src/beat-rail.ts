@@ -1,4 +1,5 @@
-import { animatable, bindStyle } from '@underlying/core'
+import { animatable, bindStyle, bindTemplate, prefersReducedMotion, template } from '@underlying/core'
+import { follow } from '@underlying/core/playback'
 import type { ScrollController } from '@underlying/scroll'
 
 // Beat 02 - the rail. Vertical scroll drives a horizontal filmstrip, and the rail
@@ -50,6 +51,25 @@ export function initRail({ mount, scroll, fireCredit }: RailDeps): void {
   // end. The momentum on scroll and the inertia on a throw both live here.
   const railX = animatable(0)
   bindStyle(rail, { x: railX })
+
+  // Compose a motion blur from that ONE live value's speed: a follow() spring eases
+  // a blur up while the rail is moving fast (the scroll lag, an inertial throw) and
+  // back to 0 at rest, written to filter via bindTemplate - so the strip reads sharp
+  // when still, smeared in motion, all from the rail's own velocity. Off when there
+  // is no motion to blur (reduced motion).
+  if (!prefersReducedMotion()) {
+    const blur = follow(0, { stiffness: 120, damping: 26 })
+    bindTemplate(rail, 'filter', template`blur(${blur}px)`)
+    let blurCredited = false
+    railX.on('change', () => {
+      const px = Math.min(5, Math.abs(railX.velocity()) / 650)
+      blur.target(px)
+      if (!blurCredited && px > 1) {
+        blurCredited = true
+        fireCredit('@underlying/core - bindTemplate, motion blur from one live spring')
+      }
+    })
+  }
 
   // travel = how far the rail must slide so its end sits flush at the right edge;
   // the vertical scroll budget (the sticky dwell) is set to match it exactly.

@@ -1,11 +1,12 @@
-import { animatable, bindStyle } from '@underlying/core'
+import { animatable, bindStyle, bindTemplate, prefersReducedMotion, staggerDelay } from '@underlying/core'
 import type { ScrollController } from '@underlying/scroll'
 
 // Beat 08 - the panorama. The "what is in the box" grid: seven packages, one core
 // underneath, each with its real version (read from package.json at build, never
-// hand-typed). A scroll trigger fires once on enter and the cards spring up in a
-// stagger - so the page reads as a full toolkit, not a one-trick demo, and earns
-// the close's single `npm i @underlying/core`.
+// hand-typed). The grid BUILDS WITH THE SCROLL: each card rises and scales tied to
+// scroll position, in a staggerDelay() wave that propagates across the real 2D grid
+// by cell distance - so it assembles as you scroll in and UN-builds as you scroll
+// back up. The reveal transform is composed by bindTemplate from one value.
 
 interface PanoramaDeps {
   mount: HTMLElement
@@ -49,27 +50,47 @@ export function initPanorama({ mount, scroll, fireCredit }: PanoramaDeps): void 
   `
   mount.appendChild(section)
 
-  // Each card rises and fades in on its own pair of values; the stagger is just a
-  // per-index delay before each spring starts.
-  const reveals = Array.from(section.querySelectorAll<HTMLElement>('[data-pkg]')).map((card) => {
-    const opacity = animatable(0)
-    const y = animatable(18)
-    bindStyle(card, { opacity, y })
-    return { opacity, y }
+  // Each card's reveal is ONE value 0..1. bindStyle binds the opacity; bindTemplate
+  // composes the rise + scale transform from that same value (its function form).
+  const cardEls = Array.from(section.querySelectorAll<HTMLElement>('[data-pkg]'))
+  const reveals = cardEls.map((card) => {
+    const v = animatable(0)
+    bindStyle(card, { opacity: v })
+    bindTemplate(card, 'transform', [v], (t) => `translate3d(0px, ${(1 - t) * 40}px, 0px) scale(${0.88 + 0.12 * t})`)
+    return v
   })
 
-  let revealed = false
-  scroll.trigger(section, {
-    onEnter: () => {
-      if (revealed) return
-      revealed = true
-      fireCredit('@underlying/scroll - trigger, on enter')
-      reveals.forEach((r, i) => {
-        window.setTimeout(() => {
-          r.opacity.spring(1, { stiffness: 180, damping: 22 })
-          r.y.spring(0, { stiffness: 180, damping: 20 })
-        }, i * 70)
-      })
+  // Reduced motion: show the grid fully revealed, no scroll-linked movement.
+  if (prefersReducedMotion()) {
+    for (const v of reveals) v.set(1)
+    return
+  }
+
+  // The wave is shaped by staggerDelay() across the real 2D grid, but its unit is
+  // SCROLL PROGRESS: each card opens over [offset, offset + span] of the scroll
+  // range, so the grid builds diagonally as it scrolls into the centre.
+  const smooth = (t: number): number => t * t * (3 - 2 * t)
+  const span = 0.4
+  const grid = section.querySelector<HTMLElement>('.panorama__grid') ?? section
+  let wave: ((index: number, total: number) => number) | null = null
+  let credited = false
+  scroll.scrub(
+    (p) => {
+      if (wave === null) {
+        // The rendered column count: the cards sharing the first card's top edge.
+        const firstTop = cardEls[0]?.offsetTop ?? 0
+        const cols = Math.max(1, cardEls.filter((card) => card.offsetTop === firstTop).length)
+        wave = staggerDelay({ each: 0.085, grid: { cols }, from: 'start' })
+      }
+      const total = reveals.length
+      for (let i = 0; i < total; i++) {
+        reveals[i]?.set(smooth(Math.min(1, Math.max(0, (p - wave(i, total)) / span))))
+      }
+      if (!credited && p > 0.02) {
+        credited = true
+        fireCredit('@underlying/core - staggerDelay grid wave (scroll-linked) + bindTemplate')
+      }
     },
-  })
+    { target: grid, range: ['start end', 'center center'] },
+  )
 }

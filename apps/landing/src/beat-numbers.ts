@@ -1,11 +1,11 @@
-import { animatable, bindStyle } from '@underlying/core'
+import { animatable, bindStyle, bindTemplate, prefersReducedMotion, staggerDelay } from '@underlying/core'
 import type { ScrollController } from '@underlying/scroll'
 
 // Beat 05 - by the numbers. The "stats band" every product landing ships, but the
-// figures are real facts about the toolkit and they count up with a spring (not a
-// linear tween) the moment the band enters view: a scroll trigger fires once, each
-// number springs from 0 to its value, and the zero pops in. Recognizable pattern,
-// honest numbers, physics-first reveal.
+// figures are real facts about the toolkit, and the band BUILDS WITH THE SCROLL:
+// each cell rises, scales and counts up tied to scroll position, in a center-out
+// staggerDelay() wave - so it assembles as you scroll into it and UN-builds as you
+// scroll back up. The reveal transform is composed by bindTemplate from one value.
 
 interface NumbersDeps {
   mount: HTMLElement
@@ -21,9 +21,8 @@ const STATS = [
 ]
 
 export function initNumbers({ mount, scroll, fireCredit }: NumbersDeps): void {
-  // Render the REAL figure statically: if JS or the scroll trigger never runs, the
-  // band reads the truth (not a screenful of zeros). The count-up overwrites from 0
-  // on enter, then lands back on this same value.
+  // Render the REAL figure statically: if JS never runs, the band reads the truth
+  // (not a screenful of zeros). The scroll-linked count overwrites from 0.
   const cells = STATS.map(
     (stat) =>
       `<div class="nums__cell" data-cell>
@@ -47,37 +46,48 @@ export function initNumbers({ mount, scroll, fireCredit }: NumbersDeps): void {
   `
   mount.appendChild(section)
 
-  const cells_ = Array.from(section.querySelectorAll<HTMLElement>('[data-cell]'))
+  const cellEls = Array.from(section.querySelectorAll<HTMLElement>('[data-cell]'))
   const valueEls = Array.from(section.querySelectorAll<HTMLElement>('[data-value]'))
 
-  // Each cell reveals with a springy pop; each value counts up on its own spring.
-  const reveals = STATS.map((stat, i) => {
-    const cell = cells_[i]
-    const valueEl = valueEls[i]
-    const opacity = animatable(0)
-    const scale = animatable(0.72)
-    const count = animatable(0)
-    if (cell !== undefined) bindStyle(cell, { opacity, scale })
-    count.on('change', () => {
-      if (valueEl !== undefined) valueEl.textContent = `${Math.round(count.get())}${stat.suffix}`
-    })
-    return { opacity, scale, count, to: stat.to }
+  // Each cell's reveal is ONE value 0..1. bindStyle binds the opacity; bindTemplate
+  // composes the rise + scale transform from that same value (its function form).
+  const reveals = cellEls.map((cell) => {
+    const v = animatable(0)
+    bindStyle(cell, { opacity: v })
+    bindTemplate(cell, 'transform', [v], (t) => `translate3d(0px, ${(1 - t) * 36}px, 0px) scale(${0.55 + 0.45 * t})`)
+    return v
   })
+  const setCell = (i: number, t: number): void => {
+    reveals[i]?.set(t)
+    const stat = STATS[i]
+    const el = valueEls[i]
+    if (stat !== undefined && el !== undefined) el.textContent = `${Math.round(t * stat.to)}${stat.suffix}`
+  }
 
-  let revealed = false
-  scroll.trigger(section, {
-    onEnter: () => {
-      if (revealed) return
-      revealed = true
-      fireCredit('@underlying/scroll - trigger; @underlying/core - spring the count')
-      reveals.forEach((r, i) => {
-        window.setTimeout(() => {
-          r.opacity.spring(1, { stiffness: 200, damping: 16 })
-          r.scale.spring(1, { stiffness: 220, damping: 15 }) // a small pop
-          // critically damped so the count rises and settles, no odd overshoot (8, 102%...)
-          if (r.to > 0) r.count.spring(r.to, { stiffness: 90, damping: 20 })
-        }, i * 110)
-      })
+  // Reduced motion: show the band fully revealed, no scroll-linked movement.
+  if (prefersReducedMotion()) {
+    for (let i = 0; i < reveals.length; i++) setCell(i, 1)
+    return
+  }
+
+  // The wave is shaped by staggerDelay() but its unit is SCROLL PROGRESS, not ms:
+  // each cell's reveal opens over [offset_i, offset_i + span] of the scroll range.
+  const smooth = (t: number): number => t * t * (3 - 2 * t)
+  const wave = staggerDelay({ each: 0.17, from: 'center' })
+  const span = 0.42
+  const grid = section.querySelector<HTMLElement>('.nums__grid') ?? section
+  let credited = false
+  scroll.scrub(
+    (p) => {
+      const total = reveals.length
+      for (let i = 0; i < total; i++) {
+        setCell(i, smooth(Math.min(1, Math.max(0, (p - wave(i, total)) / span))))
+      }
+      if (!credited && p > 0.02) {
+        credited = true
+        fireCredit('@underlying/core - staggerDelay wave (scroll-linked) + bindTemplate')
+      }
     },
-  })
+    { target: grid, range: ['start end', 'center center'] },
+  )
 }

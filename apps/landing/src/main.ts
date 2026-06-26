@@ -1,7 +1,8 @@
 import './styles.scss'
-import { animatable, bindStyle, prefersReducedMotion, type Simulation } from '@underlying/core'
-import { draggable } from '@underlying/gestures'
-import { createScroll } from '@underlying/scroll'
+import { animatable, bindStyle, bindTemplate, prefersReducedMotion, template, type Simulation } from '@underlying/core'
+import { cursor, depth, draggable } from '@underlying/gestures'
+import { createScroll, marquee } from '@underlying/scroll'
+import { morph, type MorphElement } from '@underlying/svg'
 import { reveal, typewriter } from '@underlying/text'
 import { initProof } from './beat-proof'
 import { initRail } from './beat-rail'
@@ -13,15 +14,31 @@ import { initBuild } from './beat-build'
 import { initPanorama } from './beat-panorama'
 import { initClose } from './beat-close'
 
+// Two organic closed outlines the blobs morph between forever; morph() resamples
+// them so the path commands need not match.
+const BLOB_A = 'M110 30 C150 32 186 58 188 104 C190 150 162 186 116 190 C70 194 36 160 32 116 C28 72 62 28 110 30 Z'
+const BLOB_B = 'M112 24 C162 28 196 72 188 118 C180 164 146 196 100 188 C54 180 30 144 38 96 C46 48 62 20 112 24 Z'
+
 const app = document.getElementById('app')
 if (app === null) throw new Error('underlyi.ng: no #app')
 
 app.innerHTML = `
   <a class="skip-link" href="#content">Skip to the content</a>
+  <div class="page-ambient" data-page-ambient aria-hidden="true">
+    <svg class="page-blob page-blob--a" viewBox="0 0 220 220"><path data-pblob-a d="${BLOB_A}" /></svg>
+    <svg class="page-blob page-blob--b" viewBox="0 0 220 220"><path data-pblob-b d="${BLOB_B}" /></svg>
+    <div class="page-sweep" data-page-sweep></div>
+  </div>
   <main class="page" id="content" tabindex="-1">
     <section class="hero" aria-labelledby="hero-word">
       <div class="hero__rail">00 / hero</div>
-      <div class="hero__field">
+      <div class="hero__ambient" data-ambient aria-hidden="true">
+        <svg class="hero__blob" viewBox="0 0 220 220" preserveAspectRatio="xMidYMid meet">
+          <path data-blob d="${BLOB_A}" />
+        </svg>
+        <div class="hero__sheen" data-sheen></div>
+      </div>
+      <div class="hero__field" data-field>
         <h1 class="hero__word" id="hero-word">underlyi.ng</h1>
         <p class="hero__thesis" data-thesis aria-label="Most animation is a recording. This bends."></p>
         <span class="hero__grab" data-grab>grab the dot, throw it</span>
@@ -32,6 +49,11 @@ app.innerHTML = `
         <span class="credit__dot"></span><span data-credit-text>physics-first web animation</span>
       </div>
     </section>
+    <div class="marquee-band" aria-hidden="true">
+      <div class="marquee-band__track" data-marquee-track>
+        <span>physics-first</span><span>live values</span><span>interruptible</span><span>scroll as a source</span><span>spring &middot; decay &middot; simulate</span><span>never a recording</span>
+      </div>
+    </div>
   </main>
 `
 
@@ -49,6 +71,14 @@ const thesis = pick<HTMLElement>('[data-thesis]')
 const grab = pick<HTMLElement>('[data-grab]')
 const credit = pick<HTMLElement>('[data-credit]')
 const creditText = pick<HTMLElement>('[data-credit-text]')
+const ambient = pick<HTMLElement>('[data-ambient]')
+const blobPath = pick<SVGPathElement>('[data-blob]')
+const sheen = pick<HTMLElement>('[data-sheen]')
+const pageAmbient = pick<HTMLElement>('[data-page-ambient]')
+const pblobA = pick<SVGPathElement>('[data-pblob-a]')
+const pblobB = pick<SVGPathElement>('[data-pblob-b]')
+const pageSweepEl = pick<HTMLElement>('[data-page-sweep]')
+const marqueeTrack = pick<HTMLElement>('[data-marquee-track]')
 
 // The live feature-credit chip: lights the instant a feature fires, so the page
 // reads as self-documenting dogfooding.
@@ -58,6 +88,49 @@ const fireCredit = (text: string): void => {
   credit.classList.add('credit--lit')
   clearTimeout(creditTimer)
   creditTimer = setTimeout(() => credit.classList.remove('credit--lit'), 1500)
+}
+
+// The living hero - motion that runs on its own, plus pointer depth, so the page
+// is alive the instant you arrive and reacts as you move the cursor. All of it is
+// held still under reduced motion (perpetual motion is exactly what that asks us
+// not to run).
+if (!prefersReducedMotion()) {
+  // A blob morphs forever between two organic shapes (@underlying/svg): the fraction
+  // oscillates 0..1 on a perpetual, undamped Simulation.
+  const blob = morph(blobPath as unknown as MorphElement, BLOB_B, { closed: true, samples: 72 })
+  const pulse: Simulation = { acceleration: (f) => -0.4 * (f - 0.5), rest: () => null }
+  blob.fraction.simulate(pulse, { velocity: 0 })
+
+  // An ambient light sweep: a conic-gradient angle that rotates forever, composed
+  // onto a custom property by bindTemplate from one live value.
+  const sweep = animatable(0)
+  bindTemplate(sheen, '--sweep', template`${sweep}deg`)
+  sweep.simulate({ acceleration: () => 0, rest: () => null }, { velocity: 14 })
+
+  // Pointer depth: two layers parallax against the cursor - the ambient drifts most
+  // (far), the field least (near) - a 2.5D illusion that makes the hero respond.
+  depth(ambient, { shift: 44 })
+  depth(field, { shift: 14 })
+
+  // The PAGE-WIDE living background: two more blobs morphing forever behind EVERY
+  // section (opposite phases), a second slow sweep, and its own pointer depth - so
+  // the whole page breathes, not just the hero. The sections sit transparent over it.
+  const perpetual: Simulation = { acceleration: (f) => -0.32 * (f - 0.5), rest: () => null }
+  morph(pblobA as unknown as MorphElement, BLOB_B, { closed: true, samples: 60 }).fraction.simulate(perpetual, {
+    velocity: 0,
+  })
+  morph(pblobB as unknown as MorphElement, BLOB_A, { closed: true, samples: 60, from: 1 }).fraction.simulate(perpetual, {
+    velocity: 0,
+  })
+  const pageSweep = animatable(0)
+  bindTemplate(pageSweepEl, '--sweep', template`${pageSweep}deg`)
+  pageSweep.simulate({ acceleration: () => 0, rest: () => null }, { velocity: 7 })
+  depth(pageAmbient, { shift: 26 })
+
+  // A custom cursor trails the pointer and swells over interactive targets.
+  cursor()
+
+  fireCredit('@underlying/svg morph + gestures depth + cursor - the page breathes')
 }
 
 // The protagonist disc IS the wordmark's period made physical. Three live values
@@ -199,6 +272,14 @@ initRoute({ mount: pageMain, scroll, fireCredit })
 initBuild({ mount: pageMain, scroll, fireCredit })
 initPanorama({ mount: pageMain, scroll, fireCredit })
 initClose({ mount: pageMain, scroll, fireCredit })
+
+// A manifesto ticker that drifts forever and speeds up / reverses with the scroll
+// (coupled to scroll.velocity) - always-moving text right under the hero. Off under
+// reduced motion, paused on hover, handled inside marquee().
+if (!prefersReducedMotion()) {
+  marquee(marqueeTrack, { speed: 34, velocity: scroll.velocity(), velocityFactor: 0.6 })
+  fireCredit('@underlying/scroll - marquee, velocity-coupled')
+}
 
 // Each beat becomes a named region, so a screen reader can jump between them by
 // landmark instead of scrolling blind through nine full-height sections.
