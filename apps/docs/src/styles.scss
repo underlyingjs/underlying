@@ -2150,3 +2150,40 @@ pre {
     color: #8c5a46;
   }
 }
+
+// ---- #68 bindTemplate() demo: a cursor-reactive hero ----------------------
+.composehero {
+  position: absolute;
+  inset: 28px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--sapin), var(--sous-bois));
+  cursor: crosshair;
+  will-change: filter;
+  // a sensible default so it reads before the first pointermove
+  filter: blur(8px) brightness(0.85);
+}
+.composehero__sheen {
+  position: absolute;
+  inset: 0;
+  // --sheen is composed from a live spring by bindTemplate()
+  background: conic-gradient(
+    from var(--sheen, 0deg),
+    transparent 0deg,
+    rgba(255, 255, 255, 0.28) 80deg,
+    transparent 160deg
+  );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+.composehero__label {
+  position: absolute;
+  left: 22px;
+  bottom: 18px;
+  color: var(--creme);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}

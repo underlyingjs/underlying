@@ -2,6 +2,7 @@ import './styles.scss'
 import { renderShowcase, type Page } from './showcase'
 import { customPhysics, gettingStarted, interruption, springs } from './sections/core'
 import { colors, composite, keyframes, lengthsUnits } from './sections/value-model'
+import { composedStyles } from './sections/compose'
 import { carousel, gestures, pointerCursor, pointerDepth, pointerInteractive, pointerMagnetic, pointerQuick, pointerTilt, setRelease, unifiedInput } from './sections/gestures'
 import { composition } from './sections/composition'
 import { hoverWave, regionTeardown, relativeFanout, staggerGrid } from './sections/authoring'
@@ -35,8 +36,8 @@ const pages: Page[] = [
     id: 'value-model',
     group: 'Fundamentals',
     title: 'Value model',
-    blurb: 'Beyond the five transform/opacity channels, <code>animate()</code> drives any CSS property - lengths with unit conversion, colors, composite values, and keyframe arrays.',
-    sections: [lengthsUnits, colors, composite, keyframes, flip3d, menuOrigin, namedEases],
+    blurb: 'Beyond the five transform/opacity channels, <code>animate()</code> drives any CSS property - lengths with unit conversion, colors, composite values, and keyframe arrays. And <code>bindTemplate()</code> composes several live springs into one CSS string written to any property.',
+    sections: [lengthsUnits, colors, composite, keyframes, composedStyles, flip3d, menuOrigin, namedEases],
   },
   {
     id: 'gestures',

@@ -56,6 +56,9 @@ export interface ValueType {
  */
 export function formatChannelNumber(value: number, meta: ChannelMeta): string {
   let v = value
+  // Never emit 'NaN'/'Infinity' into a CSS string (a non-finite source value, a
+  // bad target). Fall back to the channel's floor, or 0.
+  if (!Number.isFinite(v)) v = meta.min ?? 0
   if (meta.min !== undefined && v < meta.min) v = meta.min
   if (meta.max !== undefined && v > meta.max) v = meta.max
   const factor = 10 ** meta.precision

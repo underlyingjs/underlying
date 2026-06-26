@@ -10,9 +10,10 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-// 13.25 kB since 1.1: #52 authoring ergonomics added staggerDelay()/responsive()/region()
-// to the full surface (was 12 kB before #52).
-const BUDGET_BYTES = 13.25 * 1024
+// 13.75 kB since 1.1: #52 authoring ergonomics added staggerDelay()/responsive()/region()
+// (12 -> 13.25), then #68 added bindTemplate()/template() to the full surface (13.25 -> 13.75).
+// The animate() graph and primitives are untouched by #68 (bindTemplate stays off both).
+const BUDGET_BYTES = 13.75 * 1024
 const PRIMITIVES_BUDGET_BYTES = 3.5 * 1024
 // 11.25 kB since 1.1: animate() gained lifecycle callbacks (#67) and then #52 multi-target
 // + relative/function value resolution (resolveTargets/resolveValue land in the animate graph).
