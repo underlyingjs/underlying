@@ -1,5 +1,36 @@
 # @underlying/core
 
+## 1.1.0
+
+### Minor Changes
+
+- 7733826: Authoring ergonomics for real apps (#52): expressive stagger, multi-target `animate()`, relative and per-target function values, and a responsive teardown layer.
+
+  - **`staggerDelay(options)`** builds a delay schedule `(index, total) => ms` you pass to `stagger()` or to `animate()`'s new `delay` option. Choose the wave origin (`start` / `end` / `center` / `edges` / `random` / a specific index), propagate across a 2D grid by cell distance (`grid: { cols }`), restrict to an axis, and redistribute the spacing through an easing. `random` is deterministic from a `seed`. The plain `stagger(items, fn, delayMs)` and the linear default are unchanged.
+  - **Multi-target `animate()`** now accepts an element, an array, a `NodeList`, or a CSS selector string and returns ONE handle for the whole set. Single-element calls keep their exact original fast path (and the WAAPI compositor path).
+  - **Relative and function values**: a target can be `'+=100'` / `'-=40'` / `'*=2'` resolved against the live value (so a re-fire retargets from the in-flight position, physics-first), or a per-target function `(index, element, count) => value`. Relatives compose on numeric channels and single-magnitude length/number properties (unit preserved).
+  - **`responsive(query | { reducedMotion }, setup)`** runs a setup when a media query starts matching and its returned teardown when it stops - the reduced-motion form reuses the app-level override. SSR-safe and client-only.
+  - **`region(setup?)`** is a teardown boundary: scope-bound `animate` / `stagger` / `responsive` / `setStyle` plus `add` / `track`, and a single `revert()` that stops the animations, removes the media listeners, and releases the inline styles - the mount/unmount seam for framework adapters.
+
+  Also exported: `resolveTargets`, `staggerDelays`, and the `DelayFn` / `StaggerOrigin` / `StaggerGrid` / `StaggerAxis` / `StaggerDelayOptions` / `AnimationTarget` / `RelativeValue` / `ValueFn` / `ResponsiveSetup` / `Region` types.
+
+- 786aca7: `animate()` (the DOM aggregate) now accepts the lifecycle callbacks too (#67, part 2): `onStart`, `onUpdate` (the live numeric channel values object each frame), `onComplete` (every channel settled), `onInterrupt` (a channel superseded by a later `animate()`, or the handle stopped), and a `scope` (`this` receiver), plus the post-hoc `eventCallback()`. Requesting a callback runs the JS path so the per-frame `onUpdate` tick and the per-channel interrupt detection work; a callback-free `animate()` keeps the WAAPI compositor fast path. With part 1 this completes #67 across `animatable`, the playback handles, and `animate()` (the timeline package adopts the same hooks as a follow-up).
+- cf994f5: Animation lifecycle callbacks on the imperative value and the playback handles (#67, part 1). `spring`/`to`/`decay`/`simulate` and `playable(...)`'s `spring`/`to`/`decay` now accept `onStart`, `onUpdate` (the live value each frame), `onComplete` (natural settle), `onInterrupt` (replaced / stopped / teleported / disposed mid-flight), and - on playback - `onRepeat` (each iteration boundary) and `onReverseComplete` (a reversed leg reaching its start), plus an optional `scope` (the `this` receiver). The callbacks ride the same options object; the physics builders never see them, so the physics option types stay lifecycle-blind. The handle also gains a post-hoc `eventCallback(event, fn | null)` to attach or replace a callback after creation (optional - present on the handles that carry a lifecycle). Under reduced motion a run still fires `onStart` then `onComplete`; an `Infinity`-repeat run never completes. `finished` and `stop()` are unchanged. `animate()` (the DOM aggregate) follows in part 2.
+- 3f85820: Live value templating (#68): compose several independent live values into one reactive CSS string, written to any property each frame.
+
+  `template` is a tagged template whose interpolations are live sources - an `animatable`, a `follow()`, a scroll/pointer spring - and whose literals carry the units, so it reads byte-for-byte like the CSS it emits:
+
+  ```ts
+  const blur = follow(0),
+    glow = follow(1);
+  bindTemplate(hero, "filter", template`blur(${blur}px) brightness(${glow})`);
+  bindTemplate(sheen, "--sheen", template`${angle}deg`);
+  ```
+
+  `bindTemplate(element, property, template, options?)` writes the composed string to any CSS property (including a `--custom` one) through the same change-gated render phase as `animate()`: one write per frame when several sources change together, byte-deduplicated so a value jittering below its precision writes nothing, and quiet at rest. It returns a `() => void` disposer that tears down every source subscription (and drops straight into `region.add(...)`); it is a read-only projection and never disposes its sources. There is also a function escape hatch for computed projections: `bindTemplate(el, 'transform', [x, y], (px, py) => \`translate3d(${px}px, ${py}px, 0)\`)`, arity-typed to the sources.
+
+  Numeric slots round to 4 decimals by default (matching the value model), configurable via `precision`. SSR-safe: `template` is pure in-memory assembly and the module touches no browser global at import.
+
 ## 1.1.0-beta.4
 
 ### Minor Changes
