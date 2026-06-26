@@ -1,5 +1,21 @@
 # @underlying/scroll
 
+## 1.1.0
+
+### Minor Changes
+
+- 23bc99b: `marquee()` - a seamless looping ticker. `marquee(track, options?)` clones a track's children just enough to fill the container, drifts the strip at a constant speed, and wraps at exactly one content period (measured to include the inter-set gap) so there is no visible seam. Hand it `scroll.velocity()` and it speeds up and reverses with the scroll - the agency ticker. It's a standalone export (no scroll controller needed) that optionally takes a signed-px/s `Animatable` for the coupling. Options: `speed`, `direction`, `axis`, `velocity`, `velocityFactor`, `pauseOnHover` (eases the drift to a stop via a spring, and back on leave), `spring`. The loop sleeps while the container is off-screen (IntersectionObserver) and sits still under reduced motion; clones are `aria-hidden` + `inert`, and `dispose()` removes them and restores the element. The container needs `overflow: hidden`.
+- 2285b24: Smooth scroll - a document-level inertia engine. Pass `{ smooth: true }` to `createScroll` (or call `controller.smooth()`) and a spring takes over the scroll: wheel, touch (opt-in) and keyboard re-aim it and it glides to rest instead of stopping dead. It drives **native** scroll - no transform, no content wrapper - so the scrollbar, in-page anchors, `position: sticky` and find-in-page keep working, and every existing effect (`scrub`, `parallax`, `velocity`, `pin`, `snap`, `scrollTo`) reads the smoothed position with no change. Physics-first: one `follow()` spring owns the smoothed position (the same `stiffnessFor` mapping as scrub/parallax), interruptible by a real flick. `scrollTo` and `snap` route through that one spring when smooth is active, so there's never more than one writer of native scroll. A user scroll the engine did not drive (scrollbar, anchor, keyboard) is adopted rather than fought. Options: `smooth` (catch-up seconds), `spring`, `wheelMultiplier`, `touchMultiplier`, `keyboard` (default on, never steals a form field), `touch` (default off - intercepting touchmove kills iOS native momentum). Off under reduced motion - native scroll runs raw. The `ScrollSource` contract gains `driveTo(pos)` for the synchronous engine write.
+- 083d845: `scroll.velocity()` - scroll speed as one live value. It exposes how fast the scroller is moving (px/s, signed) as a `bindStyle`-ready `Animatable`, smoothed through a spring so it ramps and eases back to rest the moment you stop. Map it to a few degrees of `skewY`, a scale, or a blur, and the content leans with your scroll speed and snaps upright when you stop - the velocity-reactive lean. Physics-first: a fresh flick mid-relax re-aims the spring with velocity conserved, never a restart; held at rest under reduced motion.
+
+### Patch Changes
+
+- Updated dependencies [7733826]
+- Updated dependencies [786aca7]
+- Updated dependencies [cf994f5]
+- Updated dependencies [3f85820]
+  - @underlying/core@1.1.0
+
 ## 1.1.0-beta.4
 
 ### Patch Changes

@@ -1,5 +1,0 @@
----
-"@underlying/core": minor
----
-
-Animation lifecycle callbacks on the imperative value and the playback handles (#67, part 1). `spring`/`to`/`decay`/`simulate` and `playable(...)`'s `spring`/`to`/`decay` now accept `onStart`, `onUpdate` (the live value each frame), `onComplete` (natural settle), `onInterrupt` (replaced / stopped / teleported / disposed mid-flight), and - on playback - `onRepeat` (each iteration boundary) and `onReverseComplete` (a reversed leg reaching its start), plus an optional `scope` (the `this` receiver). The callbacks ride the same options object; the physics builders never see them, so the physics option types stay lifecycle-blind. The handle also gains a post-hoc `eventCallback(event, fn | null)` to attach or replace a callback after creation (optional - present on the handles that carry a lifecycle). Under reduced motion a run still fires `onStart` then `onComplete`; an `Infinity`-repeat run never completes. `finished` and `stop()` are unchanged. `animate()` (the DOM aggregate) follows in part 2.
