@@ -104,8 +104,44 @@ body {
   }
 }
 
+// the living-hero ambient layer: a morphing blob + a rotating light sweep, behind
+// the field. depth() owns its transform (the far parallax layer).
+.hero__ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  will-change: transform;
+}
+.hero__blob {
+  width: min(96vmin, 820px);
+  height: min(96vmin, 820px);
+  overflow: visible;
+
+  path {
+    fill: var(--sapin);
+    opacity: 0.1;
+  }
+}
+.hero__sheen {
+  position: absolute;
+  inset: -30%;
+  // --sweep is composed onto this property each frame by bindTemplate from a live spring
+  background: conic-gradient(
+    from var(--sweep, 0deg),
+    transparent 0deg,
+    rgba(28, 52, 38, 0.14) 60deg,
+    transparent 140deg,
+    transparent 360deg
+  );
+  pointer-events: none;
+}
+
 .hero__field {
   position: relative;
+  z-index: 2; // above the ambient layer
   text-align: center;
 }
 
@@ -1495,5 +1531,137 @@ body {
   // give the device frame room to breathe without forcing a tall section
   .sheet-phone {
     height: clamp(380px, 60vh, 520px);
+  }
+}
+
+// the custom cursor: cursor() only positions this (its transform); the look is
+// ours. The active swell lives on the ::before scale, NOT the parent transform
+// (which cursor() owns), so the two never fight.
+.cursor {
+  z-index: 90;
+  pointer-events: none;
+  will-change: transform;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    border: 1.5px solid var(--sapin);
+    border-radius: 50%;
+    opacity: 0.45;
+    transition:
+      transform 0.22s ease,
+      opacity 0.22s ease,
+      background 0.22s ease;
+  }
+  &--active::before {
+    transform: scale(1.75);
+    opacity: 0.8;
+    background: rgba(28, 52, 38, 0.06);
+  }
+}
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .cursor {
+    display: none; // no custom cursor on touch or when motion is reduced
+  }
+}
+
+// ---- the page-wide living background --------------------------------------
+// A fixed layer behind every section: two blobs morphing forever + a rotating
+// sweep, drifting with the pointer (depth). The sections sit transparent over it.
+.page-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  will-change: transform;
+}
+.page {
+  position: relative;
+  z-index: 1; // the content sits above the living background
+}
+.page-blob {
+  position: absolute;
+  width: min(74vmin, 660px);
+  height: min(74vmin, 660px);
+  overflow: visible;
+
+  path {
+    fill: var(--sapin);
+    opacity: 0.06;
+  }
+  &--a {
+    top: -16vmin;
+    left: -12vmin;
+  }
+  &--b {
+    right: -14vmin;
+    bottom: -18vmin;
+  }
+}
+.page-sweep {
+  position: absolute;
+  inset: -25%;
+  background: conic-gradient(
+    from var(--sweep, 0deg),
+    transparent 0deg,
+    rgba(28, 52, 38, 0.05) 90deg,
+    transparent 210deg,
+    transparent 360deg
+  );
+}
+
+// The sections go transparent so the living background shows through them all
+// (they were solid creme - the body keeps that base colour).
+.beat--proof,
+.beat--rail,
+.beat--gallery,
+.beat--sheet,
+.beat--numbers,
+.beat--route,
+.beat--build,
+.beat--panorama,
+.beat--close {
+  background: transparent;
+}
+
+// ---- the manifesto marquee ------------------------------------------------
+.marquee-band {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  padding: clamp(16px, 2.6vh, 30px) 0;
+  border-top: 1px solid var(--ligne);
+  border-bottom: 1px solid var(--ligne);
+  background: rgba(241, 239, 232, 0.55);
+}
+.marquee-band__track {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 clamp(20px, 4vw, 52px);
+    font-family: var(--display);
+    font-weight: 560;
+    font-size: clamp(22px, 4.2vw, 52px);
+    letter-spacing: -0.015em;
+    color: var(--sapin);
+
+    &::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      margin-right: clamp(20px, 4vw, 52px);
+      border-radius: 50%;
+      background: var(--lichen);
+    }
   }
 }
