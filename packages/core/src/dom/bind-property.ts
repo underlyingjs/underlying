@@ -1,10 +1,20 @@
 import { getSharedScheduler } from '../scheduler/shared'
 import type { Scheduler } from '../scheduler/scheduler'
-import type { ChannelGroup } from '../value/channel-group'
 import { toKebab } from './read-style'
 
 export interface BindPropertyOptions {
   scheduler?: Scheduler
+}
+
+/**
+ * The structural source bindProperty writes: anything that can produce a CSS
+ * string and notify when it changes. A ChannelGroup satisfies it (the animate()
+ * path), and so does a composed template (bindTemplate) - one render-phase binder
+ * serves both.
+ */
+export interface FormatSource {
+  format(): string
+  onChange(listener: () => void): () => void
 }
 
 export interface PropertyBinding {
@@ -23,7 +33,7 @@ export interface PropertyBinding {
 export function bindProperty(
   element: HTMLElement,
   property: string,
-  group: ChannelGroup,
+  source: FormatSource,
   options: BindPropertyOptions = {},
 ): PropertyBinding {
   const scheduler = options.scheduler ?? getSharedScheduler()
@@ -33,7 +43,7 @@ export function bindProperty(
   let cancelFlush: (() => void) | null = null
 
   const write = (): void => {
-    const value = group.format()
+    const value = source.format()
     if (value === lastWritten) return // byte-identical: no DOM write
     lastWritten = value
     element.style.setProperty(kebab, value)
@@ -51,7 +61,7 @@ export function bindProperty(
     }, 'render')
   }
 
-  const unsubscribe = group.onChange(() => {
+  const unsubscribe = source.onChange(() => {
     dirty = true
     scheduleFlush()
   })

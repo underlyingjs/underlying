@@ -16,6 +16,8 @@ export type { LifecycleCallbacks, LifecycleEvent } from './value/lifecycle'
 export type { Simulation, SimulationState } from './physics/simulation'
 export { bindStyle } from './dom/bind-style'
 export type { BindStyleOptions, StyleBindings } from './dom/bind-style'
+export { bindTemplate, template } from './dom/bind-template'
+export type { BindTemplateOptions, StyleTemplate, TemplateSlot, TemplateSource } from './dom/bind-template'
 export { animate, releaseStyle, setStyle } from './dom/animate'
 export type {
   AnimateKeyframes,

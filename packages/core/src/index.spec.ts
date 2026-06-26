@@ -3,6 +3,7 @@ import {
   animatable,
   animate,
   bindStyle,
+  bindTemplate,
   colorValueType,
   complexValueType,
   createScheduler,
@@ -27,6 +28,7 @@ import {
   stagger,
   staggerDelay,
   staggerDelays,
+  template,
 } from './index'
 
 describe('@underlying/core public surface', () => {
@@ -35,6 +37,7 @@ describe('@underlying/core public surface', () => {
       animatable,
       animate,
       bindStyle,
+      bindTemplate,
       createScheduler,
       easeInCubic,
       easeInOutCubic,
@@ -55,6 +58,7 @@ describe('@underlying/core public surface', () => {
       stagger,
       staggerDelay,
       staggerDelays,
+      template,
     ]
     for (const exported of surface) expect(typeof exported).toBe('function')
   })
