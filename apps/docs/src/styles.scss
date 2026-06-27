@@ -960,6 +960,25 @@ pre {
   }
 }
 
+// ---- ambient() demo : a constellation of dots that wander when idle and bend
+// into pointer-parallax when the cursor moves. ambient owns each dot's transform.
+.ambientstage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 32%, var(--sous-bois), var(--sapin));
+}
+.ambientdot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px; // centre on the left/top anchor
+  border-radius: 999px;
+  background: radial-gradient(circle at 38% 34%, var(--creme), var(--mousse));
+  box-shadow: 0 6px 16px rgba(28, 52, 38, 0.28);
+  will-change: transform;
+}
+
 // ---- quickTo() demo : a spotlight glow the spring trails behind the pointer,
 // driven by the section's own pointermove handler.
 .quickstage {
