@@ -15,6 +15,7 @@ import { svgDraw, svgMorph, svgMorphSharp, svgMotionPath } from './sections/svg'
 import { textMask, textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { flip3d, menuOrigin } from './sections/transform3d'
 import { namedEases } from './sections/eases'
+import { proceduralEases } from './sections/procedural-eases'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
 
@@ -38,7 +39,7 @@ const pages: Page[] = [
     group: 'Fundamentals',
     title: 'Value model',
     blurb: 'Beyond the five transform/opacity channels, <code>animate()</code> drives any CSS property - lengths with unit conversion, colors, composite values, and keyframe arrays. And <code>bindTemplate()</code> composes several live springs into one CSS string written to any property.',
-    sections: [lengthsUnits, colors, composite, keyframes, composedStyles, flip3d, menuOrigin, namedEases],
+    sections: [lengthsUnits, colors, composite, keyframes, composedStyles, flip3d, menuOrigin, namedEases, proceduralEases],
   },
   {
     id: 'gestures',

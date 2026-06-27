@@ -18,5 +18,8 @@ export {
   none,
   registerEases,
 } from './eases'
-export { cubicBezier } from './custom-ease'
+export { cubicBezier, customEase } from './custom-ease'
+export type { EasePoint } from './custom-ease'
+export { wiggle, shake, slow, rough } from './procedural'
+export type { WiggleOptions, WiggleWave, RoughOptions, RoughTaper } from './procedural'
 export { clamp, mapRange, interpolate, snap, wrap, random, toArray, pipe } from './utils'
