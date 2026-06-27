@@ -1,5 +1,11 @@
 # @underlying/text
 
+## 1.2.0-beta.1
+
+### Patch Changes
+
+- @underlying/core@1.2.0-beta.1
+
 ## 1.2.0-beta.0
 
 ### Minor Changes

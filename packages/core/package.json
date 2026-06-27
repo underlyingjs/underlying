@@ -1,6 +1,6 @@
 {
   "name": "@underlying/core",
-  "version": "1.2.0-beta.0",
+  "version": "1.2.0-beta.1",
   "description": "Physics-first web animation: interruptible springs with velocity conservation, inertia, colors, units, keyframes, accessible by default, zero dependencies, < 12 kB gzip.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
