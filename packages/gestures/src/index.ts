@@ -1,3 +1,13 @@
+export { ambient } from './ambient'
+export type {
+  Ambient,
+  AmbientGroup,
+  AmbientOptions,
+  BreatheOptions,
+  DriftOptions,
+  BobOptions,
+  WanderOptions,
+} from './ambient'
 export { draggable } from './draggable'
 export type { Draggable, DraggableOptions, DragAxis, DragBounds, DragRelease, SnapTo } from './draggable'
 export { cursor } from './cursor'

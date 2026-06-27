@@ -3,7 +3,7 @@ import { renderShowcase, type Page } from './showcase'
 import { customPhysics, gettingStarted, interruption, springs } from './sections/core'
 import { colors, composite, keyframes, lengthsUnits } from './sections/value-model'
 import { composedStyles } from './sections/compose'
-import { carousel, gestures, pointerCursor, pointerDepth, pointerInteractive, pointerMagnetic, pointerQuick, pointerTilt, setRelease, unifiedInput } from './sections/gestures'
+import { carousel, gestures, pointerAmbient, pointerCursor, pointerDepth, pointerInteractive, pointerMagnetic, pointerQuick, pointerTilt, setRelease, unifiedInput } from './sections/gestures'
 import { composition } from './sections/composition'
 import { hoverWave, regionTeardown, relativeFanout, staggerGrid } from './sections/authoring'
 import { bakedClip, lifecycle, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
@@ -44,7 +44,7 @@ const pages: Page[] = [
     group: 'Guides',
     title: 'Gestures',
     blurb: 'Velocity is a first-class citizen, so handing a gesture off into a spring or an inertial glide is a single argument. draggable() adds momentum-aware snap, edge resistance, and axis lock; observe() unifies wheel, trackpad, and touch.',
-    sections: [gestures, pointerTilt, pointerMagnetic, pointerCursor, pointerDepth, pointerQuick, pointerInteractive, carousel, unifiedInput, setRelease],
+    sections: [gestures, pointerTilt, pointerMagnetic, pointerCursor, pointerDepth, pointerAmbient, pointerQuick, pointerInteractive, carousel, unifiedInput, setRelease],
   },
   {
     id: 'composition',

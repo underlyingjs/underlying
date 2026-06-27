@@ -1,5 +1,5 @@
 import { animatable, animate, bindStyle, releaseStyle, setStyle } from '@underlying/core'
-import { cursor, depth, draggable, interactive, magnetic, observe, quickTo, tilt } from '@underlying/gestures'
+import { ambient, cursor, depth, draggable, interactive, magnetic, observe, quickTo, tilt } from '@underlying/gestures'
 import { button, dropdown, h, type Section } from '../showcase'
 
 /** Smoothed pointer velocity in px/s over a ~50 ms window. */
@@ -564,5 +564,50 @@ releaseStyle(el: HTMLElement): void`,
         note.textContent = 'released the element - next animate() starts cold'
       }),
     )
+  },
+}
+
+export const pointerAmbient: Section = {
+  id: 'gestures-ambient',
+  group: 'Gestures',
+  title: 'ambient()',
+  tagline: 'A constellation that idles with life and wakes to the cursor - nothing sits still.',
+  description: `
+    <p><code>ambient()</code> gives perpetual low-amplitude motion so nothing on the
+    page sits perfectly still - on live springs, never a baked loop. Pass an array
+    and it is one shared field: the dots <strong>wander</strong> slow shared
+    attractor points while you are idle, then <strong>bend into pointer-parallax with
+    velocity conserved</strong> when you move (no snap), and drift back off after a
+    moment of stillness. A per-element seed keeps them out of lockstep; the whole
+    field shares one pointer listener. Held still under reduced motion. Move the
+    cursor over the field, then leave it be.</p>`,
+  code: `import { ambient } from '@underlying/gestures'
+
+// One shared field over many dots: idle wander <-> pointer-parallax recapture.
+const field = ambient(dots, {
+  breathe: { scale: 0.05 },
+  wander: { radius: 46, parallax: 28, frame: stage },
+})`,
+  api: `interface AmbientOptions { breathe?; drift?; bob?; wander?; seed?; reducedMotion?; scheduler? }
+interface WanderOptions { radius?; parallax?; idleAfter?; attractorPeriod?; frame?; invert?; spring? }
+ambient(element, options?): Ambient                 // breathe + drift on by default
+ambient(elements, options?): AmbientGroup           // the shared wander field`,
+  run(ctx) {
+    const stage = h('div', { class: 'ambientstage' })
+    const dots: HTMLElement[] = []
+    for (let i = 0; i < 12; i++) {
+      const dot = h('span', { class: 'ambientdot' })
+      dot.style.left = `${8 + ((i * 71) % 84)}%`
+      dot.style.top = `${12 + ((i * 47) % 74)}%`
+      stage.append(dot)
+      dots.push(dot)
+    }
+    ctx.stage.append(stage)
+    const field = ambient(dots, {
+      breathe: { scale: 0.06, period: 3 },
+      drift: false,
+      wander: { radius: 46, parallax: 28, idleAfter: 1600, frame: stage },
+    })
+    ctx.onCleanup(() => field.dispose())
   },
 }

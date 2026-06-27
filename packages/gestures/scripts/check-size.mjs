@@ -6,7 +6,12 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-const FULL_BUDGET_BYTES = 6 * 1024
+// Full-surface budget (import * - the worst case). Real apps tree-shake to only
+// the primitives they import, so this is a total-package guardrail, not a per-use
+// cost. Raised to 7.5 kB in 1.2.0 for ambient() - the perpetual self-animation
+// field (breathe/drift/bob/wander + a shared idle/active integrator), the largest
+// single primitive here; importing e.g. just depth() still pays none of it.
+const FULL_BUDGET_BYTES = 7.5 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)
 const distDir = dirname(fileURLToPath(bundleUrl))
