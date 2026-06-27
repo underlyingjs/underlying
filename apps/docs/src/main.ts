@@ -10,6 +10,7 @@ import { bakedClip, lifecycle, momentumScrub, pauseResume, scrub, slowMo } from 
 import { scrollMarquee, scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger, scrollVelocity, smoothScroll } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
+import { presenceList } from './sections/presence'
 import { svgDraw, svgMorph, svgMorphSharp, svgMotionPath } from './sections/svg'
 import { textMask, textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { flip3d, menuOrigin } from './sections/transform3d'
@@ -79,7 +80,7 @@ const pages: Page[] = [
     group: 'Guides',
     title: 'Drag & FLIP',
     blurb: '<code>@underlying/gestures</code> drags and flings with the pointer\'s velocity handed straight into physics; <code>@underlying/flip</code> springs layout transitions to their new places and keeps them <em>interruptible</em>: mutate again mid-flight and each element retargets from its live velocity, never a restart.',
-    sections: [dragPlayground, flipShuffle],
+    sections: [dragPlayground, flipShuffle, presenceList],
   },
   {
     id: 'svg',

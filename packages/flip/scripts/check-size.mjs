@@ -6,7 +6,11 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-const FULL_BUDGET_BYTES = 2 * 1024
+// Full surface includes flipGroup() (auto-FLIP, shared-element, presence enter/exit).
+// The core-only budget guards that flip()/play()/snapshot() callers tree-shake the
+// controller away and keep paying the same small cost as before.
+const FULL_BUDGET_BYTES = 3 * 1024
+const CORE_BUDGET_BYTES = 1.5 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)
 const distDir = dirname(fileURLToPath(bundleUrl))
@@ -39,5 +43,10 @@ const probe = async (fixture) => {
 }
 
 check('@underlying/flip (full surface)', await probe("export * from './index.js'"), FULL_BUDGET_BYTES)
+check(
+  '@underlying/flip (flip/play/snapshot only)',
+  await probe("export { flip, play, snapshot } from './index.js'"),
+  CORE_BUDGET_BYTES,
+)
 
 process.exit(failed ? 1 : 0)
