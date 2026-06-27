@@ -1,0 +1,17 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "underlying-docs": "0.0.0",
+    "underlying-landing": "0.0.0",
+    "@underlying/core": "1.1.0",
+    "@underlying/flip": "1.1.0",
+    "@underlying/gestures": "1.1.0",
+    "@underlying/scroll": "1.1.0",
+    "@underlying/svg": "1.1.0",
+    "@underlying/text": "1.1.0",
+    "@underlying/timeline": "1.1.0",
+    "@underlying/utils": "1.1.0"
+  },
+  "changesets": []
+}
