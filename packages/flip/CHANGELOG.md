@@ -1,5 +1,11 @@
 # @underlying/flip
 
+## 1.2.0-beta.2
+
+### Patch Changes
+
+- @underlying/core@1.2.0-beta.2
+
 ## 1.2.0-beta.1
 
 ### Minor Changes
