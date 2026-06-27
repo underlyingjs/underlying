@@ -13,5 +13,7 @@
     "@underlying/timeline": "1.1.0",
     "@underlying/utils": "1.1.0"
   },
-  "changesets": []
+  "changesets": [
+    "text-masked-reveal"
+  ]
 }
