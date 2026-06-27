@@ -16,6 +16,7 @@
   "changesets": [
     "flip-transitions",
     "gestures-ambient",
-    "text-masked-reveal"
+    "text-masked-reveal",
+    "utils-procedural-easing"
   ]
 }
