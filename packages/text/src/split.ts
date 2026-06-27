@@ -16,6 +16,13 @@ export interface SplitOptions {
   locale?: string
   /** Re-split lines on a width change (lines invalidate on reflow). Default true when 'lines' is requested. */
   resize?: boolean
+  /**
+   * Fired after each in-place REBUILD (font load / width re-split), never on the
+   * initial split. Receives the same Split; chars/words/lines are the same arrays,
+   * repopulated with the fresh pieces - so a consumer (e.g. reveal()'s masks) can
+   * re-apply per-piece state after a reflow.
+   */
+  onResplit?: (split: Split) => void
 }
 
 export interface Split {
@@ -138,20 +145,29 @@ export function split(element: HTMLElement, options: SplitOptions = {}): Split {
     mount()
     measureLines()
   }
+  let observer: ResizeObserver | null = null
+  let timer = 0
+  let api: Split
+  // A re-split rebuilds the pieces in place, then notifies AFTER they exist (and
+  // synchronously, so no paint slips between the rebuild and the consumer's
+  // re-apply). The initial build() never fires onResplit.
   const reSplit = (): void => {
-    if (!reverted) build()
+    if (reverted) return
+    build()
+    options.onResplit?.(api)
   }
 
   build()
 
-  // Web fonts change metrics -> line wrapping. Re-measure once they settle.
-  if (wantLines && typeof document !== 'undefined' && 'fonts' in document) {
+  // Web fonts change metrics -> line wrapping. Re-measure once they settle - but
+  // only when re-splitting is wanted, so `resize:false` fully opts out (a consumer
+  // that armed per-piece state on the initial pieces, e.g. reveal(), is not silently
+  // torn down by a font-load rebuild it never gets to react to).
+  if (watchResize && wantLines && typeof document !== 'undefined' && 'fonts' in document) {
     void document.fonts.ready.then(reSplit)
   }
 
   // Width changes invalidate line membership; debounce and ignore height.
-  let observer: ResizeObserver | null = null
-  let timer = 0
   if (watchResize && wantLines && typeof ResizeObserver !== 'undefined') {
     let lastWidth = element.getBoundingClientRect().width
     observer = new ResizeObserver((entries) => {
@@ -164,7 +180,7 @@ export function split(element: HTMLElement, options: SplitOptions = {}): Split {
     observer.observe(element)
   }
 
-  return {
+  api = {
     chars,
     words,
     lines,
@@ -180,4 +196,5 @@ export function split(element: HTMLElement, options: SplitOptions = {}): Split {
       lines.length = 0
     },
   }
+  return api
 }
