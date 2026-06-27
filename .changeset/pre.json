@@ -14,6 +14,8 @@
     "@underlying/utils": "1.1.0"
   },
   "changesets": [
+    "flip-transitions",
+    "gestures-ambient",
     "text-masked-reveal"
   ]
 }
