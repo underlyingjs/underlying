@@ -84,6 +84,67 @@ interface Reveal { split: Split; finished: Promise<void>; stop(): void; revert()
   },
 }
 
+export const textMask: Section = {
+  id: 'text-mask',
+  group: 'Text',
+  title: 'Masked reveal',
+  tagline: 'Lines rise from behind a hard edge - the hero-headline reveal.',
+  description: `
+    <p>With <code>mask: true</code> each piece is wrapped in a clip box and rises from
+    behind a hard edge on the same live spring - overshoot and all, not baked. The mask
+    is a real clip sized to each line, so resize the window: the lines re-split and the
+    masks follow, and because the reveal already finished the new lines appear settled,
+    not hidden again. The screen reader still reads the headline whole, and under
+    <code>prefers-reduced-motion</code> it shows immediately with no clip and no motion.</p>`,
+  code: `import { reveal } from '@underlying/text'
+
+reveal(headline, { by: 'lines', mask: true, each: 90 })`,
+  api: `interface RevealOptions { /* ...the existing options... */
+  mask?: boolean    // wrap each piece in a clip mask; it rises from behind a hard edge
+  resize?: boolean  // re-split + re-mask + re-settle on reflow (default = mask, lines only)
+  bleed?: number }  // extra bottom clip room for descenders under a tight line-height`,
+  run(ctx) {
+    const headline = h(
+      'h2',
+      { class: 'textdemo__headline', style: 'max-width:15ch;margin-inline:auto' },
+      'We build sites that move. Physics, not curves.',
+    )
+    ctx.stage.append(headline)
+    let by: SplitType = 'lines'
+    let fade = false
+    let played: Reveal | null = null
+    const play = (): void => {
+      played?.revert()
+      const each = by === 'chars' ? 26 : by === 'words' ? 60 : 95
+      played = reveal(headline, fade ? { by, mask: true, each, from: { opacity: 0 } } : { by, mask: true, each })
+    }
+    ctx.onCleanup(() => {
+      played?.revert()
+      headline.remove()
+    })
+    play()
+    ctx.controls.append(
+      button('reveal', play),
+      dropdown(
+        'by',
+        [
+          { value: 'lines', label: 'lines' },
+          { value: 'words', label: 'words' },
+          { value: 'chars', label: 'chars' },
+        ],
+        (value) => {
+          by = value as SplitType
+          play()
+        },
+      ),
+      button('fade too', () => {
+        fade = !fade
+        play()
+      }),
+    )
+  },
+}
+
 export const textScramble: Section = {
   id: 'text-scramble',
   group: 'Text',

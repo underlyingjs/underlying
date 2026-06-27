@@ -11,7 +11,7 @@ import { scrollMarquee, scrollParallax, scrollScrub, scrollSnap, scrollTo, scrol
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
 import { svgDraw, svgMorph, svgMorphSharp, svgMotionPath } from './sections/svg'
-import { textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
+import { textMask, textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { flip3d, menuOrigin } from './sections/transform3d'
 import { namedEases } from './sections/eases'
 import { reducedMotion } from './sections/a11y'
@@ -93,7 +93,7 @@ const pages: Page[] = [
     group: 'Guides',
     title: 'Text',
     blurb: '<code>@underlying/text</code> splits text into chars, words and lines you can animate - without breaking accessibility: the screen reader reads it whole, copy/paste is intact, emoji stay whole. <code>reveal()</code> springs the pieces in; <code>scramble()</code> and <code>typewriter()</code> write content with the final text always the accessible name.',
-    sections: [textSplit, textReveal, textScramble, textTypewriter],
+    sections: [textSplit, textReveal, textMask, textScramble, textTypewriter],
   },
   {
     id: 'accessibility',
