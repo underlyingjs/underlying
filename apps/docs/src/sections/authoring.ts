@@ -1,4 +1,4 @@
-import { animate, region, setStyle, staggerDelay, type StaggerOrigin } from '@underlying/core'
+import { animate, from, region, setStyle, staggerDelay, type StaggerOrigin } from '@underlying/core'
 import { button, h, type Section } from '../showcase'
 
 // ---- Expressive stagger: a center-out grid reveal -------------------------
@@ -124,6 +124,47 @@ animate(cards, { x: '+=120' })`,
 
     ctx.onCleanup(() => animate(cards, { x: 0, rotate: 0 }, { duration: 0 }))
     ctx.controls.append(button('fan out', fan), button('nudge +70', nudge), button('gather', gather))
+  },
+}
+
+// ---- Entrances: from() / fromTo() -----------------------------------------
+
+export const entrance: Section = {
+  id: 'authoring-entrance',
+  group: 'Authoring',
+  title: 'from() & fromTo()',
+  tagline: 'Animate INTO a resting state - a staggered entrance, no manual setStyle, no flash.',
+  description: `
+    <p>The reveal every portfolio opens with: cards rise and fade in as the section
+    scrolls into view. <code>from()</code> parks each element at a from-state
+    synchronously (no flash), captures its <em>natural</em> resting value as the
+    target, then springs it home - so you declare only where it comes <em>from</em>.
+    With a <code>staggerDelay()</code> every card holds its from-state through its own
+    delay, like a real cascade. <code>fromTo()</code> takes both ends explicitly.
+    Under reduced motion the from-set is skipped - cards appear at rest.</p>`,
+  code: `import { from, fromTo, staggerDelay } from '@underlying/core'
+
+// rise + fade into the NATURAL resting state, cascaded
+from('.card', { y: 28, opacity: 0 }, {
+  delay: staggerDelay({ each: 70 }), stiffness: 300, damping: 26,
+})
+
+// both ends explicit
+fromTo(badge, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1 })`,
+  api: `from(target, fromState, options?): AnimationHandle    // to = each element's current value
+fromTo(target, fromState, toState, options?): AnimationHandle`,
+  run(ctx) {
+    const cards = Array.from({ length: 4 }, (_, i) => h('div', { class: 'panel' }, String(i + 1)))
+    const row = h('div', { class: 'panelrow' }, ...cards)
+    ctx.stage.append(row)
+
+    // from() captures the resting state, so a bare replay springs each card home from the from-state.
+    const reveal = (): void =>
+      void from(cards, { y: 28, opacity: 0 }, { delay: staggerDelay({ each: 70 }), stiffness: 300, damping: 26 })
+
+    ctx.onCleanup(() => animate(cards, { y: 0, opacity: 1 }, { duration: 0 }))
+    reveal()
+    ctx.controls.append(button('replay entrance', reveal))
   },
 }
 
