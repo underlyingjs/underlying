@@ -81,6 +81,22 @@ export type AnimateTargets = Partial<Record<Channel, ResolvableNumeric>> &
 type ResolvedTargets = Partial<Record<Channel, number | NumericKeyframes>> &
   Partial<Record<AnimateProperty, AnimateValue | AnimateKeyframes>>
 
+/** A from-state numeric value: absolute, a relative string, or a per-target function (no keyframes - a from-state is one value). */
+type FromNumeric = number | RelativeValue | ValueFn<number | RelativeValue>
+/** A from-state registry value: absolute, a relative string, or a per-target function (no keyframes). */
+type FromProperty = AnimateValue | RelativeValue | ValueFn<AnimateValue | RelativeValue>
+
+/**
+ * An entrance from-state: the same keys and value forms as a target (channels
+ * plus arbitrary CSS properties; absolute, relative `'+='`, or a per-target
+ * function), but a single value per key - a from-state is one point, not a
+ * keyframe path. Resolved per element against the live value at the call.
+ */
+export type FromTargets = Partial<Record<Channel, FromNumeric>> & Partial<Record<AnimateProperty, FromProperty>>
+
+/** The absolute from-state setStyle() teleports to, after per-element resolution. */
+type ResolvedFrom = Partial<Record<Channel, number>> & Partial<Record<AnimateProperty, AnimateValue>>
+
 export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
   /** ms - providing a duration switches to the tween escape hatch. */
   duration?: number
@@ -94,6 +110,17 @@ export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
   delay?: number | DelayFn
   /** Element-level reduced-motion strategy - 'fade' keeps opacity AND colors animated. */
   reducedMotion?: ReducedMotionBehavior
+  /**
+   * Entrance from-state. Each key is set to its from-value SYNCHRONOUSLY at the
+   * call (no flash, no manual setStyle), then animated to `targets`. With a
+   * stagger `delay`, every element is parked at its from-state immediately and
+   * holds it through its own delay, like a real entrance. Same value forms as a
+   * target (absolute, relative `'+='`, per-target function), resolved per element
+   * against the live value. Under reduced motion the from-set is skipped: the
+   * element ends at `targets`, never stranded at the from-state. The `from()` and
+   * `fromTo()` helpers are thin sugar over this option.
+   */
+  from?: FromTargets
   /** Fired once when the animation begins. */
   onStart?(this: object, handle: AnimationHandle): void
   /**
@@ -951,6 +978,33 @@ const resolveTargetsFor = (
   return out as ResolvedTargets
 }
 
+/** Resolve a from-state for one element to absolute teleport values (functions/relatives against the live value). */
+const resolveFromFor = (element: HTMLElement, from: FromTargets, index: number, total: number): ResolvedFrom =>
+  // A from-state is scalar-only, so the resolved shape never carries keyframe arrays.
+  resolveTargetsFor(element, from as AnimateTargets, index, total) as ResolvedFrom
+
+/**
+ * Capture one element's NATURAL (current) value for each given key, synchronously
+ * - the to-state `from()` animates back to. A numeric channel reads its live
+ * animatable value (mid-flight if interrupted) or the CSS-neutral INITIAL when
+ * untouched; any other property reads computed/inline style. Must run BEFORE the
+ * from-set moves the element, so the captured value is the real resting state.
+ */
+const captureNatural = (element: HTMLElement, keys: string[]): ResolvedTargets => {
+  const entry = registry.get(element)
+  const read = readStyle(element)
+  const out: Record<string, AnimateValue> = {}
+  for (const key of keys) {
+    if (NUMERIC_CHANNELS.has(key)) {
+      const value = entry?.values[key as Channel]
+      out[key] = value !== undefined ? value.get() : INITIAL[key as Channel]
+    } else {
+      out[key] = read.get(key)
+    }
+  }
+  return out as ResolvedTargets
+}
+
 /** True if any target value needs per-element resolution (a function, or a relative string incl. inside keyframes). */
 const hasResolvable = (targets: AnimateTargets): boolean => {
   for (const key of Object.keys(targets)) {
@@ -1035,6 +1089,7 @@ const deferredStart = (
 const perElementOptions = (options: AnimateOptions): AnimateOptions => {
   const out: AnimateOptions = { ...options }
   delete out.delay
+  delete out.from
   delete out.onStart
   delete out.onUpdate
   delete out.onComplete
@@ -1062,7 +1117,7 @@ export function animate(target: AnimationTarget, targets: AnimateTargets, option
   // Fast path: one element, no delay, no function/relative - today's exact behavior
   // (lifecycle included), with no per-element pre-pass allocation. isHTMLElement is
   // SSR-safe (a bare `instanceof HTMLElement` throws server-side).
-  if (isHTMLElement(target) && options.delay === undefined && !hasResolvable(targets)) {
+  if (isHTMLElement(target) && options.delay === undefined && options.from === undefined && !hasResolvable(targets)) {
     return animateOne(target, targets, options)
   }
 
@@ -1070,6 +1125,9 @@ export function animate(target: AnimationTarget, targets: AnimateTargets, option
   if (elements.length === 0) return RESOLVED
   const total = elements.length
   const scheduler = options.scheduler ?? getSharedScheduler()
+  const behavior = options.reducedMotion ?? getReducedMotionBehavior()
+  const reduced = behavior !== 'allow' && prefersReducedMotion()
+  const fromValues = options.from
   const delayOf: DelayFn | null =
     options.delay === undefined
       ? null
@@ -1079,6 +1137,16 @@ export function animate(target: AnimationTarget, targets: AnimateTargets, option
   const optionsForOne = perElementOptions(options)
 
   const children = elements.map((element, index) => {
+    // Immediate-render the from-state synchronously, here in the call frame, for
+    // EVERY element - so a staggered element is parked at its from-state and holds
+    // it through its own delay before deferredStart runs. Skipped under reduced
+    // motion, where the run settles straight to the to-state (no stranded from).
+    if (fromValues !== undefined && !reduced) {
+      // Pass the resolved scheduler so the from-set binds the element to the SAME
+      // clock the animation runs on - else setStyle defaults to the shared
+      // scheduler and the spring, on the injected one, never drives the channel.
+      setStyle(element, resolveFromFor(element, fromValues, index, total), { scheduler })
+    }
     const d = delayOf !== null ? delayOf(index, total) : 0
     if (d <= 0) return startResolved(element, targets, index, total, optionsForOne)
     return deferredStart(element, targets, optionsForOne, index, total, d, scheduler)
@@ -1095,6 +1163,55 @@ export function animate(target: AnimationTarget, targets: AnimateTargets, option
     return out
   }
   return withLifecycle(base, children, options, readValues, scheduler)
+}
+
+/**
+ * Entrance: animate each target element FROM `fromValues` INTO its natural
+ * (current) state, with no manual setStyle first. Each element's current value is
+ * captured per key as its own to-state (so a set animates to PER-element naturals),
+ * the from-state is set synchronously (no flash, held through any stagger delay),
+ * then the element springs/tweens back. One aggregate handle drives the whole set.
+ *
+ * Same options as `animate()` - `delay`/`staggerDelay()`, lifecycle, spring config,
+ * reduced motion (under which each element ends at its natural state, not the
+ * from-state). If an element is mid-animation, the captured to is its live value,
+ * so the hand-off has no jump. From-values take the same forms as a target
+ * (absolute, relative `'+='`, per-target function), resolved against the live value.
+ */
+export function from(target: AnimationTarget, fromValues: FromTargets, options: AnimateOptions = {}): AnimationHandle {
+  const elements = resolveTargets(target)
+  if (elements.length === 0) return RESOLVED
+  const keys = Object.keys(fromValues)
+  // Capture the natural to-state NOW, per element, before animate() sets the
+  // from-state. The to is handed to animate() as a per-target function that just
+  // returns the pre-captured constant, so its start-time resolution is exact.
+  const captured = elements.map((element) => captureNatural(element, keys))
+  const to: AnimateTargets = {}
+  for (const key of keys) {
+    ;(to as Record<string, ValueFn<AnimateValue | AnimateKeyframes>>)[key] = (index) =>
+      (captured[index] as Record<string, AnimateValue | AnimateKeyframes>)[key]!
+  }
+  // Pass the resolved element array (a stable snapshot) so animate() does not
+  // re-query a selector and capture/animate a different set.
+  return animate(elements, to, { ...options, from: fromValues })
+}
+
+/**
+ * Animate each target element FROM an explicit `fromValues` TO an explicit
+ * `toValues`. The from-state is set synchronously (no flash, held through any
+ * stagger delay), then the element animates to the to-state. Thin sugar over
+ * `animate(target, toValues, { ...options, from: fromValues })`: `toValues` keep
+ * full target parity (keyframes, relatives, per-target functions); `fromValues`
+ * are a single per-key state. Shares every `animate()` option (stagger, lifecycle,
+ * spring config, reduced motion - under which it settles straight to `toValues`).
+ */
+export function fromTo(
+  target: AnimationTarget,
+  fromValues: FromTargets,
+  toValues: AnimateTargets,
+  options: AnimateOptions = {},
+): AnimationHandle {
+  return animate(target, toValues, { ...options, from: fromValues })
 }
 
 export interface SetStyleOptions {

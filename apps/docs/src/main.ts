@@ -5,7 +5,7 @@ import { colors, composite, keyframes, lengthsUnits } from './sections/value-mod
 import { composedStyles } from './sections/compose'
 import { carousel, gestures, pointerAmbient, pointerCursor, pointerDepth, pointerInteractive, pointerMagnetic, pointerQuick, pointerTilt, setRelease, unifiedInput } from './sections/gestures'
 import { composition } from './sections/composition'
-import { hoverWave, regionTeardown, relativeFanout, staggerGrid } from './sections/authoring'
+import { entrance, hoverWave, regionTeardown, relativeFanout, staggerGrid } from './sections/authoring'
 import { bakedClip, lifecycle, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
 import { scrollMarquee, scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger, scrollVelocity, smoothScroll } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
@@ -52,8 +52,8 @@ const pages: Page[] = [
     id: 'composition',
     group: 'Guides',
     title: 'Composition',
-    blurb: 'Cascades and ordered chains, then the authoring ergonomics for real apps: an expressive <code>staggerDelay()</code> wave (origin, 2D grid, axis, easing), multi-target <code>animate()</code> over an array / NodeList / selector, relative (<code>+=</code>) and per-target function values, and a <code>region()</code> teardown seam with media-query <code>responsive()</code> setups.',
-    sections: [composition, staggerGrid, hoverWave, relativeFanout, regionTeardown],
+    blurb: 'Cascades and ordered chains, then the authoring ergonomics for real apps: an expressive <code>staggerDelay()</code> wave (origin, 2D grid, axis, easing), multi-target <code>animate()</code> over an array / NodeList / selector, <code>from()</code> / <code>fromTo()</code> entrances, relative (<code>+=</code>) and per-target function values, and a <code>region()</code> teardown seam with media-query <code>responsive()</code> setups.',
+    sections: [composition, staggerGrid, hoverWave, entrance, relativeFanout, regionTeardown],
   },
   {
     id: 'playback',

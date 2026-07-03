@@ -161,6 +161,35 @@ Without a duration the waypoints are chained springs (settle at each, then
 retarget); with a duration they become an evenly-split piecewise tween that
 rides the compositor (WAAPI multi-keyframe) when eligible.
 
+## Entrances - `from()` / `fromTo()`
+
+Animate _into_ a resting state instead of out of one, with no manual `setStyle`
+first. The from-state is parked synchronously in the call frame (no flash), then
+the element springs to its target:
+
+```ts
+import { from, fromTo } from '@underlying/core'
+
+from(card, { y: 24, opacity: 0 })                 // rises into its NATURAL resting state
+fromTo(card, { y: 24, opacity: 0 }, { y: 0, opacity: 1 }) // explicit from and to
+```
+
+`from()` captures each element's current value per key as the to-state, so a set
+returns to _its own_ resting values. `fromTo()` is sugar over
+`animate(target, to, { from })` - the `to` keeps full target parity (keyframes,
+relative `'+='`, per-target functions); the from-state is one value per key.
+
+Both share every `animate()` option. With a stagger `delay` (or `staggerDelay()`)
+every element is parked at its from-state immediately and holds it through its own
+delay, like a real entrance:
+
+```ts
+from('.card', { y: 24, opacity: 0 }, { delay: staggerDelay({ each: 60 }) })
+```
+
+Under reduced motion the from-set is skipped entirely: the element settles at its
+target, never stranded at the from-state.
+
 ## Teleport & gesture handoff
 
 ```ts
