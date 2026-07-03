@@ -6,7 +6,7 @@ import {
   type AnimateTargets,
   type AnimationTarget,
 } from '../dom/animate'
-import { resolveTargets } from '../dom/resolve-target'
+import { resolveTargets, type AnimatableElement } from '../dom/resolve-target'
 import type { AnimationHandle } from '../value/animatable'
 import { stagger as staggerImpl, type StaggerOptions } from './composition'
 import { responsive as responsiveImpl, type ResponsiveSetup } from './responsive'
@@ -63,7 +63,7 @@ const safely = (fn: () => void): void => {
 
 export function region(setup?: (region: Region) => void): Region {
   const disposers: Array<() => void> = []
-  const touched = new Set<HTMLElement>()
+  const touched = new Set<AnimatableElement>()
   let reverted = false
 
   const instance: Region = {

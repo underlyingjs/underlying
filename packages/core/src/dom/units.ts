@@ -17,7 +17,7 @@ const positive = (value: number): number | null =>
  * makes the caller snap rather than mix incompatible units.
  */
 export function createMeasure(
-  element: HTMLElement,
+  element: Element,
   property: string,
   read: StyleReader,
 ): MeasureUnit {

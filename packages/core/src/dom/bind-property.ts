@@ -1,9 +1,16 @@
 import { getSharedScheduler } from '../scheduler/shared'
 import type { Scheduler } from '../scheduler/scheduler'
 import { toKebab } from './read-style'
+import type { AnimatableElement } from './resolve-target'
 
 export interface BindPropertyOptions {
   scheduler?: Scheduler
+  /**
+   * Where the formatted value is written. 'style' (default) sets the inline style
+   * property (kebab-cased); 'attr' calls setAttribute with the bare `property`
+   * name - the seam for SVG/element attribute animation (viewBox, r, points).
+   */
+  target?: 'style' | 'attr'
 }
 
 /**
@@ -31,13 +38,15 @@ export interface PropertyBinding {
  * channel that jitters below its format precision produces no DOM write at all.
  */
 export function bindProperty(
-  element: HTMLElement,
+  element: AnimatableElement,
   property: string,
   source: FormatSource,
   options: BindPropertyOptions = {},
 ): PropertyBinding {
   const scheduler = options.scheduler ?? getSharedScheduler()
-  const kebab = toKebab(property)
+  const attr = options.target === 'attr'
+  // Attributes take the bare name verbatim (viewBox, stroke-width); style takes kebab.
+  const name = attr ? property : toKebab(property)
   let dirty = false
   let lastWritten: string | null = null
   let cancelFlush: (() => void) | null = null
@@ -46,7 +55,8 @@ export function bindProperty(
     const value = source.format()
     if (value === lastWritten) return // byte-identical: no DOM write
     lastWritten = value
-    element.style.setProperty(kebab, value)
+    if (attr) element.setAttribute(name, value)
+    else element.style.setProperty(name, value)
   }
 
   const scheduleFlush = (): void => {

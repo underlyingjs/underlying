@@ -1,4 +1,4 @@
-import { animate } from '@underlying/core'
+import { animate, filter } from '@underlying/core'
 import { button, h, type Section } from '../showcase'
 
 // ---------------------------------------------------------------------------
@@ -144,6 +144,83 @@ animate(el, { x: [0, 160, 80] }, options?)`,
       button('spring chain', () => animate(chip, { x: [0, 180, 60, 140] })),
       button('duration 900ms', () => animate(chip, { x: [0, 180, 60, 140] }, { duration: 900 })),
       button('reset', () => animate(chip, { x: 0 })),
+    )
+  },
+}
+
+// ---------------------------------------------------------------------------
+
+export const expressiveKeyframes: Section = {
+  id: 'expressive-keyframes',
+  group: 'Value model',
+  title: 'Expressive keyframes',
+  tagline: 'Per-segment position and easing, plus null holds - one waypoint list, full control.',
+  description: `
+    <p>A keyframe entry can be a <code>{ value, at, ease }</code> stop instead of a
+    bare value. <code>at</code> places the waypoint at a fraction of the duration,
+    <code>ease</code> sets that segment's easing, and a <code>null</code> mid-array
+    <em>holds</em> the previous value (a dwell). Here a chip darts out fast, lingers,
+    then eases back - the shaped move a hand-tuned entrance needs.</p>`,
+  code: `import { animate } from '@underlying/core'
+
+animate(chip, {
+  x: [0, { value: 200, at: 0.2, ease: 'power3.out' }, null, 40],
+}, { duration: 1200 })  // dart out, hold, ease back`,
+  api: `type KeyframeStop = { value: number | string | null; at?: number; ease?: Easing | string }
+// null mid-array = hold the previous value`,
+  run(ctx) {
+    const chip = h('div', { class: 'obj obj--chip' })
+    ctx.stage.append(h('div', { style: 'position:relative;width:100%;height:60px;display:flex;align-items:center' }, chip))
+    const play = (): void =>
+      void animate(chip, { x: [0, { value: 220, at: 0.22, ease: 'power3.out' }, null, 40] }, { duration: 1200 })
+    ctx.onCleanup(() => animate(chip, { x: 0 }, { duration: 0 }))
+    ctx.controls.append(button('play', play), button('reset', () => animate(chip, { x: 0 })))
+  },
+}
+
+// ---------------------------------------------------------------------------
+
+export const channels: Section = {
+  id: 'filter-attr-autoalpha',
+  group: 'Value model',
+  title: 'Filters, attributes, autoAlpha',
+  tagline: 'Animate CSS filters, SVG attributes, and opacity-with-visibility - all one handle.',
+  description: `
+    <p>Three named surfaces over the same engine. <code>filter()</code> builds a
+    typed, canonical-order filter string. An <code>attr:</code> key animates an
+    element or SVG attribute (here a circle's <code>r</code> and <code>fill</code>)
+    through <code>setAttribute</code>. <code>autoAlpha</code> fades opacity and flips
+    <code>visibility</code> at 0, so a hidden element stops catching the pointer.</p>`,
+  code: `import { animate, filter } from '@underlying/core'
+
+animate(hero, { filter: filter({ blur: 6, saturate: 1.4 }) })
+animate(circle, { 'attr:r': [30, 52], 'attr:fill': '#ff5470' })
+animate(card, { autoAlpha: 0 })  // opacity 0 AND visibility:hidden`,
+  api: `filter(spec): string           // { blur, brightness, hueRotate, dropShadow, ... }
+animate(el, { 'attr:name': value })  // setAttribute (SVG viewBox / r / points)
+animate(el, { autoAlpha: 0 })        // opacity + visibility`,
+  run(ctx) {
+    const wrap = h('div', { style: 'display:flex;gap:28px;align-items:center;flex-wrap:wrap' })
+    wrap.innerHTML =
+      '<svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">' +
+      '<circle class="uc-circle" cx="60" cy="60" r="30" fill="#5b8cff" /></svg>'
+    const tile = h('div', { class: 'obj', style: 'width:120px;height:120px;border-radius:16px;background:#5b8cff' })
+    wrap.append(tile)
+    ctx.stage.append(wrap)
+    const circle = wrap.querySelector('.uc-circle') as SVGElement
+
+    ctx.onCleanup(() => {
+      animate(tile, { filter: filter({}), autoAlpha: 1 }, { duration: 0 })
+      animate(circle, { 'attr:r': 30, 'attr:fill': '#5b8cff' }, { duration: 0 })
+    })
+    ctx.controls.append(
+      button('filter', () => animate(tile, { filter: filter({ blur: 6, saturate: 1.5 }) })),
+      button('attr morph', () => animate(circle, { 'attr:r': [30, 52], 'attr:fill': '#ff5470' })),
+      button('autoAlpha 0', () => animate(tile, { autoAlpha: 0 })),
+      button('reset', () => {
+        animate(tile, { filter: filter({}), autoAlpha: 1 })
+        animate(circle, { 'attr:r': 30, 'attr:fill': '#5b8cff' })
+      }),
     )
   },
 }

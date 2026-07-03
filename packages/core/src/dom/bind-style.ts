@@ -1,6 +1,7 @@
 import { getSharedScheduler } from '../scheduler/shared'
 import type { Scheduler } from '../scheduler/scheduler'
 import type { Animatable } from '../value/animatable'
+import type { AnimatableElement } from './resolve-target'
 import {
   formatOrigin,
   formatTransform,
@@ -20,6 +21,12 @@ export type StyleBindings = Partial<Record<TransformChannel | OriginChannel, Ani
 export interface BindStyleOptions {
   /** Must be the scheduler driving the bound animatables. Defaults to the shared one. */
   scheduler?: Scheduler
+  /**
+   * When set, the opacity write also toggles `visibility` - `hidden` at 0, cleared
+   * otherwise - so a fully transparent element stops capturing pointer events (the
+   * autoAlpha behavior). No effect without an opacity binding.
+   */
+  autoAlpha?: boolean
 }
 
 /**
@@ -29,11 +36,12 @@ export interface BindStyleOptions {
  * Returns a dispose function.
  */
 export function bindStyle(
-  element: HTMLElement,
+  element: AnimatableElement,
   bindings: StyleBindings,
   options: BindStyleOptions = {},
 ): () => void {
   const scheduler = options.scheduler ?? getSharedScheduler()
+  const autoAlpha = options.autoAlpha === true
   const { opacity } = bindings
   const transformBindings = TRANSFORM_KEYS.map((key) => [key, bindings[key]] as const).filter(
     (entry): entry is readonly [TransformChannel, Animatable] => entry[1] !== undefined,
@@ -61,7 +69,12 @@ export function bindStyle(
   }
 
   const writeOpacity = () => {
-    if (opacity !== undefined) element.style.opacity = String(opacity.get())
+    if (opacity === undefined) return
+    const value = opacity.get()
+    element.style.opacity = String(value)
+    // autoAlpha: a fully transparent element also goes visibility:hidden so it
+    // drops out of hit-testing; any non-zero opacity clears it back to visible.
+    if (autoAlpha) element.style.visibility = value <= 0.0001 ? 'hidden' : ''
   }
 
   const flush = () => {

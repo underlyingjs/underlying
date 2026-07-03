@@ -32,7 +32,11 @@ export type {
   SetStyleOptions,
   ValueFn,
 } from './dom/animate'
+export type { KeyframeInput, KeyframeStop } from './dom/keyframes'
+export { filter } from './dom/filter'
+export type { FilterSpec } from './dom/filter'
 export { resolveTargets } from './dom/resolve-target'
+export type { AnimatableElement } from './dom/resolve-target'
 export { registerValueType } from './value/registry'
 export { numberValueType } from './value/types/number'
 export { lengthValueType } from './value/types/length'

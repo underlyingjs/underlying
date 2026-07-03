@@ -15,9 +15,18 @@ import { waitFrames } from '../compose/wait'
 import type { DelayFn } from '../compose/stagger-delay'
 import { bindProperty, type PropertyBinding } from './bind-property'
 import { bindStyle } from './bind-style'
-import { normalizeKeyframes, runKeyframeChain, type ChainOps, type KeyframeChain } from './keyframes'
-import { readStyle, toKebab, type StyleReader } from './read-style'
-import { isHTMLElement, resolveTargets, type AnimationTarget } from './resolve-target'
+import {
+  fillOffsets,
+  normalizeKeyframes,
+  runKeyframeChain,
+  type ChainConfig,
+  type ChainOps,
+  type KeyframeChain,
+  type KeyframeInput,
+  type NormalizedKeyframes,
+} from './keyframes'
+import { readAttribute, readStyle, toKebab, type StyleReader } from './read-style'
+import { isHTMLElement, resolveTargets, type AnimatableElement, type AnimationTarget } from './resolve-target'
 import {
   needsResolve,
   resolveValue,
@@ -44,17 +53,25 @@ type Channel = TransformChannel | OriginChannel | 'opacity'
 /** A CSS value the registry path animates: a number or a CSS string. */
 export type AnimateValue = number | string
 
-/** Keyframe waypoints. A null is only valid at index 0, meaning "from the current value". */
-export type AnimateKeyframes = ReadonlyArray<AnimateValue | null>
-export type NumericKeyframes = ReadonlyArray<number | null>
+/**
+ * Keyframe waypoints. Each entry is a bare value, `null` (from-current at index 0,
+ * a hold later), or an expressive `{ value, at, ease }` stop for per-segment
+ * position and easing.
+ */
+export type AnimateKeyframes = ReadonlyArray<KeyframeInput<AnimateValue>>
+export type NumericKeyframes = ReadonlyArray<KeyframeInput<number>>
 
 /**
  * Any property key that is NOT one of the five numeric channels: a
- * CSSStyleDeclaration property (camelCase) or a custom property. A typo like
- * `{ opactiy: 1 }` does not compile. (CSSStyleDeclaration method names type-check
- * as keys - accepted noise.)
+ * CSSStyleDeclaration property (camelCase), a custom property, or an `attr:name`
+ * key routed to setAttribute (SVG/element attributes - viewBox, r, points). A typo
+ * like `{ opactiy: 1 }` does not compile. (CSSStyleDeclaration method names
+ * type-check as keys - accepted noise.)
  */
-export type AnimateProperty = Exclude<Extract<keyof CSSStyleDeclaration, string>, Channel> | `--${string}`
+export type AnimateProperty = Exclude<Extract<keyof CSSStyleDeclaration, string>, Channel> | `--${string}` | `attr:${string}`
+
+/** A numeric-channel key: a transform/origin channel, opacity, or the autoAlpha alias (opacity + visibility). */
+type NumericKey = Channel | 'autoAlpha'
 
 export type { AnimationTarget } from './resolve-target'
 export type { RelativeValue, ValueFn } from './resolve-value'
@@ -74,7 +91,7 @@ type ResolvableProperty =
  * the current value, or a per-target function `(index, element, count) => value`.
  * The keys are unchanged, so a typo like `{ opactiy: 1 }` still does not compile.
  */
-export type AnimateTargets = Partial<Record<Channel, ResolvableNumeric>> &
+export type AnimateTargets = Partial<Record<NumericKey, ResolvableNumeric>> &
   Partial<Record<AnimateProperty, ResolvableProperty>>
 
 /** The absolute targets animateOne() consumes after the per-element pre-pass (no functions/relatives). */
@@ -92,10 +109,10 @@ type FromProperty = AnimateValue | RelativeValue | ValueFn<AnimateValue | Relati
  * function), but a single value per key - a from-state is one point, not a
  * keyframe path. Resolved per element against the live value at the call.
  */
-export type FromTargets = Partial<Record<Channel, FromNumeric>> & Partial<Record<AnimateProperty, FromProperty>>
+export type FromTargets = Partial<Record<NumericKey, FromNumeric>> & Partial<Record<AnimateProperty, FromProperty>>
 
 /** The absolute from-state setStyle() teleports to, after per-element resolution. */
-type ResolvedFrom = Partial<Record<Channel, number>> & Partial<Record<AnimateProperty, AnimateValue>>
+type ResolvedFrom = Partial<Record<NumericKey, number>> & Partial<Record<AnimateProperty, AnimateValue>>
 
 export interface AnimateOptions extends Omit<SpringOptions, 'reducedMotion'> {
   /** ms - providing a duration switches to the tween escape hatch. */
@@ -206,7 +223,18 @@ interface DelegatedTween {
 interface GroupEntry {
   group: ChannelGroup
   binding: PropertyBinding
+  /** 'attr' groups clean up via removeAttribute; 'style' via style.removeProperty. */
+  target: PropTarget
+  /** The bare DOM name written (an attribute name, or the style property). */
+  name: string
 }
+
+/** Where a registry-property group writes: an inline style property or an element attribute. */
+type PropTarget = 'style' | 'attr'
+const ATTR_PREFIX = 'attr:'
+const isAttrKey = (key: string): boolean => key.startsWith(ATTR_PREFIX)
+/** The bare DOM name behind a target key ('attr:r' -> 'r'; a style key is itself). */
+const bareName = (key: string): string => (key.startsWith(ATTR_PREFIX) ? key.slice(ATTR_PREFIX.length) : key)
 
 interface ElementEntry {
   values: Partial<Record<Channel, Animatable>>
@@ -218,14 +246,16 @@ interface ElementEntry {
   chains: Map<string, () => void>
   /** Bumped on every animation intent on this element, so a pending staggered start can tell it was superseded. */
   generation: number
+  /** Once autoAlpha touched this element, its opacity write also toggles visibility. */
+  autoAlpha: boolean
 }
 
 /** Mark a new animation intent on the element and return the fresh generation token. */
 const markIntent = (entry: ElementEntry): number => (entry.generation += 1)
 
-const registry = new WeakMap<HTMLElement, ElementEntry>()
+const registry = new WeakMap<AnimatableElement, ElementEntry>()
 
-const supportsWaapi = (element: HTMLElement): boolean =>
+const supportsWaapi = (element: AnimatableElement): boolean =>
   typeof element.animate === 'function' &&
   typeof CSS !== 'undefined' &&
   typeof CSS.supports === 'function' &&
@@ -289,16 +319,16 @@ const ensureChannel = (entry: ElementEntry, channel: Channel): { value: Animatab
   return { value, created: true }
 }
 
-const rebind = (entry: ElementEntry, element: HTMLElement): void => {
+const rebind = (entry: ElementEntry, element: AnimatableElement): void => {
   entry.disposeBinding()
-  entry.disposeBinding = bindStyle(element, entry.values, { scheduler: entry.scheduler })
+  entry.disposeBinding = bindStyle(element, entry.values, { scheduler: entry.scheduler, autoAlpha: entry.autoAlpha })
 }
 
 type NumericNorm = { teleport: number | undefined; waypoints: number[] }
 
 const delegateMultiKeyframe = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   scalars: Array<[Channel, number]>,
   keyframeNorms: Array<[Channel, NumericNorm]>,
   durationMs: number,
@@ -566,25 +596,28 @@ const startGroupMotion = (
 /** Create a cold group, start its motion BEFORE binding (so a skip settle rides the synchronous bind write), then store it. */
 const installGroup = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   property: string,
   type: ValueType,
   start: ParsedValue,
   startMotion: (group: ChannelGroup) => AnimationHandle,
+  target: PropTarget = 'style',
 ): AnimationHandle => {
+  const name = target === 'attr' ? bareName(property) : property
   const group = channelGroup(type, start, { scheduler: entry.scheduler })
   const handle = startMotion(group)
-  const binding = bindProperty(element, property, group, { scheduler: entry.scheduler })
-  entry.groups.set(property, { group, binding })
+  const binding = bindProperty(element, name, group, { scheduler: entry.scheduler, target })
+  entry.groups.set(property, { group, binding, target, name })
   return handle
 }
 
 /** Write a literal value, dropping any group on the property. Resolves immediately, no warning. */
 const writeLiteral = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   property: string,
   value: AnimateValue,
+  target: PropTarget = 'style',
 ): AnimationHandle => {
   const existing = entry.groups.get(property)
   if (existing !== undefined) {
@@ -592,32 +625,36 @@ const writeLiteral = (
     existing.group.dispose()
     entry.groups.delete(property)
   }
-  element.style.setProperty(toKebab(property), String(value))
+  if (target === 'attr') element.setAttribute(bareName(property), String(value))
+  else element.style.setProperty(toKebab(property), String(value))
   return RESOLVED
 }
 
 /** Drop a property's group: cannot decompose the target, write it literally and warn. */
 const snapLiteral = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   property: string,
   value: AnimateValue,
+  target: PropTarget = 'style',
 ): AnimationHandle => {
   warnOnce(`snap:${property}`, `cannot animate "${property}" to "${String(value)}"; snapped`)
-  return writeLiteral(entry, element, property, value)
+  return writeLiteral(entry, element, property, value, target)
 }
 
 const animateProperty = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   property: string,
   value: AnimateValue,
   read: StyleReader,
   options: AnimateOptions,
   behavior: ReducedMotionBehavior,
   reduced: boolean,
+  channel: PropTarget = 'style',
 ): AnimationHandle => {
-  const type = resolveValueType(property)
+  const name = bareName(property)
+  const type = resolveValueType(name)
   const begin = (group: ChannelGroup, target: ParsedValue): AnimationHandle =>
     startGroupMotion(group, target, type, options, behavior, reduced)
   const existing = entry.groups.get(property)
@@ -626,9 +663,9 @@ const animateProperty = (
     const group = existing.group
     // A keyword target (e.g. 'none') resolves against the live shape.
     const target = type.parse(value) ?? type.reconcile?.(String(value), group.shape) ?? null
-    if (target === null) return snapLiteral(entry, element, property, value)
+    if (target === null) return snapLiteral(entry, element, property, value, channel)
     if (target.shape === group.shape) return begin(group, target)
-    const multiplier = type.convert?.(group.shape, target.shape, createMeasure(element, property, read)) ?? null
+    const multiplier = type.convert?.(group.shape, target.shape, createMeasure(element, name, read)) ?? null
     if (multiplier !== null) {
       group.rebase(multiplier, target.shape)
       return begin(group, target)
@@ -637,57 +674,97 @@ const animateProperty = (
     existing.binding.dispose()
     existing.group.dispose()
     entry.groups.delete(property)
-    warnOnce(`snap:${property}`, `"${property}" changed shape (${group.shape} -> ${target.shape}); snapped`)
-    return installGroup(entry, element, property, type, target, () => RESOLVED)
+    warnOnce(`snap:${property}`, `"${name}" changed shape (${group.shape} -> ${target.shape}); snapped`)
+    return installGroup(entry, element, property, type, target, () => RESOLVED, channel)
   }
 
   // Cold start.
-  const raw = read.get(property)
+  const raw = read.get(name)
   const parsedTarget = type.parse(value)
   if (parsedTarget === null) {
     // Keyword target: synthesize against the current computed shape.
     const current = type.parse(raw)
     if (current !== null && type.reconcile !== undefined) {
       const recon = type.reconcile(String(value), current.shape)
-      if (recon !== null) return installGroup(entry, element, property, type, current, (group) => begin(group, recon))
+      if (recon !== null)
+        return installGroup(entry, element, property, type, current, (group) => begin(group, recon), channel)
     }
-    return snapLiteral(entry, element, property, value)
+    return snapLiteral(entry, element, property, value, channel)
   }
   const target = parsedTarget
 
   const current = type.reconcile?.(raw, target.shape) ?? type.parse(raw)
   if (current !== null && current.shape === target.shape) {
-    return installGroup(entry, element, property, type, current, (group) => begin(group, target))
+    return installGroup(entry, element, property, type, current, (group) => begin(group, target), channel)
   }
   if (current !== null) {
-    const multiplier = type.convert?.(current.shape, target.shape, createMeasure(element, property, read)) ?? null
+    const multiplier = type.convert?.(current.shape, target.shape, createMeasure(element, name, read)) ?? null
     if (multiplier !== null) {
-      return installGroup(entry, element, property, type, current, (group) => {
-        group.rebase(multiplier, target.shape)
-        return begin(group, target)
-      })
+      return installGroup(
+        entry,
+        element,
+        property,
+        type,
+        current,
+        (group) => {
+          group.rebase(multiplier, target.shape)
+          return begin(group, target)
+        },
+        channel,
+      )
     }
   }
   // No resolvable start value (computed 'auto', detached parent, ...): snap to target.
-  warnOnce(`snap:${property}`, `cannot resolve a start for "${property}" (computed "${raw}"); snapped to target`)
-  return installGroup(entry, element, property, type, target, () => RESOLVED)
+  warnOnce(`snap:${property}`, `cannot resolve a start for "${name}" (computed "${raw}"); snapped to target`)
+  return installGroup(entry, element, property, type, target, () => RESOLVED, channel)
 }
+
+/**
+ * Per-segment tween timings from a normalized keyframe result: variable segment
+ * durations from explicit `at` positions and per-segment easings from explicit
+ * `ease`. Both are tween-only - positions need a duration; per-segment easing is
+ * carried regardless (the chain applies it only on the tween branch).
+ */
+const segmentTimings = (
+  normalized: NormalizedKeyframes<unknown>,
+  duration: number | undefined,
+): Pick<ChainConfig, 'segmentDurations' | 'segmentEasings'> => {
+  const { waypoints, offsets, eases } = normalized
+  const out: Pick<ChainConfig, 'segmentDurations' | 'segmentEasings'> = {}
+  if (eases.some((e) => e !== undefined)) {
+    out.segmentEasings = eases.map((e) => (e !== undefined ? resolveEasing(e) : undefined))
+  }
+  if (duration !== undefined && offsets.some((o) => o !== undefined)) {
+    const arrivals = fillOffsets(waypoints.length, offsets)
+    const durations: number[] = []
+    let prev = 0
+    for (const arrival of arrivals) {
+      durations.push(Math.max(0, arrival - prev) * duration)
+      prev = arrival
+    }
+    out.segmentDurations = durations
+  }
+  return out
+}
+
+/** True if any waypoint carries an explicit position or per-segment easing (the expressive form). */
+const hasKeyframeMeta = (normalized: NormalizedKeyframes<unknown>): boolean =>
+  normalized.offsets.some((o) => o !== undefined) || normalized.eases.some((e) => e !== undefined)
 
 const animatePropertyKeyframes = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   property: string,
   frames: AnimateKeyframes,
   read: StyleReader,
   options: AnimateOptions,
   reduced: boolean,
+  channel: PropTarget = 'style',
 ): AnimationHandle => {
-  const type = resolveValueType(property)
+  const name = bareName(property)
+  const type = resolveValueType(name)
   const normalized = normalizeKeyframes<AnimateValue>(frames)
   if (normalized === null) return RESOLVED
-  if (normalized.droppedNull) {
-    warnOnce(`keyframe-null:${property}`, `null is only valid at keyframe 0 for "${property}"; later nulls dropped`)
-  }
   const last = normalized.waypoints[normalized.waypoints.length - 1] ?? ''
 
   // Every non-null entry - the explicit keyframe-0 lead AND every waypoint -
@@ -697,15 +774,15 @@ const animatePropertyKeyframes = (
   const parsedEntries: ParsedValue[] = []
   for (const raw of rawEntries) {
     const parsed = type.parse(raw)
-    if (parsed === null) return snapLiteral(entry, element, property, last)
+    if (parsed === null) return snapLiteral(entry, element, property, last, channel)
     parsedEntries.push(parsed)
   }
   const first = parsedEntries[0]
   if (first === undefined) return RESOLVED
   const shape = first.shape
   if (parsedEntries.some((parsed) => parsed.shape !== shape)) {
-    warnOnce(`keyframe-shape:${property}`, `"${property}" keyframes mix units/shapes; snapped to the last`)
-    return writeLiteral(entry, element, property, last)
+    warnOnce(`keyframe-shape:${property}`, `"${name}" keyframes mix units/shapes; snapped to the last`)
+    return writeLiteral(entry, element, property, last, channel)
   }
 
   const teleport = normalized.teleport !== undefined ? parsedEntries[0] : undefined
@@ -722,6 +799,7 @@ const animatePropertyKeyframes = (
       ...(options.duration !== undefined ? { duration: options.duration } : {}),
       easing: resolveEasing(options.easing ?? easeInOutCubic),
       reduced,
+      ...segmentTimings(normalized, options.duration),
     })
     return startChain(entry, property, chain)
   }
@@ -738,11 +816,11 @@ const animatePropertyKeyframes = (
   }
   let start = teleport
   if (start === undefined) {
-    const raw = read.get(property)
+    const raw = read.get(name)
     const current = type.reconcile?.(raw, shape) ?? type.parse(raw)
     start = current !== null && current.shape === shape ? current : first
   }
-  return installGroup(entry, element, property, type, start, buildChain)
+  return installGroup(entry, element, property, type, start, buildChain, channel)
 }
 
 /**
@@ -751,13 +829,13 @@ const animatePropertyKeyframes = (
  * reverse onto native compositor controls. Returns null on the JS path. NOT
  * exported from the package entry (index.ts).
  */
-export function __getDelegated(element: HTMLElement): DelegatedControls | null {
+export function __getDelegated(element: AnimatableElement): DelegatedControls | null {
   const delegated = registry.get(element)?.delegated
   if (delegated === null || delegated === undefined) return null
   return { animation: delegated.animation, durationMs: delegated.durationMs }
 }
 
-const ensureEntry = (element: HTMLElement, scheduler: Scheduler | undefined): ElementEntry => {
+const ensureEntry = (element: AnimatableElement, scheduler: Scheduler | undefined): ElementEntry => {
   let entry = registry.get(element)
   if (entry === undefined) {
     entry = {
@@ -768,6 +846,7 @@ const ensureEntry = (element: HTMLElement, scheduler: Scheduler | undefined): El
       groups: new Map(),
       chains: new Map(),
       generation: 0,
+      autoAlpha: false,
     }
     registry.set(element, entry)
   }
@@ -782,7 +861,7 @@ const ensureEntry = (element: HTMLElement, scheduler: Scheduler | undefined): El
  */
 const handleNumeric = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   scalars: Array<[Channel, number]>,
   keyframes: Array<[Channel, NumericKeyframes]>,
   options: AnimateOptions,
@@ -793,20 +872,27 @@ const handleNumeric = (
   // onUpdate ticks them each frame, onInterrupt reads a child's interrupt, and even
   // onStart/onComplete need it - the compositor reclaim cannot tell a settle from a
   // supersede, so onComplete would fire on both (see hasLifecycle).
-  if (!reduced && options.duration !== undefined && supportsWaapi(element) && !hasLifecycle(options)) {
+  // autoAlpha opts out too: its visibility toggle rides the JS opacity write, which
+  // the compositor path skips.
+  if (!reduced && options.duration !== undefined && supportsWaapi(element) && !hasLifecycle(options) && !entry.autoAlpha) {
     const midPhysics = Object.values(entry.values).some((value) => value !== undefined && value.isAnimating())
     if (!midPhysics) {
       // Frame counts WITHOUT side effects: scalar = 2, keyframe = 1 + waypoints.
       const lengths = new Set<number>()
       for (const _ of scalars) lengths.add(2)
       const norms: Array<[Channel, NumericNorm]> = []
+      let expressive = false
       for (const [channel, frames] of keyframes) {
         const norm = normalizeKeyframes<number>(frames)
         if (norm === null) continue
+        // Per-segment positions/easings vary per channel; WAAPI shares one offset/
+        // easing per keyframe row across all properties, so route the whole set to
+        // the JS path (which applies them per channel) rather than delegate.
+        if (hasKeyframeMeta(norm)) expressive = true
         norms.push([channel, norm])
         lengths.add(1 + norm.waypoints.length)
       }
-      if (lengths.size === 1 && scalars.length + norms.length > 0) {
+      if (!expressive && lengths.size === 1 && scalars.length + norms.length > 0) {
         return [delegateMultiKeyframe(entry, element, scalars, norms, options.duration, resolveEasing(options.easing ?? easeInOutCubic))]
       }
     }
@@ -822,7 +908,7 @@ const handleNumeric = (
  */
 const animateNumericJs = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   scalars: Array<[Channel, number]>,
   keyframes: Array<[Channel, NumericKeyframes]>,
   options: AnimateOptions,
@@ -861,6 +947,7 @@ const animateNumericJs = (
       ...(options.duration !== undefined ? { duration: options.duration } : {}),
       easing: resolveEasing(options.easing ?? easeInOutCubic),
       reduced,
+      ...segmentTimings(normalized, options.duration),
     })
     handles.push(startChain(entry, channel, chain))
   }
@@ -874,7 +961,7 @@ const animateNumericJs = (
  * path; any other CSS property routes through the value-type registry. Repeated
  * calls retarget the same underlying values - never a jump.
  */
-function animateOne(element: HTMLElement, targets: AnimateTargets, options: AnimateOptions): AnimationHandle {
+function animateOne(element: AnimatableElement, targets: AnimateTargets, options: AnimateOptions): AnimationHandle {
   const entry = ensureEntry(element, options.scheduler)
   markIntent(entry) // a fresh intent supersedes any still-waiting staggered start on this element
   // Any new call on the element interrupts a delegated tween first.
@@ -887,26 +974,52 @@ function animateOne(element: HTMLElement, targets: AnimateTargets, options: Anim
   const numericKeyframes: Array<[Channel, NumericKeyframes]> = []
   const scalarProperties: Array<[string, AnimateValue]> = []
   const keyframeProperties: Array<[string, AnimateKeyframes]> = []
+  const attrScalars: Array<[string, AnimateValue]> = []
+  const attrKeyframes: Array<[string, AnimateKeyframes]> = []
+  let autoAlpha = false
+  let plainOpacity = false
   for (const key of Object.keys(targets)) {
     const value = (targets as Record<string, AnimateValue | AnimateKeyframes | undefined>)[key]
     if (value === undefined) continue
     // A new motion on a key takes over any keyframe chain still running there.
     interruptKey(entry, key)
-    if (NUMERIC_CHANNELS.has(key)) {
+    if (key === 'autoAlpha') {
+      // An alias of the opacity channel that also toggles visibility (handled at the bind).
+      autoAlpha = true
+      interruptKey(entry, 'opacity')
+      if (Array.isArray(value)) numericKeyframes.push(['opacity', value as NumericKeyframes])
+      else numericScalars.push(['opacity', value as number])
+    } else if (NUMERIC_CHANNELS.has(key)) {
+      if (key === 'opacity') plainOpacity = true
       if (Array.isArray(value)) numericKeyframes.push([key as Channel, value as NumericKeyframes])
       else numericScalars.push([key as Channel, value as number])
     } else if (key === 'transform') {
       warnOnce('transform', 'animate x/y/scale/rotate instead of the transform shorthand')
+    } else if (isAttrKey(key)) {
+      if (Array.isArray(value)) attrKeyframes.push([key, value as AnimateKeyframes])
+      else attrScalars.push([key, value as AnimateValue])
     } else if (Array.isArray(value)) {
       keyframeProperties.push([key, value as AnimateKeyframes])
     } else {
       scalarProperties.push([key, value as AnimateValue])
     }
   }
+  // The visibility link follows the latest opacity intent: autoAlpha turns it on,
+  // a plain opacity animation turns it off (and reveals) so it never leaks onto
+  // an unrelated later opacity tween. Latched BEFORE the numeric path so the flag
+  // is right when a fresh opacity channel binds (and gates WAAPI delegation).
+  const opacityExisted = entry.values.opacity !== undefined
+  const unlinkAutoAlpha = plainOpacity && !autoAlpha && entry.autoAlpha
+  if (autoAlpha) entry.autoAlpha = true
+  else if (plainOpacity) entry.autoAlpha = false
 
   const handles: AnimationHandle[] = []
   if (numericScalars.length > 0 || numericKeyframes.length > 0) {
     handles.push(...handleNumeric(entry, element, numericScalars, numericKeyframes, options, behavior, reduced))
+    if (unlinkAutoAlpha) element.style.visibility = '' // drop the hidden state we may have set
+    // Refresh the binding to apply/remove the visibility toggle - but only when
+    // handleNumeric did not already rebind a freshly created opacity channel.
+    if ((autoAlpha || unlinkAutoAlpha) && opacityExisted) rebind(entry, element)
   }
   if (scalarProperties.length > 0 || keyframeProperties.length > 0) {
     const read = readStyle(element)
@@ -915,6 +1028,15 @@ function animateOne(element: HTMLElement, targets: AnimateTargets, options: Anim
     }
     for (const [property, frames] of keyframeProperties) {
       handles.push(animatePropertyKeyframes(entry, element, property, frames, read, options, reduced))
+    }
+  }
+  if (attrScalars.length > 0 || attrKeyframes.length > 0) {
+    const read = readAttribute(element)
+    for (const [property, value] of attrScalars) {
+      handles.push(animateProperty(entry, element, property, value, read, options, behavior, reduced, 'attr'))
+    }
+    for (const [property, frames] of attrKeyframes) {
+      handles.push(animatePropertyKeyframes(entry, element, property, frames, read, options, reduced, 'attr'))
     }
   }
   const base = aggregate(handles)
@@ -931,7 +1053,7 @@ function animateOne(element: HTMLElement, targets: AnimateTargets, options: Anim
 // preserves its unit/template - only for single-channel value types (length,
 // number). Multi-channel (color, shadow) returns undefined; a relative there
 // degrades to the operand (resolveValue warns).
-const readMagnitude = (element: HTMLElement, entry: ElementEntry | undefined, key: string): Magnitude | undefined => {
+const readMagnitude = (element: AnimatableElement, entry: ElementEntry | undefined, key: string): Magnitude | undefined => {
   const warm = entry?.groups.get(key)
   if (warm !== undefined) {
     if (warm.group.channels.length !== 1) return undefined
@@ -939,23 +1061,27 @@ const readMagnitude = (element: HTMLElement, entry: ElementEntry | undefined, ke
     const { type, shape } = warm.group
     return { value: channel.get(), reformat: (next) => type.format([next], shape) }
   }
-  const type = resolveValueType(key)
-  const parsed = type.parse(readStyle(element).get(key))
+  const name = bareName(key)
+  const type = resolveValueType(name)
+  // Attributes read via getAttribute; style properties via computed style.
+  const raw = isAttrKey(key) ? (element.getAttribute(name) ?? '').trim() : readStyle(element).get(name)
+  const parsed = type.parse(raw)
   if (parsed === null || parsed.channels.length !== 1) return undefined
   return { value: parsed.channels[0]!, reformat: (next) => type.format([next], parsed.shape) }
 }
 
 /** The per-element resolution context: live channel reads plus the single-magnitude registry reader. */
-const resolveContextFor = (element: HTMLElement, index: number, total: number): ResolveContext => {
+const resolveContextFor = (element: AnimatableElement, index: number, total: number): ResolveContext => {
   const entry = registry.get(element)
   return {
     index,
     element,
     total,
     readNumeric: (key) => {
-      if (!NUMERIC_CHANNELS.has(key)) return undefined
-      const value = entry?.values[key as Channel]
-      return value !== undefined ? value.get() : INITIAL[key as Channel]
+      const channel = key === 'autoAlpha' ? 'opacity' : key
+      if (!NUMERIC_CHANNELS.has(channel)) return undefined
+      const value = entry?.values[channel as Channel]
+      return value !== undefined ? value.get() : INITIAL[channel as Channel]
     },
     readMagnitude: (key) => readMagnitude(element, entry, key),
   }
@@ -963,7 +1089,7 @@ const resolveContextFor = (element: HTMLElement, index: number, total: number): 
 
 /** Resolve every target value for one element (functions, relatives, keyframe chaining) to absolutes. */
 const resolveTargetsFor = (
-  element: HTMLElement,
+  element: AnimatableElement,
   targets: AnimateTargets,
   index: number,
   total: number,
@@ -979,7 +1105,7 @@ const resolveTargetsFor = (
 }
 
 /** Resolve a from-state for one element to absolute teleport values (functions/relatives against the live value). */
-const resolveFromFor = (element: HTMLElement, from: FromTargets, index: number, total: number): ResolvedFrom =>
+const resolveFromFor = (element: AnimatableElement, from: FromTargets, index: number, total: number): ResolvedFrom =>
   // A from-state is scalar-only, so the resolved shape never carries keyframe arrays.
   resolveTargetsFor(element, from as AnimateTargets, index, total) as ResolvedFrom
 
@@ -990,14 +1116,17 @@ const resolveFromFor = (element: HTMLElement, from: FromTargets, index: number, 
  * untouched; any other property reads computed/inline style. Must run BEFORE the
  * from-set moves the element, so the captured value is the real resting state.
  */
-const captureNatural = (element: HTMLElement, keys: string[]): ResolvedTargets => {
+const captureNatural = (element: AnimatableElement, keys: string[]): ResolvedTargets => {
   const entry = registry.get(element)
   const read = readStyle(element)
   const out: Record<string, AnimateValue> = {}
   for (const key of keys) {
-    if (NUMERIC_CHANNELS.has(key)) {
-      const value = entry?.values[key as Channel]
-      out[key] = value !== undefined ? value.get() : INITIAL[key as Channel]
+    const channel = key === 'autoAlpha' ? 'opacity' : key
+    if (NUMERIC_CHANNELS.has(channel)) {
+      const value = entry?.values[channel as Channel]
+      out[key] = value !== undefined ? value.get() : INITIAL[channel as Channel]
+    } else if (isAttrKey(key)) {
+      out[key] = element.getAttribute(bareName(key)) ?? ''
     } else {
       out[key] = read.get(key)
     }
@@ -1017,7 +1146,7 @@ const hasResolvable = (targets: AnimateTargets): boolean => {
 // mid-flight position, not a stale pre-tween value), then resolve this element's
 // targets and start them. Resolution happens at the element's START time.
 const startResolved = (
-  element: HTMLElement,
+  element: AnimatableElement,
   targets: AnimateTargets,
   index: number,
   total: number,
@@ -1036,7 +1165,7 @@ const startResolved = (
 // START time (after the wait), off the live value. A later animate() on this element
 // (a supersede during the wait) bumps the generation, so the stale start is dropped.
 const deferredStart = (
-  element: HTMLElement,
+  element: AnimatableElement,
   targets: AnimateTargets,
   options: AnimateOptions,
   index: number,
@@ -1111,7 +1240,7 @@ const perElementOptions = (options: AnimateOptions): AnimateOptions => {
  * settled, `onInterrupt` when the first element is interrupted, `onUpdate` reports
  * the first element's channels.
  */
-export function animate(target: HTMLElement, targets: AnimateTargets, options?: AnimateOptions): AnimationHandle
+export function animate(target: AnimatableElement, targets: AnimateTargets, options?: AnimateOptions): AnimationHandle
 export function animate(target: AnimationTarget, targets: AnimateTargets, options?: AnimateOptions): AnimationHandle
 export function animate(target: AnimationTarget, targets: AnimateTargets, options: AnimateOptions = {}): AnimationHandle {
   // Fast path: one element, no delay, no function/relative - today's exact behavior
@@ -1227,12 +1356,14 @@ export interface SetStyleOptions {
 /** Teleport a registry property, coherently with the channel state, writing synchronously. */
 const setStyleProperty = (
   entry: ElementEntry,
-  element: HTMLElement,
+  element: AnimatableElement,
   property: string,
   value: AnimateValue,
   velocity: number | undefined,
+  target: PropTarget = 'style',
 ): void => {
-  const type = resolveValueType(property)
+  const name = bareName(property)
+  const type = resolveValueType(name)
   const existing = entry.groups.get(property)
   if (existing !== undefined) {
     // Fast path: the incoming value parses into the live shape - update channel
@@ -1250,13 +1381,13 @@ const setStyleProperty = (
   }
   const parsed = type.parse(value)
   if (parsed === null) {
-    writeLiteral(entry, element, property, value)
+    writeLiteral(entry, element, property, value, target)
     return
   }
   const group = channelGroup(type, parsed, { scheduler: entry.scheduler })
   if (velocity !== undefined) group.set(parsed, { velocity })
-  const binding = bindProperty(element, property, group, { scheduler: entry.scheduler })
-  entry.groups.set(property, { group, binding })
+  const binding = bindProperty(element, name, group, { scheduler: entry.scheduler, target })
+  entry.groups.set(property, { group, binding, target, name })
   binding.flushNow()
 }
 
@@ -1268,8 +1399,8 @@ const setStyleProperty = (
  * (zero-latency scrubbing); numeric channels reflect on the next frame.
  */
 export function setStyle(
-  element: HTMLElement,
-  targets: Partial<Record<Channel, number>> & Partial<Record<AnimateProperty, AnimateValue>>,
+  element: AnimatableElement,
+  targets: Partial<Record<NumericKey, number>> & Partial<Record<AnimateProperty, AnimateValue>>,
   options: SetStyleOptions = {},
 ): void {
   const entry = ensureEntry(element, options.scheduler)
@@ -1282,19 +1413,34 @@ export function setStyle(
   }
   const velocity = options.velocity
   let newChannel = false
+  let autoAlpha = false
+  let plainOpacity = false
   for (const key of Object.keys(targets)) {
     const value = (targets as Record<string, AnimateValue | undefined>)[key]
     if (value === undefined) continue
     interruptKey(entry, key)
-    if (NUMERIC_CHANNELS.has(key)) {
+    if (key === 'autoAlpha') {
+      autoAlpha = true
+      interruptKey(entry, 'opacity')
+      const { value: channel, created } = ensureChannel(entry, 'opacity')
+      newChannel ||= created
+      channel.set(value as number, velocity !== undefined ? { velocity } : undefined)
+    } else if (NUMERIC_CHANNELS.has(key)) {
+      if (key === 'opacity') plainOpacity = true
       const { value: channel, created } = ensureChannel(entry, key as Channel)
       newChannel ||= created
       channel.set(value as number, velocity !== undefined ? { velocity } : undefined)
+    } else if (isAttrKey(key)) {
+      setStyleProperty(entry, element, key, value, velocity, 'attr')
     } else if (key !== 'transform') {
       setStyleProperty(entry, element, key, value, velocity)
     }
   }
-  if (newChannel) rebind(entry, element)
+  const unlinkAutoAlpha = plainOpacity && !autoAlpha && entry.autoAlpha
+  if (autoAlpha) entry.autoAlpha = true
+  else if (plainOpacity) entry.autoAlpha = false
+  if (unlinkAutoAlpha) element.style.visibility = ''
+  if (newChannel || autoAlpha || unlinkAutoAlpha) rebind(entry, element)
 }
 
 /**
@@ -1303,7 +1449,7 @@ export function setStyle(
  * (re-reads computed style). The sanctioned uncache hatch after an external
  * style write. Idempotent; an unknown element is a no-op.
  */
-export function releaseStyle(element: HTMLElement): void {
+export function releaseStyle(element: AnimatableElement): void {
   const entry = registry.get(element)
   if (entry === undefined) return
   reclaim(entry)
@@ -1315,12 +1461,14 @@ export function releaseStyle(element: HTMLElement): void {
   if (Object.keys(entry.values).length > 0) {
     element.style.removeProperty('transform')
     element.style.removeProperty('opacity')
+    if (entry.autoAlpha) element.style.removeProperty('visibility')
   }
 
-  for (const [property, { group, binding }] of entry.groups) {
+  for (const { group, binding, target, name } of entry.groups.values()) {
     binding.dispose()
     group.dispose()
-    element.style.removeProperty(toKebab(property))
+    if (target === 'attr') element.removeAttribute(name)
+    else element.style.removeProperty(toKebab(name))
   }
   entry.groups.clear()
   registry.delete(element)

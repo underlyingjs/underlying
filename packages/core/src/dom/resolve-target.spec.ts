@@ -14,12 +14,12 @@ describe('resolveTargets', () => {
     expect(resolveTargets(el)).toEqual([el])
   })
 
-  it('resolves a selector and filters out non-HTMLElements', () => {
+  it('resolves a selector, keeping HTML and SVG elements', () => {
     document.body.innerHTML =
       '<div class="t"></div><div class="t"></div><svg class="t"></svg>'
     const found = resolveTargets('.t')
-    expect(found).toHaveLength(2) // the SVG is excluded
-    expect(found.every((node) => node instanceof HTMLElement)).toBe(true)
+    expect(found).toHaveLength(3) // SVG is animatable too (attr:viewBox/r/points)
+    expect(found.every((node) => node instanceof HTMLElement || node instanceof SVGElement)).toBe(true)
   })
 
   it('resolves a NodeList', () => {
