@@ -10,15 +10,18 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-// 14.0 kB since 1.2: #52 authoring ergonomics added staggerDelay()/responsive()/region()
-// (12 -> 13.25), #68 added bindTemplate()/template() to the full surface (13.25 -> 13.75),
-// then #41 added from()/fromTo() entrances (13.75 -> 14.0).
-const BUDGET_BYTES = 14.0 * 1024
-const PRIMITIVES_BUDGET_BYTES = 3.5 * 1024
-// 11.5 kB since 1.2: animate() gained lifecycle callbacks (#67), then #52 multi-target
-// + relative/function value resolution (resolveTargets/resolveValue land in the animate graph),
-// then #41 added the from-state capture/park path for from()/fromTo() (11.25 -> 11.5).
-const ANIMATE_BUDGET_BYTES = 11.5 * 1024
+// 15.25 kB since 1.2: #52 authoring ergonomics added staggerDelay()/responsive()/region()
+// (12 -> 13.25), #68 added bindTemplate()/template() (13.25 -> 13.75), #41 added
+// from()/fromTo() entrances (13.75 -> 14.0), then #56 added keyframe expressivity
+// (per-segment ease/position/hold), attr routing, autoAlpha, and the filter() builder
+// (14.0 -> 15.25).
+const BUDGET_BYTES = 15.25 * 1024
+// 3.6 kB: #56's autoAlpha adds the opacity->visibility toggle to bindStyle (in the primitives graph).
+const PRIMITIVES_BUDGET_BYTES = 3.6 * 1024
+// 12.5 kB since 1.2: animate() gained lifecycle callbacks (#67), #52 multi-target
+// + relative/function value resolution, #41 the from-state capture/park path, then #56
+// keyframe expressivity + attribute routing + autoAlpha in the animate graph (11.5 -> 12.5).
+const ANIMATE_BUDGET_BYTES = 12.5 * 1024
 // The opt-in playback layer: pause/timeScale/reverse/seek, bake(), follow(),
 // timeScope, and sequence() (the live composition twin of @underlying/timeline).
 const PLAYBACK_BUDGET_BYTES = 6 * 1024

@@ -1,5 +1,6 @@
 import { warnOnce } from '../value/warn'
 import type { AnimateKeyframes, AnimateValue } from './animate'
+import type { AnimatableElement } from './resolve-target'
 
 /**
  * A target resolved against the current value. The numeric channels accept the
@@ -10,7 +11,7 @@ import type { AnimateKeyframes, AnimateValue } from './animate'
 export type RelativeValue = `+=${number}` | `-=${number}` | `*=${number}`
 
 /** A per-target value: receives the item's index, its element, and the set count. */
-export type ValueFn<V> = (index: number, element: HTMLElement, total: number) => V
+export type ValueFn<V> = (index: number, element: AnimatableElement, total: number) => V
 
 /** A single magnitude read from a registry property, plus how to re-emit it preserving the unit/template. */
 export interface Magnitude {
@@ -20,7 +21,7 @@ export interface Magnitude {
 
 export interface ResolveContext {
   readonly index: number
-  readonly element: HTMLElement
+  readonly element: AnimatableElement
   readonly total: number
   /** Current value of a numeric channel (caller bakes in the INITIAL fallback); undefined if `key` is not a numeric channel. */
   readNumeric(key: string): number | undefined
@@ -42,11 +43,23 @@ const parseRelative = (s: string): { op: '+' | '-' | '*'; operand: number } | nu
 const applyRelative = (cur: number, op: '+' | '-' | '*', operand: number): number =>
   op === '+' ? cur + operand : op === '-' ? cur - operand : cur * operand
 
+/** A keyframe stop object `{ value, at?, ease? }` - distinguished from a bare value/null. */
+const isStop = (w: unknown): w is { value: AnimateValue | null } =>
+  w !== null && typeof w === 'object' && !Array.isArray(w)
+
+/** The value a waypoint carries (a bare value, a hold null, or a stop's `.value`). */
+const waypointValue = (w: unknown): AnimateValue | null => (isStop(w) ? w.value : (w as AnimateValue | null))
+
 /** True if a raw value needs per-element resolution (a function, or a relative string incl. inside keyframes). */
 export const needsResolve = (raw: unknown): boolean => {
   if (typeof raw === 'function') return true
   if (typeof raw === 'string') return RELATIVE.test(raw)
-  if (Array.isArray(raw)) return raw.some((waypoint) => typeof waypoint === 'string' && RELATIVE.test(waypoint))
+  if (Array.isArray(raw)) {
+    return raw.some((waypoint) => {
+      const value = waypointValue(waypoint)
+      return typeof value === 'string' && RELATIVE.test(value)
+    })
+  }
   return false
 }
 
@@ -69,29 +82,40 @@ const resolveKeyframes = (key: string, frames: AnimateKeyframes, ctx: ResolveCon
   // computed style). An absolute waypoint re-seeds the chain so a following relative is correct.
   const numeric = ctx.readNumeric(key)
   const mag =
-    numeric === undefined && frames.some((waypoint) => typeof waypoint === 'string' && parseRelative(waypoint) !== null)
+    numeric === undefined &&
+    frames.some((waypoint) => {
+      const value = waypointValue(waypoint)
+      return typeof value === 'string' && parseRelative(value) !== null
+    })
       ? ctx.readMagnitude(key)
       : undefined
   let running: number | undefined = numeric ?? mag?.value
-  return frames.map((waypoint) => {
-    if (waypoint === null) return null
-    if (typeof waypoint === 'number') {
-      running = waypoint
-      return waypoint
+
+  // Resolve one waypoint's value against the running magnitude, advancing it.
+  const resolveOne = (value: AnimateValue | null): AnimateValue | null => {
+    if (value === null) return null
+    if (typeof value === 'number') {
+      running = value
+      return value
     }
-    const rel = parseRelative(waypoint)
+    const rel = parseRelative(value)
     if (rel === null) {
-      const seed = Number.parseFloat(waypoint)
+      const seed = Number.parseFloat(value)
       running = Number.isFinite(seed) ? seed : undefined
-      return waypoint
+      return value
     }
     if (running === undefined) {
-      warnOnce(`relative:${key}`, `relative "${waypoint}" on "${key}" keyframe is not decomposable; used ${rel.operand}`)
+      warnOnce(`relative:${key}`, `relative "${value}" on "${key}" keyframe is not decomposable; used ${rel.operand}`)
       return rel.operand
     }
     running = applyRelative(running, rel.op, rel.operand)
     return mag !== undefined ? mag.reformat(running) : running
-  })
+  }
+
+  return frames.map((waypoint) =>
+    // A stop keeps its position/easing metadata; only its value resolves.
+    isStop(waypoint) ? { ...waypoint, value: resolveOne(waypoint.value) } : resolveOne(waypoint as AnimateValue | null),
+  )
 }
 
 /** A value before per-target resolution: an absolute value/keyframes, a relative string, or a function returning any of those. */

@@ -28,7 +28,7 @@ describe('needsResolve', () => {
 
 describe('resolveValue', () => {
   it('evaluates a function with (index, element, total)', () => {
-    const fn = vi.fn((i: number, _e: HTMLElement, n: number) => i * 10 + n)
+    const fn = vi.fn((i: number, _e: Element, n: number) => i * 10 + n)
     expect(resolveValue('rotate', fn, ctx({ index: 2, total: 5 }))).toBe(25)
     expect(fn).toHaveBeenCalledWith(2, el, 5)
   })
@@ -80,5 +80,23 @@ describe('resolveValue', () => {
     expect(resolveValue('x', 100, ctx())).toBe(100)
     expect(resolveValue('width', '50%', ctx())).toBe('50%')
     expect(resolveValue('x', [0, 100], ctx())).toEqual([0, 100])
+  })
+
+  it('resolves a relative inside a keyframe stop, preserving its position and easing', () => {
+    const c = ctx({ readMagnitude: () => ({ value: 100, reformat: (n) => `${n}px` }) })
+    expect(resolveValue('width', [{ value: '+=40px', at: 0.5, ease: 'linear' }], c)).toEqual([
+      { value: '140px', at: 0.5, ease: 'linear' },
+    ])
+  })
+
+  it('chains a stop value with a bare waypoint in the same array', () => {
+    const c = ctx({ readNumeric: () => 0 })
+    // 0 -> {+=10 => 10} -> {+=20 => 30}, metadata on the stops preserved.
+    expect(resolveValue('x', ['+=10', { value: '+=20', at: 0.8 }], c)).toEqual([10, { value: 30, at: 0.8 }])
+  })
+
+  it('flags a relative inside a keyframe stop via needsResolve', () => {
+    expect(needsResolve([0, { value: '+=20' }])).toBe(true)
+    expect(needsResolve([0, { value: 100, at: 0.5 }])).toBe(false) // an absolute stop needs no resolution
   })
 })

@@ -150,6 +150,40 @@ Units convert by measuring once at the start (`240px` retargeted to `50%`
 rebases position *and* velocity). Unconvertible or unparseable values snap to
 the target with a one-time console warning, never a throw.
 
+## Filters, attributes, autoAlpha
+
+`filter()` is a typed builder for the CSS `filter` string, emitted in a fixed
+canonical order so two results interpolate cleanly:
+
+```ts
+import { animate, filter } from '@underlying/core'
+
+animate(hero, { filter: filter({ blur: 8, brightness: 1.1 }) })  // -> 'blur(8px) brightness(1.1)'
+```
+
+An `attr:` key animates an element/SVG **attribute** through `setAttribute`
+(reading the start via `getAttribute`) - the same springs, keyframes, relatives,
+and expressive stops as any property. `animate()` accepts SVG elements too:
+
+```ts
+animate(circle, { 'attr:r': [10, 40], 'attr:fill': '#ff0055', opacity: 1 }) // attr + style, one handle
+animate(svg, { 'attr:viewBox': '0 0 50 50' })
+animate(circle, { 'attr:r': '+=15' })                                        // relative to the live attribute
+```
+
+On an SVG element the transform channels (`x`, `scale`, `rotate`, ...) still work,
+but they write CSS transforms (their own transform-box/origin); for SVG geometry
+prefer `attr:` (`attr:cx`, `attr:r`, `attr:points`) or a `motionPath`.
+
+`autoAlpha` animates opacity **and** toggles `visibility: hidden` at 0, so a fully
+transparent element also drops out of hit-testing. It runs on the JS path (the
+visibility toggle rides the opacity write):
+
+```ts
+animate(dialog, { autoAlpha: 0 })                       // fade out AND become non-interactive
+fromTo(toast, { autoAlpha: 0 }, { autoAlpha: 1 })       // reveal from hidden
+```
+
 ## Keyframes
 
 ```ts
@@ -160,6 +194,28 @@ animate(badge, { x: [0, 120, 80] }, { duration: 600 })  // explicit 0 = teleport
 Without a duration the waypoints are chained springs (settle at each, then
 retarget); with a duration they become an evenly-split piecewise tween that
 rides the compositor (WAAPI multi-keyframe) when eligible.
+
+### Expressive keyframes - position, per-segment easing, holds
+
+A keyframe entry can be a `{ value, at, ease }` stop instead of a bare value.
+`at` places the waypoint at a fraction (0..1) of the total duration; `ease` sets
+the easing of the segment reaching it; a `null` mid-array HOLDS the previous value
+(a dwell). These are tween-mode features (they need a `duration`); expressive
+keyframes run on the JS path rather than the compositor. An `at` on the _last_
+waypoint reaches the final value at that fraction and holds it to the end
+(a settle-and-dwell, WAAPI-consistent).
+
+```ts
+import { animate } from '@underlying/core'
+import { easeOutBack } from '@underlying/utils'
+
+animate(el, {
+  x: [0, { value: 120, at: 0.25, ease: easeOutBack }, 60], // snap out fast, ease the rest
+  opacity: [0, 1, 1, 0],                                     // different length is fine
+}, { duration: 800 })
+
+animate(box, { x: [0, 100, null, 0] }, { duration: 600 })   // rise, hold, fall
+```
 
 ## Entrances - `from()` / `fromTo()`
 
