@@ -8,10 +8,16 @@ import { tweenMotion, type ToOptions } from '../physics/tween'
 import type { FrameInfo, Scheduler } from '../scheduler/scheduler'
 import { getSharedScheduler } from '../scheduler/shared'
 import { lifecycleRegistry, type LifecycleCallbacks, type LifecycleEvent, type LifecycleRegistry } from './lifecycle'
+import { thenFinished, type ThenFn } from './thenable'
 
 export interface AnimationHandle {
   /** Resolves when the animation settles OR is interrupted. Never rejects. */
   readonly finished: Promise<void>
+  /**
+   * Handles are awaitable: `await animate(...)` / `await handle` resolves when the
+   * animation settles or is interrupted (delegates to `finished`; never rejects).
+   */
+  then: ThenFn
   /** Freezes the value in place - only if this animation is still the active one. */
   stop(): void
   /**
@@ -167,8 +173,10 @@ export function animatable(initial: number, options: AnimatableOptions = {}): An
   ): AnimationHandle => {
     const registry = lifecycleRegistry<AnimationHandle>()
     registry.seed(lifecycle)
+    const finished = Promise.resolve()
     const handle: AnimationHandle = {
-      finished: Promise.resolve(),
+      finished,
+      then: thenFinished(finished),
       stop: () => {},
       eventCallback(event, fn) {
         registry.set(event, fn)
@@ -223,6 +231,7 @@ export function animatable(initial: number, options: AnimatableOptions = {}): An
     }
     const handle: AnimationHandle = {
       finished,
+      then: thenFinished(finished),
       stop: () => {
         if (active === animation) freeze('interrupt')
       },

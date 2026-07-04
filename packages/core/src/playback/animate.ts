@@ -1,5 +1,6 @@
 import { __getDelegated, animate, type AnimateOptions, type AnimateTargets } from '../dom/animate'
 import type { AnimationHandle } from '../value/animatable'
+import { thenFinished } from '../value/thenable'
 import { warnOnce } from '../value/warn'
 import type { MotionKind, PlaybackHandle, PlaybackOptions } from './handle'
 import { timeScope, type TimeScope } from './time-scope'
@@ -11,10 +12,15 @@ import { waapiHandle } from './waapi'
  * warn once and no-op. For a seekable DOM tween, delegate to WAAPI (see above).
  */
 function scopeHandle(scope: TimeScope, base: AnimationHandle, kind: MotionKind): PlaybackHandle {
+  let done = false
+  void base.finished.then(() => {
+    done = true
+  })
   const handle: PlaybackHandle = {
     kind,
     seekable: false,
     finished: base.finished,
+    then: thenFinished(base.finished),
     stop: () => base.stop(),
     pause() {
       scope.pause()
@@ -50,6 +56,15 @@ function scopeHandle(scope: TimeScope, base: AnimationHandle, kind: MotionKind):
     time: () => 0,
     totalTime: () => 0,
     duration: () => undefined,
+    isActive: () => !done && !scope.isPaused(),
+    iteration: () => 0, // repeat/yoyo are not modelled on this path (playable() has them)
+    totalProgress: () => (done ? 1 : 0), // no playhead on a live spring; coarse but honest
+    startTime: () => 0,
+    endTime: () => undefined,
+    restart() {
+      warnOnce('playback:restart-dom', 'restart() needs a seekable handle or playable(); re-call animate() to replay')
+      return this
+    },
     bake: () => false,
     setTarget() {
       warnOnce('playback:settarget-dom', 'setTarget() is for an imperative value; use playable() for live re-aim')

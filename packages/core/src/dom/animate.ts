@@ -11,6 +11,7 @@ import { resolveValueType } from '../value/registry'
 import type { ParsedValue, ValueType } from '../value/value-type'
 import { warnOnce } from '../value/warn'
 import { animatable, type Animatable, type AnimationHandle } from '../value/animatable'
+import { thenFinished } from '../value/thenable'
 import { waitFrames } from '../compose/wait'
 import type { DelayFn } from '../compose/stagger-delay'
 import { bindProperty, type PropertyBinding } from './bind-property'
@@ -413,13 +414,19 @@ const delegateMultiKeyframe = (
 
   return {
     finished,
+    then: thenFinished(finished),
     stop: () => {
       if (entry.delegated === tween) reclaim(entry)
     },
   }
 }
 
-const RESOLVED: AnimationHandle = { finished: Promise.resolve(), stop: () => {} }
+const RESOLVED_PROMISE = Promise.resolve()
+const RESOLVED: AnimationHandle = {
+  finished: RESOLVED_PROMISE,
+  then: thenFinished(RESOLVED_PROMISE),
+  stop: () => {},
+}
 
 // Forwards its children's interrupt up as ONE interrupt, so an outer lifecycle
 // owner (multi-target withLifecycle, where each child IS an aggregate) can tell a
@@ -436,8 +443,10 @@ const aggregate = (handles: AnimationHandle[]): AnimationHandle => {
     onInterrupt?.(handle)
   }
   for (const child of handles) child.eventCallback?.('interrupt', fireInterrupt)
+  const finished = Promise.all(handles.map((child) => child.finished)).then(() => undefined)
   const handle: AnimationHandle = {
-    finished: Promise.all(handles.map((child) => child.finished)).then(() => undefined),
+    finished,
+    then: thenFinished(finished),
     stop: () => {
       for (const child of handles) child.stop()
     },
@@ -490,6 +499,7 @@ const withLifecycle = (
 
   handle = {
     finished: base.finished,
+    then: thenFinished(base.finished),
     stop: () => base.stop(), // interrupts the children -> their interrupt fires onInterrupt above
     eventCallback(event, fn) {
       const cb = fn ?? undefined
@@ -1198,6 +1208,7 @@ const deferredStart = (
   })
   const handle: AnimationHandle = {
     finished,
+    then: thenFinished(finished),
     stop: () => {
       if (cancelled) return
       cancelled = true

@@ -92,6 +92,14 @@ chain([
 Repeated `animate()` calls on the same element retarget the same underlying
 values - interruption with velocity conservation, not parallel animations.
 
+Every handle is awaitable - `await animate(...)` (or `await handle`) resolves when
+it settles or is interrupted (it delegates to `finished` and never rejects):
+
+```ts
+await animate(el, { opacity: 0 })
+el.remove()
+```
+
 ## Playback (opt-in)
 
 Springs stay live; tweens are seekable. `@underlying/core/playback` is a separate
@@ -114,6 +122,17 @@ const lag = follow(0)                     // a value that springs toward a movin
 onScroll((y) => lag.target(y))            // momentum scrub, conserved velocity
 
 sequence().spring(a, 1).spring(b, 1, { overlap: 80 }).play()  // live cascade, interruptible
+```
+
+A `PlaybackHandle` also answers the everyday playhead questions:
+
+```ts
+const h = playable(v).to(300, { duration: 400, repeat: 2 })
+h.isActive()       // still running (not finished/paused)?
+h.iteration()      // 0-based, advances each repeat
+h.totalProgress()  // 0..1 across the WHOLE run (all iterations + delays)
+h.startTime()      // the initial delay (ms); endTime() = when the whole run ends
+h.restart()        // replay from the top
 ```
 
 ## Transform channels
