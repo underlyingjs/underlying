@@ -14,6 +14,8 @@
     "@underlying/utils": "1.1.0"
   },
   "changesets": [
+    "core-from-fromto",
+    "core-keyframe-expressivity-channels",
     "flip-transitions",
     "gestures-ambient",
     "text-masked-reveal",

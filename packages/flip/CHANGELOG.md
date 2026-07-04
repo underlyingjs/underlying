@@ -1,5 +1,13 @@
 # @underlying/flip
 
+## 1.2.0-beta.3
+
+### Patch Changes
+
+- Updated dependencies [7aafc87]
+- Updated dependencies [5bebad9]
+  - @underlying/core@1.2.0-beta.3
+
 ## 1.2.0-beta.2
 
 ### Patch Changes
