@@ -10,6 +10,7 @@ import type { Scheduler } from '../scheduler/scheduler'
 import { getSharedScheduler } from '../scheduler/shared'
 import type { Animatable } from '../value/animatable'
 import { lifecycleRegistry, type LifecycleEvent, type LifecycleRegistry } from '../value/lifecycle'
+import { thenFinished } from '../value/thenable'
 import { warnOnce } from '../value/warn'
 import type { MotionKind, PlaybackHandle, PlaybackOptions } from './handle'
 import { timeScope } from './time-scope'
@@ -91,6 +92,13 @@ interface RunControls {
   timeMs(): number
   totalMs(): number
   durationMs(): number | undefined
+  // playhead queries (both kinds):
+  isActive(): boolean
+  iteration(): number
+  totalProgress(): number
+  restart(): void
+  startTimeMs(): number
+  endTimeMs(): number | undefined
   // live only:
   setTarget(value: number, velocity?: number): void
   bake(maxDurationMs?: number): boolean
@@ -157,6 +165,17 @@ function startRun(config: StartConfig): RunControls {
   let holdS = (config.delay ?? 0) / 1000 // initial delay, then reused between iterations
   let forwardLeg = true // live yoyo parity: launch -> target (true) vs target -> launch
   let totalElapsedS = 0
+  let iterationIndex = 0 // 0-based, advances at each iteration boundary (handles infinite repeat)
+
+  // Total run duration (initial delay + every iteration + repeat delays), for
+  // totalProgress()/endTime(). undefined while an un-baked spring has no duration.
+  const delayS0 = (config.delay ?? 0) / 1000
+  const repeatCount = (): number => (canRepeat ? (config.repeat ?? 0) : 0)
+  const activeDurationS = (): number | undefined => {
+    if (seekMotion === null) return undefined
+    const r = repeatCount()
+    return Number.isFinite(r) ? (1 + r) * durationS + r * repeatDelayS : Infinity
+  }
 
   let settled = false
   let resolveFinished = () => {}
@@ -202,6 +221,7 @@ function startRun(config: StartConfig): RunControls {
       return
     }
     iterationsLeft -= 1
+    iterationIndex += 1
     fire('repeat', boundaryPos)
     holdS = repeatDelayS
     if (seekMotion !== null) {
@@ -345,6 +365,51 @@ function startRun(config: StartConfig): RunControls {
     timeMs: () => (seekMotion !== null ? elapsedS : liveElapsedS) * 1000,
     totalMs: () => totalElapsedS * 1000,
     durationMs: () => (seekMotion !== null ? durationS * 1000 : undefined),
+    isActive: () => !settled && !scope.isPaused(),
+    iteration: () => iterationIndex,
+    totalProgress() {
+      if (settled) return 1
+      const active = activeDurationS()
+      const total = active === undefined ? undefined : delayS0 + active
+      // Unknown (un-baked spring) or infinite total: fall back to this iteration's progress.
+      if (total === undefined || !Number.isFinite(total) || total <= 0) {
+        if (seekMotion !== null) return durationS <= 0 ? 1 : clamp(elapsedS / durationS, 0, 1)
+        return liveProgress()
+      }
+      return clamp(totalElapsedS / total, 0, 1)
+    },
+    startTimeMs: () => delayS0 * 1000,
+    endTimeMs() {
+      const active = activeDurationS()
+      return active === undefined || !Number.isFinite(active) ? undefined : (delayS0 + active) * 1000
+    },
+    restart() {
+      if (settled) {
+        warnOnce('playback:restart-settled', 'restart() needs an active handle; a finished run cannot replay - start a new one')
+        return
+      }
+      iterationsLeft = repeatCount()
+      iterationIndex = 0
+      // Seed the elapsed clock with the skipped initial delay so totalProgress()'s
+      // (delayS0 + active) denominator still reaches 1 - restart skips the delay.
+      totalElapsedS = delayS0
+      holdS = 0 // replay immediately, skipping the initial delay
+      seekReversed = false
+      reversing = false
+      started = false // re-arm so the replay fires 'start' again
+      if (seekMotion !== null) {
+        elapsedS = 0
+        direction = 1
+        value.drive(seekMotion.seek(0))
+        ensureSubscribed()
+      } else {
+        forwardLeg = true
+        value.drive({ position: launchPos, velocity: 0 })
+        retargetLiveTo(originalTarget, 0, false) // re-aims + re-subscribes
+      }
+      lastUpdateValue = value.get() // seed after driving so the first frame isn't a spurious update
+      scope.resume()
+    },
     setTarget(target, velocity) {
       retargetLiveTo(target, velocity, false)
     },
@@ -392,6 +457,12 @@ function inertControls(value: Animatable, kind: MotionKind, settleTo: number): R
     timeMs: () => 0,
     totalMs: () => 0,
     durationMs: () => 0,
+    isActive: () => false,
+    iteration: () => 0,
+    totalProgress: () => 1,
+    restart: () => {},
+    startTimeMs: () => 0,
+    endTimeMs: () => 0,
     setTarget: (target) => value.drive({ position: target, velocity: 0 }),
     bake: () => true,
   }
@@ -409,6 +480,7 @@ function buildHandle(controls: RunControls, registry: LifecycleRegistry<Playback
       return controls.isSeekable()
     },
     finished: controls.finished,
+    then: thenFinished(controls.finished),
     stop: () => controls.stop(),
     pause() {
       controls.pause()
@@ -453,6 +525,15 @@ function buildHandle(controls: RunControls, registry: LifecycleRegistry<Playback
     time: () => controls.timeMs(),
     totalTime: () => controls.totalMs(),
     duration: () => controls.durationMs(),
+    isActive: () => controls.isActive(),
+    iteration: () => controls.iteration(),
+    totalProgress: () => controls.totalProgress(),
+    startTime: () => controls.startTimeMs(),
+    endTime: () => controls.endTimeMs(),
+    restart() {
+      controls.restart()
+      return this
+    },
     bake: (options) => controls.bake(options?.maxDurationMs),
     setTarget(value: number, options?: { velocity?: number }) {
       if (controls.isSeekable()) {

@@ -1,6 +1,7 @@
 import type { Scheduler } from '../scheduler/scheduler'
 import { getSharedScheduler } from '../scheduler/shared'
 import type { AnimationHandle } from '../value/animatable'
+import { thenFinished } from '../value/thenable'
 // Type-only: erased at build, so it does NOT pull the stagger-delay math (which
 // imports resolveEasing) into the primitives size graph that probes `stagger`.
 import type { DelayFn } from './stagger-delay'
@@ -60,6 +61,7 @@ export function stagger<T>(
 
   return {
     finished,
+    then: thenFinished(finished),
     stop: () => {
       if (stopped) return
       stopped = true
@@ -97,6 +99,7 @@ export function chain(steps: readonly AnimationStep[]): AnimationHandle {
 
   return {
     finished,
+    then: thenFinished(finished),
     stop: () => {
       if (stopped) return
       stopped = true

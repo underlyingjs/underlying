@@ -53,7 +53,8 @@ describe('region', () => {
     const r = region()
     const fn = (): void => {}
     expect(r.add(fn)).toBe(fn)
-    const handle = { finished: Promise.resolve(), stop: () => {} }
+    const finished = Promise.resolve()
+    const handle = { finished, then: finished.then.bind(finished), stop: () => {} }
     expect(r.track(handle)).toBe(handle)
   })
 
@@ -68,7 +69,8 @@ describe('region', () => {
   it('stops a tracked external handle on revert()', () => {
     let stopped = false
     const r = region()
-    r.track({ finished: Promise.resolve(), stop: () => (stopped = true) })
+    const finished = Promise.resolve()
+    r.track({ finished, then: finished.then.bind(finished), stop: () => (stopped = true) })
     r.revert()
     expect(stopped).toBe(true)
   })

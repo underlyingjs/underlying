@@ -2,6 +2,7 @@ import type { SpringOptions } from '../physics/spring'
 import type { ToOptions } from '../physics/tween'
 import type { Scheduler } from '../scheduler/scheduler'
 import { animatable, type Animatable, type AnimationHandle } from './animatable'
+import { thenFinished } from './thenable'
 import type { ChannelMeta, ParsedValue, ValueType } from './value-type'
 
 /**
@@ -47,8 +48,10 @@ const aggregate = (handles: AnimationHandle[]): AnimationHandle => {
     onInterrupt?.(handle)
   }
   for (const child of handles) child.eventCallback?.('interrupt', fireInterrupt)
+  const finished = Promise.all(handles.map((child) => child.finished)).then(() => undefined)
   const handle: AnimationHandle = {
-    finished: Promise.all(handles.map((child) => child.finished)).then(() => undefined),
+    finished,
+    then: thenFinished(finished),
     stop: () => {
       for (const child of handles) child.stop()
     },

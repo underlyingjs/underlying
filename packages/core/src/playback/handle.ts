@@ -44,6 +44,24 @@ export interface PlaybackHandle extends AnimationHandle {
   /** Duration (ms); undefined for an un-baked live spring/decay. */
   duration(): number | undefined
 
+  // --- Playhead queries (both kinds) ---
+  /** True while the run is progressing (not finished/stopped, not paused). */
+  isActive(): boolean
+  /** Current iteration index, 0-based (advances at each repeat boundary). */
+  iteration(): number
+  /**
+   * Progress across the WHOLE run, 0..1 (initial delay + every iteration + repeat
+   * delays). Falls back to the current iteration's progress for an un-baked spring
+   * or an infinite repeat (no finite total). 1 once settled.
+   */
+  totalProgress(): number
+  /** Replay from the start (skipping the initial delay) and play. No-op + warn once on a finished handle. */
+  restart(): this
+  /** The initial delay (ms) before the first iteration - the run's own start offset. */
+  startTime(): number
+  /** When the whole run completes (ms from its start): delay + all iterations. undefined if unknown/infinite. */
+  endTime(): number | undefined
+
   // --- Physics only ---
   /**
    * Sample the deterministic trajectory to rest ONCE into a seekable table.

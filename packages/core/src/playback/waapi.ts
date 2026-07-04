@@ -1,5 +1,6 @@
 import type { DelegatedControls } from '../dom/animate'
 import type { AnimationHandle } from '../value/animatable'
+import { thenFinished } from '../value/thenable'
 import { warnOnce } from '../value/warn'
 import type { MotionKind, PlaybackHandle } from './handle'
 
@@ -15,11 +16,17 @@ export function waapiHandle(delegated: DelegatedControls, base: AnimationHandle,
   const animation = delegated.animation
   const durationMs = delegated.durationMs
   let paused = false
+  let done = false
+  void base.finished.then(() => {
+    done = true
+  })
+  const progressNow = (): number => (durationMs <= 0 ? 1 : clamp(Number(animation.currentTime ?? 0) / durationMs, 0, 1))
 
   const handle: PlaybackHandle = {
     kind,
     seekable: true,
     finished: base.finished,
+    then: thenFinished(base.finished),
     stop: () => base.stop(),
     pause() {
       animation.pause?.()
@@ -49,13 +56,24 @@ export function waapiHandle(delegated: DelegatedControls, base: AnimationHandle,
       return this
     },
     progress(p?: number): number | PlaybackHandle {
-      if (p === undefined) return durationMs <= 0 ? 1 : clamp(Number(animation.currentTime ?? 0) / durationMs, 0, 1)
+      if (p === undefined) return progressNow()
       animation.currentTime = clamp(p, 0, 1) * durationMs
       return handle
     },
     time: () => Number(animation.currentTime ?? 0),
     totalTime: () => Number(animation.currentTime ?? 0),
     duration: () => durationMs,
+    isActive: () => !done && !paused,
+    iteration: () => 0, // a delegated tween runs a single iteration
+    totalProgress: () => progressNow(),
+    startTime: () => 0,
+    endTime: () => durationMs,
+    restart() {
+      animation.currentTime = 0
+      animation.play?.()
+      paused = false
+      return this
+    },
     bake: () => true, // a delegated tween is already seekable
     setTarget() {
       warnOnce('playback:settarget-seekable', 'setTarget() re-aims a live spring; a tween uses seek()')

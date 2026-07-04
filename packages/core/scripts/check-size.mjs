@@ -24,7 +24,9 @@ const PRIMITIVES_BUDGET_BYTES = 3.6 * 1024
 const ANIMATE_BUDGET_BYTES = 12.5 * 1024
 // The opt-in playback layer: pause/timeScale/reverse/seek, bake(), follow(),
 // timeScope, and sequence() (the live composition twin of @underlying/timeline).
-const PLAYBACK_BUDGET_BYTES = 6 * 1024
+// 6.5 kB since 1.2: #70 added the playhead queries (isActive/iteration/
+// totalProgress/restart/startTime/endTime) across the handle variants (6.0 -> 6.5).
+const PLAYBACK_BUDGET_BYTES = 6.5 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)
 const playbackUrl = new URL('../dist/playback/index.js', import.meta.url)

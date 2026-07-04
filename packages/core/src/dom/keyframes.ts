@@ -1,6 +1,7 @@
 import type { EasingInput } from '../physics/easing-registry'
 import type { Easing } from '../physics/easings'
 import type { AnimationHandle } from '../value/animatable'
+import { thenFinished } from '../value/thenable'
 
 /**
  * One expressive keyframe stop: a value plus an optional position and the easing
@@ -140,7 +141,7 @@ export function runKeyframeChain<T>(
 
   if (waypoints.length === 0) {
     resolveFinished()
-    return { handle: { finished, stop: () => {} }, interrupt: () => {} }
+    return { handle: { finished, then: thenFinished(finished), stop: () => {} }, interrupt: () => {} }
   }
 
   if (config.reduced) {
@@ -148,7 +149,7 @@ export function runKeyframeChain<T>(
     // last target: collapse straight to the final waypoint.
     ops.settle(waypoints[waypoints.length - 1]!)
     resolveFinished()
-    return { handle: { finished, stop: () => {} }, interrupt: () => {} }
+    return { handle: { finished, then: thenFinished(finished), stop: () => {} }, interrupt: () => {} }
   }
 
   if (normalized.teleport !== undefined) ops.teleport(normalized.teleport)
@@ -178,6 +179,7 @@ export function runKeyframeChain<T>(
   // so it never fires interrupt.
   const handle: AnimationHandle = {
     finished,
+    then: thenFinished(finished),
     stop: () => {
       if (cancelled) return
       cancelled = true

@@ -18,6 +18,14 @@ const translateX = (element: HTMLElement): number =>
   Number(/translate3d\((-?[\d.]+)px/.exec(element.style.transform)?.[1] ?? Number.NaN)
 
 describe('animate', () => {
+  it('is awaitable - await animate(...) resolves once it settles', async () => {
+    const { driver, scheduler, element } = setup()
+    const handle = animate(element, { x: 100 }, { scheduler })
+    for (let t = 0; t <= 4000; t += 16) driver.frame(t)
+    await handle // the handle is thenable (delegates to finished)
+    expect(translateX(element)).toBeCloseTo(100, 0)
+  })
+
   it('springs the requested channels to their targets', () => {
     const { driver, scheduler, element } = setup()
     animate(element, { x: 100, opacity: 0 }, { scheduler })

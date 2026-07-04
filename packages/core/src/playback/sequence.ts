@@ -1,3 +1,4 @@
+import type { ThenFn } from '../value/thenable'
 import type { DecayOptions } from '../physics/decay'
 import type { SpringOptions } from '../physics/spring'
 import type { ToOptions } from '../physics/tween'
@@ -45,6 +46,8 @@ export interface Sequence {
   readonly seekable: false
   /** Resolves when the last leg rests (or on stop()). Never rejects. */
   readonly finished: Promise<void>
+  /** Awaitable: `await sequence` resolves when the current run finishes (delegates to `finished`). */
+  then: ThenFn
 
   spring(value: Animatable, target: number, options?: SpringLegOptions): this
   to(value: Animatable, target: number, options?: ToLegOptions): this
@@ -201,6 +204,12 @@ export function createSequence(options: SequenceOptions = {}): Sequence {
     seekable: false as const,
     get finished() {
       return finishedPromise
+    },
+    then(
+      onfulfilled?: ((value: void) => unknown) | null,
+      onrejected?: ((reason: unknown) => unknown) | null,
+    ): Promise<unknown> {
+      return finishedPromise.then(onfulfilled ?? undefined, onrejected ?? undefined)
     },
 
     spring(value: Animatable, target: number, o: SpringLegOptions = {}) {
