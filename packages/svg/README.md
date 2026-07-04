@@ -66,7 +66,7 @@ This is a resampling morph (smooth, handles arbitrary shapes). When you need cor
 
 ## `morphCommands()`
 
-A command-preserving morph that keeps corners razor-sharp. Instead of resampling both outlines into points, it parses the `d` commands into cubic segments, subdivides the sparser shape so anchors map to anchors (de Casteljau, so original corners stay crisp), aligns closed rings by rotation and winding, and interpolates each anchor and control. The result is real curves with sharp corners the whole way across. The fraction is live, so you can scrub it or grab it mid-morph.
+A command-preserving morph that keeps corners razor-sharp. Instead of resampling both outlines into points, it parses the `d` commands into cubic segments, subdivides the sparser shape by arc length so anchors map to anchors (de Casteljau, so original corners stay crisp), aligns closed rings by rotation and winding (matched on centroid/scale-normalized anchors), pairs multi-piece shapes by similarity, and interpolates each anchor and control. Elliptical arcs (`A`) are converted to cubics. The result is real curves with sharp corners the whole way across. The fraction is live, so you can scrub it or grab it mid-morph.
 
 ```ts
 import { morphCommands } from '@underlying/svg'
@@ -77,7 +77,7 @@ m.spring(0)   // back - interruptible
 m.set(0.5)    // hold it halfway
 ```
 
-There is no arc (`A`) command support - use `morph()` for paths with arcs or arbitrary shapes.
+Multi-piece logos work too: subpaths pair by similarity (position + area), and a surplus piece shrinks to (or grows from) a point rather than snapping to an unrelated shape. For arbitrary blobby shapes where corners do not matter, `morph()` (resampling) is the simpler fallback.
 
 ## The familiar one-call form
 
@@ -124,7 +124,7 @@ samplePath('#track').at(0.5)  // low-level: { x, y, angle } at progress 0.5
 - **Reduced motion** is inherited from core: a `spring`/`decay`/`to` on the driver auto-degrades under `prefers-reduced-motion`, so the element jumps to the target with no travel.
 - **Coordinate space.** `motionPath` writes the sampled point straight to the element's `transform`, so the element and the path should share a coordinate space (e.g. both inside the same SVG, or the element absolutely positioned over it).
 - **SSR.** Sampling needs the DOM; pass an element rather than a selector on the server, or call from an effect.
-- **Morph** comes in two flavours. `morph()` resamples both outlines into points and interpolates - it handles any two shapes, but sharp corners can soften (raise `samples` for fidelity). `morphCommands()` preserves the commands and keeps corners crisp, but has no arc (`A`) support; use `morph()` for arcs.
+- **Morph** comes in two flavours. `morph()` resamples both outlines into points and interpolates - it handles any two shapes, but sharp corners can soften (raise `samples` for fidelity). `morphCommands()` preserves the commands and keeps corners crisp (arcs, multi-piece shapes, and wildly different scales all handled); reach for `morph()` when corners do not matter.
 
 ## License
 

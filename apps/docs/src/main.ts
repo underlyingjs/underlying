@@ -11,7 +11,7 @@ import { scrollMarquee, scrollParallax, scrollScrub, scrollSnap, scrollTo, scrol
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, flipShuffle } from './sections/drag-flip'
 import { presenceList } from './sections/presence'
-import { svgDraw, svgMorph, svgMorphSharp, svgMotionPath } from './sections/svg'
+import { svgDraw, svgMorph, svgMorphArc, svgMorphSharp, svgMotionPath } from './sections/svg'
 import { textMask, textReveal, textScramble, textSplit, textTypewriter } from './sections/text'
 import { flip3d, menuOrigin } from './sections/transform3d'
 import { namedEases } from './sections/eases'
@@ -88,7 +88,7 @@ const pages: Page[] = [
     group: 'Guides',
     title: 'SVG path',
     blurb: '<code>@underlying/svg</code> animates SVG paths physics-first: <code>motionPath()</code> rides an element along a path, <code>draw()</code> draws a stroke on, <code>morph()</code> resamples one shape into another, and <code>morphCommands()</code> morphs while keeping corners sharp. The progress of each is a live value you can flick, interrupt or scrub - no baked path tweens.',
-    sections: [svgMotionPath, svgDraw, svgMorph, svgMorphSharp],
+    sections: [svgMotionPath, svgDraw, svgMorph, svgMorphSharp, svgMorphArc],
   },
   {
     id: 'text',
