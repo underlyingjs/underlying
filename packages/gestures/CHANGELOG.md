@@ -1,5 +1,11 @@
 # @underlying/gestures
 
+## 1.2.0-beta.4
+
+### Patch Changes
+
+- @underlying/core@1.2.0-beta.4
+
 ## 1.2.0-beta.3
 
 ### Patch Changes
