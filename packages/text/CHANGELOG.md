@@ -1,5 +1,12 @@
 # @underlying/text
 
+## 1.2.0-beta.5
+
+### Patch Changes
+
+- Updated dependencies [fb77271]
+  - @underlying/core@1.2.0-beta.5
+
 ## 1.2.0-beta.4
 
 ### Patch Changes
