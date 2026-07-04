@@ -18,6 +18,7 @@
     "core-keyframe-expressivity-channels",
     "flip-transitions",
     "gestures-ambient",
+    "svg-morph-hardening",
     "text-masked-reveal",
     "utils-procedural-easing"
   ]
