@@ -14,6 +14,7 @@
     "@underlying/utils": "1.1.0"
   },
   "changesets": [
+    "core-awaitable-handles",
     "core-from-fromto",
     "core-keyframe-expressivity-channels",
     "flip-transitions",
