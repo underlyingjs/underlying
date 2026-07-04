@@ -6,7 +6,10 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-const FULL_BUDGET_BYTES = 4 * 1024
+// 5.0 kB since 1.2: #46 hardened morphCommands - arc (A) -> cubic conversion,
+// arc-length subdivision, normalized correspondence, and similarity subpath
+// matching added to the command-morph path (4.0 -> 5.0).
+const FULL_BUDGET_BYTES = 5 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)
 const distDir = dirname(fileURLToPath(bundleUrl))

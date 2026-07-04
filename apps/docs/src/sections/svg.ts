@@ -14,6 +14,11 @@ const STAR_D = 'M 160 26 L 176 70 L 223 72 L 186 100 L 199 145 L 160 119 L 121 1
 // A play triangle and a stop square - sharp corners on both, for the command morph.
 const PLAY_D = 'M 130 48 L 130 132 L 208 90 Z'
 const STOP_D = 'M 120 50 L 200 50 L 200 130 L 120 130 Z'
+// A circle drawn with arc commands, and a rounded square with arc corners - both
+// use A commands the command morph now converts to cubics.
+const ARC_CIRCLE_D = 'M 95 90 A 65 65 0 1 0 225 90 A 65 65 0 1 0 95 90 Z'
+const ARC_SQUARE_D =
+  'M 136 40 L 184 40 A 16 16 0 0 1 200 56 L 200 124 A 16 16 0 0 1 184 140 L 136 140 A 16 16 0 0 1 120 124 L 120 56 A 16 16 0 0 1 136 40 Z'
 
 const canvas = (inner: string): HTMLDivElement => {
   const wrap = h('div', { class: 'svgdemo' })
@@ -156,7 +161,7 @@ const m = morphCommands(icon, stopSquareData)
 m.spring(1)   // play -> stop, corners stay sharp
 m.spring(0)   // back - interruptible`,
   api: `morphCommands(element: MorphElement, target: string | { getAttribute(name: string): string | null }, options?: MorphCommandsOptions): Morph
-interface MorphCommandsOptions { from?: number; to?: number }  // no arc (A) support - use morph() for arcs
+interface MorphCommandsOptions { from?: number; to?: number }  // arcs (A) convert to cubics; multi-piece shapes pair by similarity
 interface Morph extends ScalarControls { readonly fraction: Animatable }`,
   run(ctx) {
     const wrap = canvas(`<path class="svgdemo__morph" d="${PLAY_D}" />`)
@@ -170,6 +175,38 @@ interface Morph extends ScalarControls { readonly fraction: Animatable }`,
     ctx.controls.append(
       button('to stop', () => m.spring(1, GENTLE)),
       button('to play', () => m.spring(0, GENTLE)),
+      scrub,
+    )
+  },
+}
+
+export const svgMorphArc: Section = {
+  id: 'svg-morph-arc',
+  group: 'SVG',
+  title: 'morphCommands() - arcs & pieces',
+  tagline: 'Arc commands convert to cubics; an arc circle morphs into a rounded square.',
+  description: `
+    <p>The command morph now handles the shapes it used to reject. Elliptical arc
+    (<code>A</code>) commands are converted to cubic beziers, so a <strong>circle
+    drawn with arcs</strong> morphs cleanly into a <strong>rounded square whose
+    corners are also arcs</strong>. Subdivision is by arc length and rings align on
+    normalized anchors, so the curve stays smooth the whole way. Drag to scrub.</p>`,
+  code: `// both shapes use A (arc) commands - converted to cubics, no throw
+const m = morphCommands(circle, roundedSquareData)
+m.spring(1)   // arc circle -> rounded square`,
+  api: `// arcs (A/a) -> cubics (<=90 deg per segment); packed flags like "A5 5 0 0110 10" parse too`,
+  run(ctx) {
+    const wrap = canvas(`<path class="svgdemo__morph" d="${ARC_CIRCLE_D}" />`)
+    ctx.stage.append(wrap)
+    const shape = wrap.querySelector('.svgdemo__morph') as unknown as SVGPathElement
+
+    const m = morphCommands(shape, ARC_SQUARE_D)
+    ctx.onCleanup(() => m.revert())
+
+    const scrub = slider('scrub', { min: 0, max: 100, value: 0, onInput: (v) => m.set(v / 100) })
+    ctx.controls.append(
+      button('to square', () => m.spring(1, GENTLE)),
+      button('to circle', () => m.spring(0, GENTLE)),
       scrub,
     )
   },
