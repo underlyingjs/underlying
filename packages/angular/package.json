@@ -1,6 +1,6 @@
 {
   "name": "@underlying/angular",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Angular adapter for underlying: standalone directives that bind animate(), gestures, text and FLIP to your elements, with automatic teardown on destroy.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
