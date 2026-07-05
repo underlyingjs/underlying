@@ -8,6 +8,7 @@
       "@underlying/core",
       "@underlying/flip",
       "@underlying/gestures",
+      "@underlying/react",
       "@underlying/scroll",
       "@underlying/svg",
       "@underlying/text",
