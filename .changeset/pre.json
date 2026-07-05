@@ -17,6 +17,7 @@
     "core-awaitable-handles",
     "core-from-fromto",
     "core-keyframe-expressivity-channels",
+    "flip-reorder",
     "flip-transitions",
     "gestures-ambient",
     "svg-morph-hardening",
