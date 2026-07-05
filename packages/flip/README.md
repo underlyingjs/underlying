@@ -47,6 +47,25 @@ play(state, { targets: detailEls, stiffness: 260, damping: 24 })
 
 A target with no matching key in the snapshot is left alone.
 
+## Drag-to-reorder: `reorder()`
+
+Drag an item and the displaced siblings FLIP into their new slots; on drop the dragged item springs into place. The new order is reported on every change.
+
+```ts
+import { reorder } from '@underlying/flip'
+
+const list = reorder(container, {
+  axis: 'y',              // 'y' (default) | 'x' | 'both' (a wrapping grid)
+  handle: '.grip',        // optional: only start a drag from this element
+  onReorder: ({ item, from, to, order }) => save(order),
+})
+
+list.order()   // the items in their current order
+list.dispose() // remove the listeners
+```
+
+Built on `flip()`: each reorder measures the siblings, mutates the DOM order, and springs them, while the dragged item is kept under the pointer across the mutation. Physics-first and interruptible - grab another item mid-settle. `reorder()` tree-shakes out for callers that only use `flip()`/`play()`/`snapshot()`. (The container's animated children should be the reorder items; other siblings are not accounted for.)
+
 ## Interruption
 
 Every `flip()` / `play()` retargets from the live spring, velocity conserved - press the button again while the tiles are still moving and the motion redirects, never restarts. That is the whole point.

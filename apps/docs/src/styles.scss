@@ -2259,3 +2259,40 @@ pre {
   text-transform: uppercase;
   opacity: 0.85;
 }
+
+/* reorder() demo */
+.reorderlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 340px;
+}
+.reorderrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  margin: 8px 0;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: var(--surface-2, #1b1f2a);
+  border: 1px solid var(--line, #2a2f3d);
+  user-select: none;
+}
+.reorderrow .grip {
+  cursor: grab;
+  color: var(--muted, #8a92a6);
+  font-size: 18px;
+  line-height: 1;
+  touch-action: none;
+}
+.reorderrow[data-reorder-dragging] {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border-color: var(--accent, #5b8cff);
+}
+.reorderorder {
+  margin-top: 12px;
+  color: var(--muted, #8a92a6);
+  font-size: 13px;
+}
