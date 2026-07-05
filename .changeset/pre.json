@@ -13,7 +13,8 @@
     "@underlying/timeline": "1.1.0",
     "@underlying/utils": "1.1.0",
     "@underlying/angular": "1.2.0-beta.6",
-    "@underlying/react": "1.2.0-beta.7"
+    "@underlying/react": "1.2.0-beta.7",
+    "@underlying/vue": "1.2.0-beta.8"
   },
   "changesets": [
     "angular-adapter",
@@ -26,6 +27,7 @@
     "react-adapter",
     "svg-morph-hardening",
     "text-masked-reveal",
-    "utils-procedural-easing"
+    "utils-procedural-easing",
+    "vue-adapter"
   ]
 }
