@@ -13,7 +13,8 @@
       "@underlying/svg",
       "@underlying/text",
       "@underlying/timeline",
-      "@underlying/utils"
+      "@underlying/utils",
+      "@underlying/vue"
     ]
   ],
   "linked": [],
