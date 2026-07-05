@@ -12,7 +12,8 @@
     "@underlying/text": "1.1.0",
     "@underlying/timeline": "1.1.0",
     "@underlying/utils": "1.1.0",
-    "@underlying/angular": "1.2.0-beta.6"
+    "@underlying/angular": "1.2.0-beta.6",
+    "@underlying/react": "1.2.0-beta.7"
   },
   "changesets": [
     "angular-adapter",
@@ -22,6 +23,7 @@
     "flip-reorder",
     "flip-transitions",
     "gestures-ambient",
+    "react-adapter",
     "svg-morph-hardening",
     "text-masked-reveal",
     "utils-procedural-easing"
