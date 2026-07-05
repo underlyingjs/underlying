@@ -1,6 +1,6 @@
 {
   "name": "@underlying/timeline",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Seekable timelines for @underlying/core: labels, relative positions, nesting, scrub. Physics-shaped composition.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",

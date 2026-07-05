@@ -1,6 +1,6 @@
 {
   "name": "@underlying/vue",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Vue adapter for underlying: composables that bind animate(), gestures, text and FLIP to a template ref, with automatic teardown on unmount.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
