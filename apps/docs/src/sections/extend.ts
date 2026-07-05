@@ -2,9 +2,9 @@ import { animate, numberValueType, registerValueType } from '@underlying/core'
 import { button, h, type Section } from '../showcase'
 
 // Explicit, app-level registration: a custom property animated as a plain
-// number. This is the exact extension mechanism @underlying/scroll and
-// @underlying/color will use. Done once at module load (never inside library
-// import side effects, which a tree-shaker would drop).
+// number. This is the exact extension mechanism the @underlying/* packages use.
+// Done once at module load (never inside library import side effects, which a
+// tree-shaker would drop).
 registerValueType(['--progress'], numberValueType)
 
 export const customTypes: Section = {

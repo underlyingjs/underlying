@@ -6,7 +6,7 @@ import { composedStyles } from './sections/compose'
 import { carousel, gestures, pointerAmbient, pointerCursor, pointerDepth, pointerInteractive, pointerMagnetic, pointerQuick, pointerTilt, setRelease, unifiedInput } from './sections/gestures'
 import { composition } from './sections/composition'
 import { entrance, hoverWave, regionTeardown, relativeFanout, staggerGrid } from './sections/authoring'
-import { bakedClip, lifecycle, momentumScrub, pauseResume, scrub, slowMo } from './sections/playback'
+import { bakedClip, lifecycle, momentumScrub, pauseResume, playheadQueries, scrub, slowMo } from './sections/playback'
 import { scrollMarquee, scrollParallax, scrollScrub, scrollSnap, scrollTo, scrollTrack, scrollTrigger, scrollVelocity, smoothScroll } from './sections/scroll'
 import { sequenceInterrupt, timelineChoreograph, timelineScroll } from './sections/timeline'
 import { dragPlayground, dragReorder, flipShuffle } from './sections/drag-flip'
@@ -18,6 +18,7 @@ import { namedEases } from './sections/eases'
 import { proceduralEases } from './sections/procedural-eases'
 import { reducedMotion } from './sections/a11y'
 import { customTypes } from './sections/extend'
+import { angularAdapter, reactAdapter, vueAdapter } from './sections/adapters'
 
 const pages: Page[] = [
   {
@@ -60,7 +61,7 @@ const pages: Page[] = [
     group: 'Guides',
     title: 'Playback',
     blurb: 'Springs are live, tweens are seekable. The opt-in <code>@underlying/core/playback</code> entry adds pause, timeScale, reverse, and seek, a <code>bake()</code> bridge that turns a spring into a scrubbable clip, and <code>follow()</code> for momentum scrub.',
-    sections: [pauseResume, lifecycle, slowMo, scrub, bakedClip, momentumScrub],
+    sections: [pauseResume, lifecycle, slowMo, scrub, bakedClip, momentumScrub, playheadQueries],
   },
   {
     id: 'scroll',
@@ -96,6 +97,13 @@ const pages: Page[] = [
     title: 'Text',
     blurb: '<code>@underlying/text</code> splits text into chars, words and lines you can animate - without breaking accessibility: the screen reader reads it whole, copy/paste is intact, emoji stay whole. <code>reveal()</code> springs the pieces in; <code>scramble()</code> and <code>typewriter()</code> write content with the final text always the accessible name.',
     sections: [textSplit, textReveal, textMask, textScramble, textTypewriter],
+  },
+  {
+    id: 'adapters',
+    group: 'Adapters',
+    title: 'React, Vue & Angular',
+    blurb: 'The same primitives, bound to your framework\'s lifecycle - created on mount, torn down automatically. <code>@underlying/react</code> exposes hooks, <code>@underlying/vue</code> composables, and <code>@underlying/angular</code> standalone directives, each a 1:1 mapping onto <code>animate()</code>, the gestures, the text effects and FLIP. Install the adapter (it pulls in the core packages it uses) and share one core with any direct imports.',
+    sections: [reactAdapter, vueAdapter, angularAdapter],
   },
   {
     id: 'accessibility',

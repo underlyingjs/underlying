@@ -179,8 +179,8 @@ export const regionTeardown: Section = {
     <p>A <code>region()</code> collects everything created inside it - animations,
     a <code>responsive()</code> breakpoint setup - and <code>revert()</code> undoes
     it all at once: stops the motion, removes the media listeners, releases the
-    inline styles. That is exactly the mount/unmount lifetime a React, Vue, or Svelte
-    adapter needs. Mount the scene, watch the live log, then unmount.</p>`,
+    inline styles. That is exactly the mount/unmount lifetime the React, Vue, and
+    Angular adapters build on. Mount the scene, watch the live log, then unmount.</p>`,
   code: `const scene = region((r) => {
   r.animate('.panel', { opacity: [0, 1], y: ['16px', '0px'] }, { delay: staggerDelay({ each: 90 }) })
   r.responsive('(min-width: 720px)', () => {
