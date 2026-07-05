@@ -275,3 +275,74 @@ lane.addEventListener('pointermove', (event) => lag.target(localX(event)))`,
     track.addEventListener('pointermove', (event) => lag.target(localX(event)))
   },
 }
+
+export const playheadQueries: Section = {
+  id: 'playback-playhead',
+  group: 'Playback',
+  title: 'Awaitable handles & playhead queries',
+  tagline: 'await a run to settle; ask a handle where it is.',
+  description: `
+    <p>Every <code>animate()</code> handle is awaitable - <code>await animate(...)</code>
+    resolves when the motion settles (the same signal as <code>.finished</code>), so
+    sequencing reads top to bottom. On the opt-in playback handle you can also query
+    the playhead: <code>isActive()</code>, <code>iteration()</code>,
+    <code>totalProgress()</code> (0..1 across the whole run, delays and repeats
+    included), <code>startTime()</code> / <code>endTime()</code>, and
+    <code>restart()</code> to replay. Launch it and watch the live readout.</p>`,
+  code: `import { animate } from '@underlying/core'
+import { animatePlayback } from '@underlying/core/playback'
+
+await animate(box, { x: 200 })          // resolves when it settles
+await animate(box, { x: 0 })            // then this one runs
+
+const play = animatePlayback(box, { x: 280 }, { duration: 1600 })
+play.isActive()        // true while progressing (not finished / paused)
+play.totalProgress()   // 0..1 over the whole run
+play.iteration()       // 0-based; advances when a run repeats (via playable())
+play.restart()         // replay from the start`,
+  api: `// AnimationHandle is a PromiseLike<void> - await it, or use .finished / .then()
+isActive(): boolean            // progressing (not finished/stopped/paused)
+iteration(): number            // 0-based iteration index
+totalProgress(): number        // 0..1 across delay + every iteration + repeat delays
+startTime(): number            // initial delay before the first iteration (ms)
+endTime(): number | undefined  // when the whole run completes (ms); undefined if infinite
+restart(): this                // replay from the start and play`,
+  run(ctx) {
+    const track = lane()
+    const box = h('div', { class: 'obj obj--chip' })
+    track.append(box)
+    ctx.stage.append(track)
+
+    const activeVal = h('span', { style: 'color:var(--encre)' }, '-')
+    const progressVal = h('span', { style: 'color:var(--encre)' }, '-')
+    const cell = (label: string, value: HTMLElement): HTMLElement => h('span', {}, h('span', {}, `${label} `), value)
+    const readout = h('div', {
+      style: 'position:absolute;left:18px;bottom:14px;display:flex;gap:14px;font-size:12px;color:var(--lichen);font-variant-numeric:tabular-nums',
+    }, cell('isActive', activeVal), cell('totalProgress', progressVal))
+    track.append(readout)
+
+    let handle: PlaybackHandle | null = null
+    let raf = 0
+    const tick = (): void => {
+      if (handle !== null) {
+        activeVal.textContent = String(handle.isActive())
+        progressVal.textContent = handle.totalProgress().toFixed(2)
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+
+    const launch = (): void => {
+      handle?.stop()
+      handle = animatePlayback(box, { x: [0, spanOf(track)] }, { duration: 1600 })
+    }
+    ctx.onCleanup(() => {
+      cancelAnimationFrame(raf)
+      handle?.stop()
+    })
+    ctx.controls.append(
+      button('launch', launch),
+      button('restart', () => handle?.restart()),
+    )
+  },
+}

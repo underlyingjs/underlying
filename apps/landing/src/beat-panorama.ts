@@ -1,7 +1,7 @@
 import { animatable, bindStyle, bindTemplate, prefersReducedMotion, staggerDelay } from '@underlying/core'
 import type { ScrollController } from '@underlying/scroll'
 
-// Beat 08 - the panorama. The "what is in the box" grid: seven packages, one core
+// Beat 08 - the panorama. The "what is in the box" grid: every package, one core
 // underneath, each with its real version (read from package.json at build, never
 // hand-typed). The grid BUILDS WITH THE SCROLL: each card rises and scales tied to
 // scroll position, in a staggerDelay() wave that propagates across the real 2D grid
@@ -22,6 +22,10 @@ const PACKAGES = [
   { key: 'svg', name: '@underlying/svg', role: 'Ride a path, draw a line, morph a shape - command-preserving.' },
   { key: 'text', name: '@underlying/text', role: 'Accessible splitting and a physics-first reveal, the real text intact underneath.' },
   { key: 'timeline', name: '@underlying/timeline', role: 'Seekable, time-addressable sequences for when you need a frame, not a force.' },
+  { key: 'utils', name: '@underlying/utils', role: 'Named eases, cubicBezier, and the small math - clamp, mapRange, interpolate, wrap.' },
+  { key: 'react', name: '@underlying/react', role: 'Hooks that bind animate(), gestures, text and FLIP to a ref. Teardown on unmount.' },
+  { key: 'vue', name: '@underlying/vue', role: 'Composables that bind the same to a template ref. Teardown on unmount.' },
+  { key: 'angular', name: '@underlying/angular', role: 'Standalone directives that bind the same to your elements. Teardown on destroy.' },
 ]
 
 export function initPanorama({ mount, scroll, fireCredit }: PanoramaDeps): void {
@@ -31,7 +35,7 @@ export function initPanorama({ mount, scroll, fireCredit }: PanoramaDeps): void 
       `<li class="pkg" data-pkg>
         <span class="pkg__name">${p.name}</span>
         <p class="pkg__role">${p.role}</p>
-        <span class="pkg__ver">${versions[p.key] ?? 'beta'}</span>
+        <span class="pkg__ver">${versions[p.key] ?? ''}</span>
       </li>`,
   ).join('')
 
@@ -42,8 +46,8 @@ export function initPanorama({ mount, scroll, fireCredit }: PanoramaDeps): void 
     <div class="beat__rail">08 / the box</div>
     <div class="panorama">
       <header class="panorama__lede">
-        <h2 class="panorama__head">Seven packages. One core.</h2>
-        <p class="panorama__sub">Each adds a surface. The physics is the same live value underneath.</p>
+        <h2 class="panorama__head">${PACKAGES.length} packages. One core.</h2>
+        <p class="panorama__sub">Each adds a surface - now including React, Vue and Angular adapters. The physics is the same live value underneath.</p>
       </header>
       <ul class="panorama__grid">${cards}</ul>
     </div>

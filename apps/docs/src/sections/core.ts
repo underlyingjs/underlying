@@ -7,6 +7,9 @@ export const gettingStarted: Section = {
   title: 'animate()',
   tagline: 'One call. Springs by default. Every value interruptible.',
   description: `
+    <p>Install the core, plus any add-ons or a framework adapter you want:</p>
+    <pre class="code"><code>npm install @underlying/core
+npm install @underlying/react   # or @underlying/vue, @underlying/angular</code></pre>
     <p><code>animate(element, targets)</code> is the whole entry point. The five
     transform/opacity channels (<code>x</code>, <code>y</code>, <code>scale</code>,
     <code>rotate</code>, <code>opacity</code>) ride a compositor-friendly fast

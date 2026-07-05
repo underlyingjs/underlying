@@ -9,7 +9,8 @@
 
 <p align="center">
   Springs and inertia by default. Every value interruptible, with its velocity conserved.
-  <br />Accessible out of the box. Zero dependencies. ~9.5 kB gzip.
+  <br />Accessible out of the box. Zero dependencies. React, Vue and Angular adapters.
+  <br />~12 kB gzip for animate(), tree-shakeable to ~3.5 kB.
 </p>
 
 <p align="center">
@@ -18,10 +19,15 @@
   <a href="https://www.npmjs.com/package/@underlying/timeline"><img alt="@underlying/timeline on npm" src="https://img.shields.io/npm/v/@underlying/timeline?label=timeline&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/gestures"><img alt="@underlying/gestures on npm" src="https://img.shields.io/npm/v/@underlying/gestures?label=gestures&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/text"><img alt="@underlying/text on npm" src="https://img.shields.io/npm/v/@underlying/text?label=text&color=1C3426" /></a>
+  <a href="https://www.npmjs.com/package/@underlying/flip"><img alt="@underlying/flip on npm" src="https://img.shields.io/npm/v/@underlying/flip?label=flip&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/svg"><img alt="@underlying/svg on npm" src="https://img.shields.io/npm/v/@underlying/svg?label=svg&color=1C3426" /></a>
   <a href="https://www.npmjs.com/package/@underlying/utils"><img alt="@underlying/utils on npm" src="https://img.shields.io/npm/v/@underlying/utils?label=utils&color=1C3426" /></a>
-  <a href="https://underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
-  <img alt="core gzip" src="https://img.shields.io/badge/core-~9.5%20kB%20gzip-1C3426" />
+  <br />
+  <a href="https://www.npmjs.com/package/@underlying/react"><img alt="@underlying/react on npm" src="https://img.shields.io/npm/v/@underlying/react?label=react&color=1C3426" /></a>
+  <a href="https://www.npmjs.com/package/@underlying/vue"><img alt="@underlying/vue on npm" src="https://img.shields.io/npm/v/@underlying/vue?label=vue&color=1C3426" /></a>
+  <a href="https://www.npmjs.com/package/@underlying/angular"><img alt="@underlying/angular on npm" src="https://img.shields.io/npm/v/@underlying/angular?label=angular&color=1C3426" /></a>
+  <a href="https://docs.underlyi.ng"><img alt="docs" src="https://img.shields.io/badge/docs-underlyi.ng-1C3426" /></a>
+  <img alt="core gzip" src="https://img.shields.io/badge/core-~12%20kB%20gzip-1C3426" />
   <img alt="dependencies" src="https://img.shields.io/badge/deps-0-1C3426" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-1C3426" />
 </p>
@@ -64,27 +70,64 @@ sequence().spring(a, 1).spring(b, 1, { overlap: 80 }).play()   // live cascade, 
 
 ## Packages
 
-Live, interruptible physics is the default - for a single value (core, scroll's momentum scrub), for whole compositions (`sequence()`), and for drag, fling and FLIP layout transitions (`@underlying/gestures`). The layers that let you scrub *time* - scroll's locked scrub, the timeline - record that physics into a seekable form: the motion stays physics-shaped (a real spring trajectory, overshoot and all), never an eased fake. So composition comes in two honest flavors: live and interruptible (`sequence()`), or recorded and scrubbable (the timeline).
+Live, interruptible physics is the default - for a single value (core, scroll's momentum scrub), for whole compositions (`sequence()`), for drag and fling (`@underlying/gestures`), and for FLIP layout transitions (`@underlying/flip`). The layers that let you scrub *time* - scroll's locked scrub, the timeline - record that physics into a seekable form: the motion stays physics-shaped (a real spring trajectory, overshoot and all), never an eased fake. So composition comes in two honest flavors: live and interruptible (`sequence()`), or recorded and scrubbable (the timeline).
 
 | Package | Description | Status |
 | --- | --- | --- |
-| [`@underlying/core`](packages/core) | Scheduler, animatable values, springs / inertia / decay, any-CSS-property value model, composition, a11y, WAAPI delegation | beta |
-| `@underlying/core/playback` | pause / timeScale / reverse / seek, `bake()`, `follow()`, `sequence()` - opt-in, separate bundle | beta |
-| `@underlying/angular` | Service, directives, signals integration | planned |
-| [`@underlying/scroll`](packages/scroll) | Scrub, parallax, pin, snap, triggers - scroll as a source driving animatables | beta |
-| [`@underlying/timeline`](packages/timeline) | Seekable timelines: labels, relative positions, nesting, stagger - scrubbable, physics-shaped | beta |
-| [`@underlying/gestures`](packages/gestures) | Drag, fling and interruptible FLIP - pointer velocity into physics, layout transitions that retarget mid-flight | beta |
-| [`@underlying/text`](packages/text) | Accessible split (chars / words / lines), physics reveal, scramble, typewriter | beta |
-| [`@underlying/svg`](packages/svg) | SVG path animation: ride a path (`motionPath`), draw a stroke on (`draw`), morph one shape into another (`morph`) - physics-first, flick / interrupt / scrub | beta |
-| [`@underlying/utils`](packages/utils) | Named eases (`power`, `back`, `elastic`, `bounce`, `steps`, `cubicBezier`) by function or string, plus `clamp` / `mapRange` / `interpolate` / `snap` / `wrap` / `random` | beta |
+| [`@underlying/core`](packages/core) | Scheduler, animatable values, springs / inertia / decay, any-CSS-property value model, composition, a11y, WAAPI delegation | stable |
+| `@underlying/core/playback` | pause / timeScale / reverse / seek, `bake()`, `follow()`, `sequence()` - opt-in, separate bundle | stable |
+| [`@underlying/scroll`](packages/scroll) | Scrub, parallax, pin, snap, triggers - scroll as a source driving animatables | stable |
+| [`@underlying/timeline`](packages/timeline) | Seekable timelines: labels, relative positions, nesting, stagger - scrubbable, physics-shaped | stable |
+| [`@underlying/gestures`](packages/gestures) | Drag, fling and interruptible FLIP - pointer velocity into physics, layout transitions that retarget mid-flight | stable |
+| [`@underlying/flip`](packages/flip) | FLIP layout and shared-element transitions, drag-to-reorder, presence lists - interruptible, retargeting from live velocity | stable |
+| [`@underlying/text`](packages/text) | Accessible split (chars / words / lines), physics reveal, scramble, typewriter | stable |
+| [`@underlying/svg`](packages/svg) | SVG path animation: ride a path (`motionPath`), draw a stroke on (`draw`), morph one shape into another (`morph`) - physics-first, flick / interrupt / scrub | stable |
+| [`@underlying/utils`](packages/utils) | Named eases (`power`, `back`, `elastic`, `bounce`, `steps`, `cubicBezier`) by function or string, plus `clamp` / `mapRange` / `interpolate` / `snap` / `wrap` / `random` | stable |
+| [`@underlying/react`](packages/react) | Hooks binding `animate()`, gestures, text and FLIP to a ref, with teardown on unmount | stable |
+| [`@underlying/vue`](packages/vue) | Composables binding the same to a template ref, with teardown on unmount | stable |
+| [`@underlying/angular`](packages/angular) | Standalone directives binding the same to your elements, with teardown on destroy | stable |
+
+## Framework adapters
+
+The same primitives, bound to your framework's lifecycle - created on mount, torn down automatically. Each adapter pulls in the underlying packages it needs (core, gestures, text, flip), so installing the adapter is enough. Their version ranges are caret-pinned, so if you also import `@underlying/core` directly it dedupes to a single shared core (one rAF loop).
+
+```tsx
+// React
+import { useAnimate, useDraggable } from '@underlying/react'
+const box = useAnimate<HTMLDivElement>({ x: open ? 200 : 0 })   // retargets, velocity conserved
+return <div ref={box} />
+```
+
+```vue
+<!-- Vue -->
+<script setup lang="ts">
+import { useAnimate } from '@underlying/vue'
+const box = useAnimate<HTMLDivElement>(() => ({ x: open.value ? 200 : 0 }))
+</script>
+<template><div :ref="box" /></template>
+```
+
+```html
+<!-- Angular (standalone directives) -->
+<div uAnimate [uAnimate]="{ x: open() ? 200 : 0 }"></div>
+```
+
+Angular directives run outside the zone and no-op during SSR; the React and Vue adapters are SSR-safe.
 
 ## Install
 
 ```sh
-npm install @underlying/core
+npm install @underlying/core                 # the library
+npm install @underlying/scroll @underlying/gestures @underlying/text   # add-ons, as needed
+
+npm install @underlying/react     # React  - pulls in the core packages it uses
+npm install @underlying/vue       # Vue
+npm install @underlying/angular   # Angular
 ```
 
-Every demo on the docs site is live - [read the docs at underlyi.ng](https://underlyi.ng).
+Add `@underlying/core` alongside an adapter if you want to call `animate()` directly too; the caret ranges keep it a single instance.
+
+Every demo on the docs site is live - [read the docs at docs.underlyi.ng](https://docs.underlyi.ng).
 
 ## Development
 
