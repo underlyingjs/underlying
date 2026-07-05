@@ -1,4 +1,4 @@
-import { Directive, DestroyRef, ElementRef, inject, input, type OnInit } from '@angular/core'
+import { Directive, ElementRef, inject, input, type OnInit } from '@angular/core'
 import {
   ambient,
   depth,
@@ -11,20 +11,24 @@ import {
   type MagneticOptions,
   type TiltOptions,
 } from '@underlying/gestures'
+import { primitiveBinder } from './internal'
 
 // Input signals hold their value only AFTER the first binding, so the primitive is
 // created in ngOnInit (not the constructor, where inputs still read their default).
-// inject() runs in the constructor injection context via the field initializers.
+// primitiveBinder() runs in the field initializer (an injection context) and returns
+// a binder that creates the primitive outside the Angular zone, skipping SSR.
 
 /** 3D card tilt toward the pointer. `<div uTilt [uTilt]="{ max: 12 }"></div>` */
 @Directive({ selector: '[uTilt]', standalone: true })
 export class UnderlyingTiltDirective implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
-  private readonly destroyRef = inject(DestroyRef)
+  private readonly bind = primitiveBinder()
   readonly options = input<TiltOptions>({}, { alias: 'uTilt' })
   ngOnInit(): void {
-    const handle = tilt(this.host, this.options())
-    this.destroyRef.onDestroy(() => handle.dispose())
+    this.bind(
+      () => tilt(this.host, this.options()),
+      (handle) => handle.dispose(),
+    )
   }
 }
 
@@ -32,11 +36,13 @@ export class UnderlyingTiltDirective implements OnInit {
 @Directive({ selector: '[uMagnetic]', standalone: true })
 export class UnderlyingMagneticDirective implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
-  private readonly destroyRef = inject(DestroyRef)
+  private readonly bind = primitiveBinder()
   readonly options = input<MagneticOptions>({}, { alias: 'uMagnetic' })
   ngOnInit(): void {
-    const handle = magnetic(this.host, this.options())
-    this.destroyRef.onDestroy(() => handle.dispose())
+    this.bind(
+      () => magnetic(this.host, this.options()),
+      (handle) => handle.dispose(),
+    )
   }
 }
 
@@ -44,11 +50,13 @@ export class UnderlyingMagneticDirective implements OnInit {
 @Directive({ selector: '[uDepth]', standalone: true })
 export class UnderlyingDepthDirective implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
-  private readonly destroyRef = inject(DestroyRef)
+  private readonly bind = primitiveBinder()
   readonly options = input<DepthOptions>({}, { alias: 'uDepth' })
   ngOnInit(): void {
-    const handle = depth(this.host, this.options())
-    this.destroyRef.onDestroy(() => handle.dispose())
+    this.bind(
+      () => depth(this.host, this.options()),
+      (handle) => handle.dispose(),
+    )
   }
 }
 
@@ -56,11 +64,13 @@ export class UnderlyingDepthDirective implements OnInit {
 @Directive({ selector: '[uAmbient]', standalone: true })
 export class UnderlyingAmbientDirective implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
-  private readonly destroyRef = inject(DestroyRef)
+  private readonly bind = primitiveBinder()
   readonly options = input<AmbientOptions>({}, { alias: 'uAmbient' })
   ngOnInit(): void {
-    const handle = ambient(this.host, this.options())
-    this.destroyRef.onDestroy(() => handle.dispose())
+    this.bind(
+      () => ambient(this.host, this.options()),
+      (handle) => handle.dispose(),
+    )
   }
 }
 
@@ -68,10 +78,12 @@ export class UnderlyingAmbientDirective implements OnInit {
 @Directive({ selector: '[uInteractive]', standalone: true })
 export class UnderlyingInteractiveDirective implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
-  private readonly destroyRef = inject(DestroyRef)
+  private readonly bind = primitiveBinder()
   readonly options = input<InteractiveOptions>({}, { alias: 'uInteractive' })
   ngOnInit(): void {
-    const handle = interactive(this.host, this.options())
-    this.destroyRef.onDestroy(() => handle.dispose())
+    this.bind(
+      () => interactive(this.host, this.options()),
+      (handle) => handle.dispose(),
+    )
   }
 }

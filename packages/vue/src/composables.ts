@@ -115,7 +115,11 @@ export function useReveal<T extends HTMLElement = HTMLElement>(options?: RevealO
   }, options)
 }
 
-/** Typewriter effect writing `text` into the ref'd element. */
+/**
+ * Typewriter effect writing `text` into the ref'd element. `text` and options are
+ * read once on mount (it is a one-shot entrance); later changes do not re-type.
+ * Remount the element (e.g. with a `key`) to play it again with new text.
+ */
 export function useTypewriter<T extends HTMLElement = HTMLElement>(
   text: string,
   options?: TypewriterOptions,
@@ -126,7 +130,11 @@ export function useTypewriter<T extends HTMLElement = HTMLElement>(
   }, options)
 }
 
-/** Scramble-in effect writing `text` into the ref'd element. */
+/**
+ * Scramble-in effect writing `text` into the ref'd element. `text` and options are
+ * read once on mount (it is a one-shot entrance); later changes do not re-run.
+ * Remount the element (e.g. with a `key`) to play it again with new text.
+ */
 export function useScramble<T extends HTMLElement = HTMLElement>(
   text: string,
   options?: ScrambleOptions,
