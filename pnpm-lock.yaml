@@ -86,19 +86,16 @@ importers:
   packages/angular:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@underlying/flip':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../flip
       '@underlying/gestures':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../gestures
-      '@underlying/scroll':
-        specifier: workspace:*
-        version: link:../scroll
       '@underlying/text':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../text
       tslib:
         specifier: ^2.8.0
@@ -159,7 +156,7 @@ importers:
   packages/flip:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       esbuild:
@@ -181,7 +178,7 @@ importers:
   packages/gestures:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       esbuild:
@@ -203,16 +200,16 @@ importers:
   packages/react:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@underlying/flip':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../flip
       '@underlying/gestures':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../gestures
       '@underlying/text':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../text
     devDependencies:
       '@testing-library/react':
@@ -221,6 +218,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -243,7 +243,7 @@ importers:
   packages/scroll:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       esbuild:
@@ -265,7 +265,7 @@ importers:
   packages/svg:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       esbuild:
@@ -287,7 +287,7 @@ importers:
   packages/text:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       esbuild:
@@ -309,11 +309,11 @@ importers:
   packages/timeline:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@underlying/scroll':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../scroll
       esbuild:
         specifier: ^0.25.0
@@ -331,7 +331,7 @@ importers:
   packages/utils:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       esbuild:
@@ -350,21 +350,24 @@ importers:
   packages/vue:
     dependencies:
       '@underlying/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@underlying/flip':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../flip
       '@underlying/gestures':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../gestures
       '@underlying/text':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../text
     devDependencies:
       '@vue/test-utils':
         specifier: ^2.4.6
         version: 2.4.11(@vue/compiler-dom@3.5.39)(@vue/server-renderer@3.5.39(vue@3.5.39(typescript@5.9.3)))(vue@3.5.39(typescript@5.9.3))
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0

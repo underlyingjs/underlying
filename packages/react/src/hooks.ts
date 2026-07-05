@@ -1,5 +1,11 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
 import { animate, releaseStyle, type AnimateOptions, type AnimateTargets } from '@underlying/core'
+
+// DOM-mutating setup (split/reveal rewrapping text, the initial animate()
+// positioning) must run before the browser paints, or the first frame flashes
+// the un-animated element. useLayoutEffect does that, but React warns when it
+// runs on the server, where there is no layout - fall back to useEffect in SSR.
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import {
   ambient,
   depth,
@@ -38,7 +44,7 @@ function useBind<T extends HTMLElement, O>(
   const ref = useRef<T>(null)
   const latest = useRef(options)
   latest.current = options
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = ref.current
     if (el === null) return undefined
     return bind(el, latest.current)
@@ -124,7 +130,11 @@ export function useReveal<T extends HTMLElement = HTMLElement>(options?: RevealO
   return useBind(bindReveal, options)
 }
 
-/** Typewriter effect writing `text` into the ref'd element. */
+/**
+ * Typewriter effect writing `text` into the ref'd element. `text` and options are
+ * read once when the effect mounts (it is a one-shot entrance); later changes do
+ * not re-type. Remount (e.g. with a `key`) to play it again with new text.
+ */
 export function useTypewriter<T extends HTMLElement = HTMLElement>(
   text: string,
   options?: TypewriterOptions,
@@ -132,7 +142,7 @@ export function useTypewriter<T extends HTMLElement = HTMLElement>(
   const ref = useRef<T>(null)
   const latest = useRef({ text, options })
   latest.current = { text, options }
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = ref.current
     if (el === null) return undefined
     const h = typewriter(el, latest.current.text, latest.current.options)
@@ -141,7 +151,11 @@ export function useTypewriter<T extends HTMLElement = HTMLElement>(
   return ref
 }
 
-/** Scramble-in effect writing `text` into the ref'd element. */
+/**
+ * Scramble-in effect writing `text` into the ref'd element. `text` and options are
+ * read once when the effect mounts (it is a one-shot entrance); later changes do
+ * not re-run. Remount (e.g. with a `key`) to play it again with new text.
+ */
 export function useScramble<T extends HTMLElement = HTMLElement>(
   text: string,
   options?: ScrambleOptions,
@@ -149,7 +163,7 @@ export function useScramble<T extends HTMLElement = HTMLElement>(
   const ref = useRef<T>(null)
   const latest = useRef({ text, options })
   latest.current = { text, options }
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = ref.current
     if (el === null) return undefined
     const h = scramble(el, latest.current.text, latest.current.options)
@@ -190,14 +204,17 @@ export function useAnimate<T extends HTMLElement = HTMLElement>(
   opts.current = options
   // No deps: re-run each render. A physics-first animate() retargets the same
   // channels to the (possibly unchanged) target, so an idle re-run is a no-op.
-  useEffect(() => {
+  // Layout effect so the first positioning lands before paint (no flash).
+  useIsomorphicLayoutEffect(() => {
     const el = ref.current
     if (el !== null) animate(el, targets, opts.current)
   })
-  // Release the inline styles once, on unmount.
+  // Release the inline styles (and dispose the live channels) once, on unmount.
+  // Capture the element on mount: React nulls ref.current before this cleanup
+  // runs, so reading the ref here would release nothing and leak the spring.
   useEffect(() => {
+    const el = ref.current
     return () => {
-      const el = ref.current
       if (el !== null) releaseStyle(el)
     }
   }, [])

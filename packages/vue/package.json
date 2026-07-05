@@ -33,10 +33,12 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=20"
@@ -45,19 +47,21 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "vite build && tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "size": "node scripts/check-size.mjs"
   },
   "peerDependencies": {
     "vue": "^3.4.0"
   },
   "dependencies": {
-    "@underlying/core": "workspace:*",
-    "@underlying/flip": "workspace:*",
-    "@underlying/gestures": "workspace:*",
-    "@underlying/text": "workspace:*"
+    "@underlying/core": "workspace:^",
+    "@underlying/flip": "workspace:^",
+    "@underlying/gestures": "workspace:^",
+    "@underlying/text": "workspace:^"
   },
   "devDependencies": {
     "@vue/test-utils": "^2.4.6",
+    "esbuild": "^0.25.0",
     "jsdom": "^26.1.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",

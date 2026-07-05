@@ -34,7 +34,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      # Hard gate: the full bundle (< 12 kB gzip) plus two tree-shake probes
-      # (primitives-only and animate-only import graphs) fail the build if exceeded.
+      # Hard gate: every package's gzip budget (core's full surface plus its
+      # primitives-only and animate-only tree-shake probes, and each add-on and
+      # adapter) fails the build if exceeded. Budgets live in each package's
+      # scripts/check-size.mjs - the single source of truth for the numbers.
       - name: Size budget
         run: pnpm size

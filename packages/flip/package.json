@@ -37,7 +37,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=20"
@@ -50,7 +51,7 @@
     "size": "node scripts/check-size.mjs"
   },
   "dependencies": {
-    "@underlying/core": "workspace:*"
+    "@underlying/core": "workspace:^"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",
