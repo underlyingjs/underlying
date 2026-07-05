@@ -6,10 +6,11 @@ import { dirname } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-// Full surface includes flipGroup() (auto-FLIP, shared-element, presence enter/exit).
-// The core-only budget guards that flip()/play()/snapshot() callers tree-shake the
-// controller away and keep paying the same small cost as before.
-const FULL_BUDGET_BYTES = 3 * 1024
+// Full surface includes flipGroup() (auto-FLIP, shared-element, presence enter/exit)
+// and, since 1.2, reorder() (#69 drag-to-reorder: 3.0 -> 4.0). The core-only budget
+// guards that flip()/play()/snapshot() callers tree-shake both away and keep paying
+// the same small cost as before.
+const FULL_BUDGET_BYTES = 4 * 1024
 const CORE_BUDGET_BYTES = 1.5 * 1024
 
 const bundleUrl = new URL('../dist/index.js', import.meta.url)

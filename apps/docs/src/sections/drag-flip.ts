@@ -1,4 +1,4 @@
-import { flip } from '@underlying/flip'
+import { flip, reorder } from '@underlying/flip'
 import { draggable } from '@underlying/gestures'
 import { button, h, type Section } from '../showcase'
 
@@ -84,5 +84,51 @@ interface FlipOptions extends SpringOptions {
       }, { stiffness: 300, damping: 28 })
     }
     ctx.controls.append(button('shuffle', shuffle), button('grid / list', toggleView))
+  },
+}
+
+export const dragReorder: Section = {
+  id: 'drag-reorder',
+  group: 'Drag & FLIP',
+  title: 'reorder()',
+  tagline: 'Drag to reorder a list - displaced items FLIP into place, the new order is reported.',
+  description: `
+    <p>The project-list / tag-chip / nav-builder interaction, in one call.
+    <code>reorder()</code> makes a list drag-sortable: grab an item by its handle,
+    the displaced rows spring to their new slots, and on drop the dragged row
+    settles home. It is built on <code>flip()</code>, so every swap is a real
+    interruptible spring. The live order is reported through <code>onReorder</code> -
+    persist it, or mirror it into your data. Drag the rows below.</p>`,
+  code: `import { reorder } from '@underlying/flip'
+
+reorder(list, {
+  axis: 'y',
+  handle: '.grip',
+  onReorder: ({ order }) => save(order),  // fires on every change
+})`,
+  api: `reorder(container: HTMLElement, options?: ReorderOptions): Reorder
+interface ReorderOptions extends SpringOptions {
+  items?: string; axis?: 'x' | 'y' | 'both'; handle?: string
+  onReorder?: (e: { item; from; to; order }) => void; scheduler?: Scheduler
+}`,
+  run(ctx) {
+    const labels = ['Northwind rebrand', 'Atlas mobile app', 'Verdant landing', 'Cobalt design system']
+    const list = h('ul', { class: 'reorderlist' })
+    for (const label of labels) {
+      list.append(h('li', { class: 'reorderrow' }, h('span', { class: 'grip' }, '⠿'), label))
+    }
+    const readout = h('p', { class: 'reorderorder' }, labels.join('  ·  '))
+    ctx.stage.append(h('div', {}, list, readout))
+
+    const handle = reorder(list, {
+      axis: 'y',
+      handle: '.grip',
+      stiffness: 420,
+      damping: 32,
+      onReorder: () => {
+        readout.textContent = handle.order().map((el) => el.textContent?.replace('⠿', '').trim()).join('  ·  ')
+      },
+    })
+    ctx.onCleanup(() => handle.dispose())
   },
 }
