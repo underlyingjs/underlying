@@ -4,6 +4,7 @@
   "commit": false,
   "fixed": [
     [
+      "@underlying/angular",
       "@underlying/core",
       "@underlying/flip",
       "@underlying/gestures",
