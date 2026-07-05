@@ -11,9 +11,11 @@
     "@underlying/svg": "1.1.0",
     "@underlying/text": "1.1.0",
     "@underlying/timeline": "1.1.0",
-    "@underlying/utils": "1.1.0"
+    "@underlying/utils": "1.1.0",
+    "@underlying/angular": "1.2.0-beta.6"
   },
   "changesets": [
+    "angular-adapter",
     "core-awaitable-handles",
     "core-from-fromto",
     "core-keyframe-expressivity-channels",
