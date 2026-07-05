@@ -1,5 +1,11 @@
 # @underlying/scroll
 
+## 1.2.0-beta.8
+
+### Patch Changes
+
+- @underlying/core@1.2.0-beta.8
+
 ## 1.2.0-beta.7
 
 ### Patch Changes
