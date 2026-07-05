@@ -1,6 +1,6 @@
 {
   "name": "@underlying/flip",
-  "version": "1.2.0-beta.8",
+  "version": "1.2.0",
   "description": "Physics-first FLIP for @underlying/core: animate layout and shared-element transitions from old place to new, position and size - interruptible, retargeting mid-flight from live velocity.",
   "license": "MIT",
   "author": "underlyi.ng <contact@underlyi.ng>",
